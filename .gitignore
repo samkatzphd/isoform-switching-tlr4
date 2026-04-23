@@ -1,0 +1,25 @@
+# R
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj.user
+*.rds~
+# renv
+renv/local/
+# outputs (optional: uncomment to track some results; default ignore large/binary)
+# results/figures/*
+# data/raw/*.rds
+
+# Python / Jupyter
+.venv
+__pycache__/
+*.ipynb_checkpoints
+.pytest_cache
+
+# OS / editor
+.DS_Store
+*.swp
+.quarto/
+
+# Quarto
+*_files/

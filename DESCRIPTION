@@ -1,0 +1,16 @@
+Type: project
+Version: 0.1.0
+Title: Isoform switching downstream analysis
+License: file LICENSE
+Encoding: UTF-8
+Imports:
+    dplyr (>= 1.1.0),
+    tibble (>= 3.2.0),
+    yaml (>= 2.3.0),
+    methods
+Suggests:
+    renv,
+    IsoformSwitchAnalyzeR,
+    clusterProfiler,
+    ggplot2,
+    readr

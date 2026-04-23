@@ -1,0 +1,18 @@
+# Optional Conda environment: R for analysis, Python if you add downstream tools.
+# Conda: mamba env create -f environment.yml && mamba activate isoform-switch
+name: isoform-switch
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base >=4.2
+  - r-essentials
+  - r-yaml
+  - r-tibble
+  - r-dplyr
+  - r-renv
+  - python >=3.11
+  - pip
+  - pip:
+      - ipython
+      - jupyter

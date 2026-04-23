@@ -1,0 +1,25 @@
+---
+title: "Isoform switching — exploratory report"
+format:
+  html: default
+execute:
+  echo: true
+  warning: true
+  message: true
+---
+
+# Purpose
+
+Narrative exploration and QC after running `scripts/01_*.R` and `02_*.R`.
+(Extend with chunks that `readRDS()` processed objects and `knitr::kable()` key tables.)
+
+```{r}
+#| label: setup
+#| eval: false
+# Example: from project root, `source("utils/bootstrap.R")` and readRDS processed tables
+```
+
+# Next steps
+
+- Add chunks that load `data/processed/isoformFeatures_*.rds` and `results/tables/gene_level_summary_*.rds`
+- Add figures and session info when `06_visualization.R` is in place

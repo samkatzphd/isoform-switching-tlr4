@@ -1,0 +1,69 @@
+# Isoform switching pipeline - paths and analysis parameters
+# Set ISOFORM_PROJECT_ROOT if you run scripts from outside the project tree.
+
+version: 2
+
+paths:
+  processed_dir: "data/processed"
+  # Tables/figures (scripts 02+ write under these; created if missing)
+  results_tables: "results/tables"
+  results_figures: "results/figures"
+
+# Explicit datasets so both reference transcriptomes are represented cleanly.
+# Each dataset maps one ISA object to its matching final annotation (GFF3).
+datasets:
+  T_HT:
+    label: "T_HT_anchor"
+    isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/T_minus-T_plus_2024-Dec-18/T_minus-T_plus_IsoformSwitchAnalyzeR.Rdata"
+    annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/H_T/H_T.gff3"
+    object_name: null
+    condition: "T"
+    reference_transcriptome: "HT"
+
+  H_HT:
+    label: "H_HT_supplementary"
+    isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/H_minus-H_plus_2024-Dec-18/H_minus-H_plus_IsoformSwitchAnalyzeR.Rdata"
+    annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/H_T/H_T.gff3"
+    object_name: null
+    condition: "H"
+    reference_transcriptome: "HT"
+
+  U_UT:
+    label: "U_UT"
+    isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/U-T_Comparisons/U_minus-U_plus_2025-Feb-11/U_minus-U_plus_IsoformSwitchAnalyzeR.Rdata"
+    annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/U_T/U_T.gff3"
+    object_name: null
+    condition: "U"
+    reference_transcriptome: "UT"
+
+  T_UT:
+    label: "T_UT"
+    isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/U-T_Comparisons/T_minus-T_plus_2025-Feb-11/T_minus-T_plus_IsoformSwitchAnalyzeR.Rdata"
+    annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/U_T/U_T.gff3"
+    object_name: null
+    condition: "T"
+    reference_transcriptome: "UT"
+
+# Analysis framing for collaborators (used in reports/README; scripts can ignore)
+analysis_questions:
+  q1_wt_lps_ht:
+    description: "WT pre/post LPS isoform differences anchored on THP1 (T) using HT reference; H is supplementary."
+    primary_datasets: ["T_HT"]
+    supplementary_datasets: ["H_HT"]
+    reference_transcriptome: "HT"
+  q2_ubl5_ut:
+    description: "Role of UBL5 in post-LPS isoform selection using UT reference; compare U vs T."
+    primary_datasets: ["U_UT", "T_UT"]
+    reference_transcriptome: "UT"
+
+# Novel-transcript id rule: oId (or your column) with this prefix = PacBio-derived
+novel:
+  id_column: "oId"
+  pb_prefix: "PB"
+
+# Significance: isoform- and gene-level FDR thresholds (q-values)
+significance:
+  isoform_q: 0.05
+  gene_q: 0.05
+  # Optional minimum |dIF| to count as a "strong" switch (0 = not required)
+  min_abs_dif: 0.0
