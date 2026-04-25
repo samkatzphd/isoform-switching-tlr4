@@ -13,4 +13,5 @@ Suggests:
     IsoformSwitchAnalyzeR,
     clusterProfiler,
     ggplot2,
+    scales,
     readr

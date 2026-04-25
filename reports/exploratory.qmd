@@ -10,8 +10,7 @@ execute:
 
 # Purpose
 
-Narrative exploration and QC after running `scripts/01_*.R` and `02_*.R`.
-(Extend with chunks that `readRDS()` processed objects and `knitr::kable()` key tables.)
+Optional scratch space. The main **overview + QC report** is `isoform_switching_overview.qmd` (run `quarto render reports/isoform_switching_overview.qmd` after `01`, `02`, `02b`, `02c`).
 
 ```{r}
 #| label: setup

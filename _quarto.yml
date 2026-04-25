@@ -1,0 +1,15 @@
+# Project metadata (path resolution is handled in the report `setup` chunk)
+project:
+  type: default
+
+format:
+  html:
+    toc: true
+    number-sections: true
+    page-layout: full
+
+execute:
+  freeze: false
+  echo: true
+  warning: true
+  message: true

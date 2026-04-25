@@ -13,10 +13,12 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
 
 | Path | Role |
 |------|------|
-| `data/raw/` | Your `T_isa_list.rds`, `U_isa_list.rds`, optional `H_isa_list.rds` (as named in config) |
+| `data/raw/` | Placeholder for copies of inputs if you do not use absolute paths in `config` |
 | `data/processed/` | Isoform tibbles from `01_load_data.R` |
-| `results/tables/` | Gene-level and downstream tables (e.g. from `02` onward) |
-| `results/figures/` | Plots (to be written by `06` and report chunks) |
+| `results/tables/` | Gene tables, QC snapshots, comparisons (`02`+) |
+| `results/figures/` | QC and overview plots from `02c_qc_figures.R` |
+| `reports/isoform_switching_overview.qmd` | First HTML report (tables + figures; render with Quarto) |
+| `_quarto.yml` | Shared Quarto defaults for reports |
 | `config/config.yml` | Input paths, labels (T/U/H), q-value cutoffs, novel id column/prefix |
 | `utils/helper_functions.R` + `utils/bootstrap.R` | Shared I/O, extraction, gene summary |
 | `environment.yml` | Optional Conda stack; or use R + `renv` (see below) |
@@ -34,10 +36,10 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
    Inputs can be `.rds` or `.RData/.Rdata`. For `.RData` with multiple objects, set `object_name` per dataset.  
    Use the final reference annotation `.gff3` per dataset (`annotation_path`) to map `isoform_id -> oId/cmp_ref/class_code`.
 
-3. **Install R packages** (minimum for scripts 01–02):
+3. **Install R packages** (minimum for scripts 01–02; add **ggplot2** and **scales** for `02c` figures):
 
    ```r
-   install.packages(c("yaml", "tibble", "dplyr"))
+   install.packages(c("yaml", "tibble", "dplyr", "ggplot2", "scales"))
    ```
 
    [Bioconductor](https://bioconductor.org/) packages (e.g. `IsoformSwitchAnalyzeR`, `clusterProfiler`) are only needed for upstream object creation or for planned scripts 05+.
@@ -47,14 +49,26 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
    ```bash
    Rscript scripts/01_load_data.R
    Rscript scripts/02_gene_level_summary.R
+   Rscript scripts/02b_qc_snapshot.R
+   Rscript scripts/02c_qc_figures.R
    ```
 
    If you run from `scripts/`, the bootstrap still finds the project as long as `config/config.yml` is discoverable (see `utils/bootstrap.R`).
+
+4. **HTML report (optional, requires [Quarto](https://quarto.org/docs/get-started/))**:
+
+   ```bash
+   quarto render reports/isoform_switching_overview.qmd
+   ```
+
+   Output: `reports/isoform_switching_overview.html` (embed-resources on).
 
 ## What each step does (implemented)
 
 - **`01_load_data.R`**: `readRDS()` each configured list → `extract_isoform_features()` → `tag_novel_isoforms()` (default: `oId` starting with `PB`) → writes `data/processed/isoformFeatures_<label>.{rds,csv}`.
 - **`02_gene_level_summary.R`**: Reads all `data/processed/isoformFeatures_*.rds`, runs `summarize_genes_from_isoform_table()` with thresholds from `config/config.yml` → `results/tables/gene_level_summary_<label>.{rds,csv}`.
+- **`02b_qc_snapshot.R`**: One-row-per-dataset QC and `results/tables/qc_top10_genes_per_dataset.csv`.
+- **`02c_qc_figures.R`**: Writes PNGs under `results/figures/` (gene + isoform QC plots).
 
 **Gene table columns** (typical): `gene_id`, `gene_name`, `n_isoforms`, `n_switching_isoforms`, `min_isoform_switch_q`, `min_gene_switch_q`, `max_abs_dif`, `novel_involved`.
 

@@ -100,6 +100,21 @@ for (k in names(datasets)) {
         tx_map,
         by = c("isoform_id" = "transcript_id")
       )
+      # Prefer gene symbols from annotation over XLOC placeholders in ISA.
+      if ("gene_name_from_gtf" %in% names(iso)) {
+        if (!"gene_name_original" %in% names(iso) && "gene_name" %in% names(iso)) {
+          iso$gene_name_original <- iso$gene_name
+        }
+        isa_name <- if ("gene_name" %in% names(iso)) as.character(iso$gene_name) else rep(NA_character_, nrow(iso))
+        gtf_name <- as.character(iso$gene_name_from_gtf)
+        isa_placeholder <- is.na(isa_name) | !nzchar(isa_name) | grepl("^XLOC_", isa_name)
+        gtf_ok <- !is.na(gtf_name) & nzchar(gtf_name) & !grepl("^XLOC_", gtf_name)
+        if (!"gene_name" %in% names(iso)) {
+          iso$gene_name <- gtf_name
+        } else {
+          iso$gene_name <- ifelse(isa_placeholder & gtf_ok, gtf_name, isa_name)
+        }
+      }
     } else {
       message("  No annotation_path for ", k, "; skipping transcript map join.")
     }
