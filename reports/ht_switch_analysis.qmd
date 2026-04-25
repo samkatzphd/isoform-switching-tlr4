@@ -1,0 +1,190 @@
+---
+title: "HT switch analysis: T_HT and H_HT"
+author: "Project"
+date: last-modified
+format:
+  html:
+    embed-resources: true
+    toc: true
+    number-sections: true
+    fig-align: center
+---
+
+## Scope
+
+This report focuses on the HT reference transcriptome datasets:
+
+- `T_HT` (anchor)
+- `H_HT` (supplementary)
+
+Ranking is performed with q-value cutoffs, ordered by `max_abs_dif_switching`, and flags genes with two or more significant isoforms that switch in opposing directions.
+
+```{r}
+#| label: setup
+#| message: false
+library(knitr)
+library(dplyr)
+
+.infer_project_root <- function() {
+  p <- getwd()
+  for (i in 1:20) {
+    if (file.exists(file.path(p, "config", "config.yml"))) {
+      return(normalizePath(p, mustWork = TRUE))
+    }
+    p2 <- dirname(p)
+    if (identical(p, p2)) break
+    p <- p2
+  }
+  stop("Could not find config/config.yml")
+}
+knitr::opts_knit$set(root.dir = .infer_project_root())
+```
+
+```{r}
+#| label: load-data
+#| message: false
+t_path <- "results/tables/top_switching_genes_T_HT_anchor.csv"
+h_path <- "results/tables/top_switching_genes_H_HT_supplementary.csv"
+ov_sum_path <- "results/tables/isoform_overlap_T_HT_vs_H_HT_summary.csv"
+ov_detail_path <- "results/tables/isoform_overlap_T_significant_in_H_context.csv"
+
+if (!file.exists(t_path) || !file.exists(h_path) || !file.exists(ov_sum_path) || !file.exists(ov_detail_path)) {
+  stop("Missing HT analysis outputs. Run: Rscript scripts/06_visualization.R")
+}
+
+t_top <- read.csv(t_path, stringsAsFactors = FALSE, check.names = FALSE)
+h_top <- read.csv(h_path, stringsAsFactors = FALSE, check.names = FALSE)
+ov_sum <- read.csv(ov_sum_path, stringsAsFactors = FALSE, check.names = FALSE)
+ov_detail <- read.csv(ov_detail_path, stringsAsFactors = FALSE, check.names = FALSE)
+```
+
+## T_HT panel
+
+### Top 30 genes (ranked by max_abs_dif_switching)
+
+```{r}
+knitr::kable(
+  t_top,
+  digits = 4,
+  caption = "T_HT top 30 genes (q-cutoff filtered; ranked by max_abs_dif_switching)"
+)
+```
+
+### T_HT genes with multi-isoform opposing-direction switches
+
+```{r}
+t_interest <- t_top |>
+  filter(.data$has_multi_isoform_opposing_switch %in% TRUE) |>
+  arrange(desc(.data$max_abs_dif_switching), desc(.data$n_switching_isoforms))
+if (nrow(t_interest) == 0) {
+  knitr::asis_output("_No T_HT top-30 genes met the multi-isoform opposing-direction criterion._")
+} else {
+  knitr::kable(
+    t_interest,
+    digits = 4,
+    caption = "T_HT genes of particular interest (>=2 significant isoforms changing in opposing directions)"
+  )
+}
+```
+
+### T_HT switch plots
+
+```{r}
+t_figs <- list.files(
+  "results/figures/ht_top_switch_plots",
+  pattern = "^switch_plot_T_HT_anchor_rank[0-9]{2}_.*\\.png$",
+  full.names = TRUE
+)
+t_figs <- sort(t_figs)
+if (!length(t_figs)) {
+  knitr::asis_output("_No T_HT switch plots found._")
+} else {
+  # Render first 12 to keep report navigable.
+  for (f in utils::head(t_figs, 12)) {
+    knitr::include_graphics(f)
+    cat("\n\n")
+  }
+}
+```
+
+## H_HT panel
+
+### Top 30 genes (ranked by max_abs_dif_switching)
+
+```{r}
+knitr::kable(
+  h_top,
+  digits = 4,
+  caption = "H_HT top 30 genes (q-cutoff filtered; ranked by max_abs_dif_switching)"
+)
+```
+
+### H_HT genes with multi-isoform opposing-direction switches
+
+```{r}
+h_interest <- h_top |>
+  filter(.data$has_multi_isoform_opposing_switch %in% TRUE) |>
+  arrange(desc(.data$max_abs_dif_switching), desc(.data$n_switching_isoforms))
+if (nrow(h_interest) == 0) {
+  knitr::asis_output("_No H_HT top-30 genes met the multi-isoform opposing-direction criterion._")
+} else {
+  knitr::kable(
+    h_interest,
+    digits = 4,
+    caption = "H_HT genes of particular interest (>=2 significant isoforms changing in opposing directions)"
+  )
+}
+```
+
+### H_HT switch plots
+
+```{r}
+h_figs <- list.files(
+  "results/figures/ht_top_switch_plots",
+  pattern = "^switch_plot_H_HT_supplementary_rank[0-9]{2}_.*\\.png$",
+  full.names = TRUE
+)
+h_figs <- sort(h_figs)
+if (!length(h_figs)) {
+  knitr::asis_output("_No H_HT switch plots found._")
+} else {
+  # Render first 12 to keep report navigable.
+  for (f in utils::head(h_figs, 12)) {
+    knitr::include_graphics(f)
+    cat("\n\n")
+  }
+}
+```
+
+## T vs H overlap panel
+
+This panel goes beyond "top/significant only" and asks:
+
+- For isoforms significant in `T_HT`, are they also detected in `H_HT`?
+- If detected in `H_HT`, are they also significant there?
+- If not significant in `H_HT`, what is the observed direction/magnitude context?
+
+### Overlap summary
+
+```{r}
+knitr::kable(ov_sum, digits = 4, caption = "Isoform overlap summary: T_HT vs H_HT")
+```
+
+### T-significant isoforms in H context (including non-significant H)
+
+```{r}
+ov_show <- ov_detail |>
+  arrange(desc(abs(.data$T_dIF_n)), .data$T_q_i) |>
+  select(
+    gene_id, gene_name, isoform_id,
+    T_dIF_n, T_q_i, T_q_g, T_significant,
+    H_dIF_n, H_q_i, H_q_g, H_significant,
+    same_direction, overlap_note
+  )
+
+knitr::kable(
+  utils::head(ov_show, 100),
+  digits = 4,
+  caption = "Top T-significant isoforms mapped to H context (first 100 rows)"
+)
+```
