@@ -1,0 +1,267 @@
+---
+title: "UT comparison: T (WT) vs U (UBL5 knockout)"
+author: "Project"
+date: last-modified
+format:
+  html:
+    embed-resources: true
+    toc: true
+    number-sections: true
+    fig-align: center
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+## Scope and biological question
+
+Using the **UT reference transcriptome**, we ask whether LPS-associated isoform switching in **UBL5 knockout (U)** differs from **wildtype THP1 (T)**.
+
+This report:
+
+1. Ranks significant switching genes in `T_UT` and `U_UT` (same q / |dIF| rules as elsewhere).
+2. Classifies genes as **Shared**, **T-only**, or **U-only**.
+3. Matches isoforms by `isoform_id` for delta-dIF / concordance statistics.
+4. Provides visual overlap summaries and **gene-level explorer** panels (side-by-side T vs U dIF).
+5. Includes IsoformSwitchAnalyzeR switch plots for showcase genes.
+
+```{r}
+#| label: setup
+library(knitr)
+library(dplyr)
+
+PROJECT_ROOT <- normalizePath("..", mustWork = TRUE)
+tab <- function(...) file.path(PROJECT_ROOT, "results", "tables", ...)
+fig <- function(...) file.path("..", "results", "figures", "ut_t_vs_u", ...)
+gene_fig <- function(...) file.path("..", "results", "figures", "ut_t_vs_u", "gene_explorer", ...)
+switch_fig <- function(...) file.path("..", "results", "figures", "ut_t_vs_u", "switch_plots", ...)
+```
+
+```{r}
+#| label: load
+need <- c(
+  "ut_T_vs_U_stats_summary.csv",
+  "ut_gene_overlap_T_vs_U_summary.csv",
+  "ut_gene_overlap_T_vs_U.csv",
+  "ut_isoform_overlap_T_vs_U_significant.csv",
+  "ut_T_vs_U_fisher_gene_contingency.csv",
+  "top_switching_genes_T_UT.csv",
+  "top_switching_genes_U_UT.csv",
+  "ut_gene_explorer_index.csv",
+  "ut_switch_plot_index.csv"
+)
+abs_need <- vapply(need, tab, character(1))
+miss <- abs_need[!file.exists(abs_need)]
+if (length(miss)) {
+  stop("Missing UT comparison outputs. Run: Rscript scripts/04_comparison_T_vs_U.R\n", paste(miss, collapse = "\n"))
+}
+
+stats <- read.csv(abs_need[[1]], stringsAsFactors = FALSE, check.names = FALSE)
+gsum <- read.csv(abs_need[[2]], stringsAsFactors = FALSE, check.names = FALSE)
+gover <- read.csv(abs_need[[3]], stringsAsFactors = FALSE, check.names = FALSE)
+isig <- read.csv(abs_need[[4]], stringsAsFactors = FALSE, check.names = FALSE)
+ftab <- read.csv(abs_need[[5]], stringsAsFactors = FALSE, check.names = FALSE)
+top_t <- read.csv(abs_need[[6]], stringsAsFactors = FALSE, check.names = FALSE)
+top_u <- read.csv(abs_need[[7]], stringsAsFactors = FALSE, check.names = FALSE)
+gidx <- read.csv(abs_need[[8]], stringsAsFactors = FALSE, check.names = FALSE)
+sidx <- read.csv(abs_need[[9]], stringsAsFactors = FALSE, check.names = FALSE)
+```
+
+## Statistical summary
+
+```{r}
+knitr::kable(stats, digits = 4, caption = "UT T vs U statistical summary")
+```
+
+Key interpretation cues:
+
+- **Gene overlap counts / Jaccard**: shared vs genotype-specific switching genes.
+- **Fisher odds ratio / p (both-present background)**: among gene symbols observed in *both* T_UT and U_UT, are significant calls co-enriched?
+- **Spearman rho** on shared-significant isoform dIF: concordance of effect sizes when both are significant.
+- **Binomial test**: whether shared-significant isoforms more often change in the **same direction**.
+- **Wilcoxon / Kruskal**: whether |dIF| / delta-dIF distributions differ by class.
+
+### Gene-significance contingency (genes present in both UT datasets)
+
+```{r}
+knitr::kable(ftab, caption = "Contingency of significant switching genes among both-present symbols (T_sig × U_sig)")
+```
+
+### Gene overlap tallies
+
+```{r}
+knitr::kable(gsum, digits = 2, caption = "Switching genes by overlap class")
+```
+
+```{r}
+#| fig-cap: "Gene-level switching overlap counts"
+knitr::include_graphics(fig("fig_ut_gene_overlap_counts.png"))
+```
+
+## Overlap visualizations
+
+```{r}
+#| fig-cap: "Isoform-level switching categories"
+knitr::include_graphics(fig("fig_ut_isoform_overlap_counts.png"))
+```
+
+```{r}
+#| fig-cap: "Matched isoform dIF scatter (T vs U)"
+knitr::include_graphics(fig("fig_ut_dIF_scatter_matched_isoforms.png"))
+```
+
+```{r}
+#| fig-cap: "Delta dIF (U - T) for matched isoforms"
+knitr::include_graphics(fig("fig_ut_delta_dIF_histogram.png"))
+```
+
+```{r}
+#| fig-cap: "|dIF| by significant-isoform overlap class"
+knitr::include_graphics(fig("fig_ut_abs_dIF_by_overlap_class.png"))
+```
+
+```{r}
+#| fig-cap: "Top genes by overlap class"
+knitr::include_graphics(fig("fig_ut_top_genes_by_overlap_class.png"))
+```
+
+## Top switching genes by dataset
+
+### T_UT (WT) top 30
+
+```{r}
+knitr::kable(
+  top_t |>
+    select(rank, gene_name, gene_id, n_switching_isoforms, max_abs_dif_switching, min_isoform_switch_q, novel_involved, has_multi_isoform_opposing_switch),
+  digits = 4,
+  caption = "Top 30 switching genes in T_UT"
+)
+```
+
+### U_UT (knockout) top 30
+
+```{r}
+knitr::kable(
+  top_u |>
+    select(rank, gene_name, gene_id, n_switching_isoforms, max_abs_dif_switching, min_isoform_switch_q, novel_involved, has_multi_isoform_opposing_switch),
+  digits = 4,
+  caption = "Top 30 switching genes in U_UT"
+)
+```
+
+## Shared vs unique genes
+
+### Shared genes (first 40)
+
+```{r}
+shared <- gover |>
+  filter(.data$overlap_class == "Shared (T and U)") |>
+  arrange(desc(.data$max_abs_dif_either)) |>
+  head(40) |>
+  select(
+    gene_name, T_max_abs_dif, U_max_abs_dif, delta_max_abs_dif,
+    T_n_switching, U_n_switching, T_min_q, U_min_q,
+    T_novel_involved, U_novel_involved
+  )
+knitr::kable(shared, digits = 4, caption = "Shared significant genes (top by max |dIF|)")
+```
+
+### T-only (first 30)
+
+```{r}
+t_only <- gover |>
+  filter(.data$overlap_class == "T-only") |>
+  arrange(desc(.data$T_max_abs_dif)) |>
+  head(30) |>
+  select(gene_name, T_max_abs_dif, T_n_switching, T_min_q, T_novel_involved, T_opposing)
+knitr::kable(t_only, digits = 4, caption = "T-only significant genes")
+```
+
+### U-only (first 30)
+
+```{r}
+u_only <- gover |>
+  filter(.data$overlap_class == "U-only") |>
+  arrange(desc(.data$U_max_abs_dif)) |>
+  head(30) |>
+  select(gene_name, U_max_abs_dif, U_n_switching, U_min_q, U_novel_involved, U_opposing)
+knitr::kable(u_only, digits = 4, caption = "U-only significant genes")
+```
+
+## Gene-level explorer
+
+Each panel shows isoform dIF for the same gene in **T_UT** and **U_UT** (novel isoforms tagged `(PB)`).
+
+```{r}
+#| fig-cap: "Gene explorer panels (subset by overlap class)"
+#| out-width: "100%"
+ok <- gidx[!is.na(gidx$figure) & nzchar(gidx$figure), , drop = FALSE]
+show <- ok |>
+  group_by(.data$overlap_class) |>
+  slice_head(n = 6) |>
+  ungroup()
+paths <- vapply(show$figure, gene_fig, character(1))
+exist_abs <- file.path(
+  PROJECT_ROOT, "results", "figures", "ut_t_vs_u", "gene_explorer", show$figure
+)
+keep <- file.exists(exist_abs)
+if (any(keep)) {
+  knitr::include_graphics(paths[keep])
+} else {
+  knitr::asis_output("_No gene explorer figures found._\n")
+}
+```
+
+```{r}
+knitr::kable(
+  show[, c("gene_name", "overlap_class", "figure", "T_max_abs_dif", "U_max_abs_dif")],
+  digits = 4,
+  caption = "Gene explorer figures included above"
+)
+```
+
+## Switch plots (showcase)
+
+ISA `switchPlot` panels (gene symbols + PB labels when available).
+
+```{r}
+#| fig-cap: "Showcase switchPlots for shared / T-only / U-only genes"
+#| out-width: "100%"
+ok <- sidx
+ok$ok_flag <- ok$ok %in% c(TRUE, "TRUE", "true", 1, "1")
+ok <- ok[!is.na(ok$figure) & nzchar(ok$figure) & ok$ok_flag, , drop = FALSE]
+show_sw <- ok |>
+  group_by(.data$overlap_class, .data$dataset) |>
+  slice_head(n = 3) |>
+  ungroup()
+paths_sw <- vapply(show_sw$figure, switch_fig, character(1))
+exist_sw <- file.path(
+  PROJECT_ROOT, "results", "figures", "ut_t_vs_u", "switch_plots", show_sw$figure
+)
+keep_sw <- file.exists(exist_sw)
+if (any(keep_sw)) {
+  knitr::include_graphics(paths_sw[keep_sw])
+} else {
+  knitr::asis_output("_No switch plots found._\n")
+}
+```
+
+```{r}
+knitr::kable(
+  show_sw[, c("gene_name", "overlap_class", "dataset", "figure")],
+  caption = "Switch plots included above"
+)
+```
+
+## Methods notes
+
+- Significance uses `config/config.yml` thresholds (`isoform_q`, `gene_q`, optional `min_abs_dif`).
+- **Gene overlap** uses cleaned gene symbols (not `XLOC_*` / `ENSG*`), because those IDs are not stably shared across condition objects.
+- **Isoform matching** uses `isoform_id` (`TCONS`) within the UT reference; many isoforms are unique to one genotype’s ISA output, so “missing in U/T” is an informative category.
+- Rebuild:
+
+```bash
+Rscript scripts/04_comparison_T_vs_U.R
+quarto render reports/ut_t_vs_u_comparison.qmd
+```

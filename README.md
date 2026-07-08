@@ -20,6 +20,7 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
 | `reports/isoform_switching_overview.qmd` | QC overview report |
 | `reports/ht_switch_analysis.qmd` | HT top-switch + T↔H overlap report |
 | `reports/novel_isoform_analysis.qmd` | Novel PacBio isoform report (per-dataset + HT vs UT) |
+| `reports/ut_t_vs_u_comparison.qmd` | UT T (WT) vs U (knockout) comparison report |
 | `_quarto.yml` | Shared Quarto defaults for reports |
 | `config/config.yml` | Input paths, labels (T/U/H), q-value cutoffs, novel id column/prefix |
 | `utils/helper_functions.R` + `utils/bootstrap.R` | Shared I/O, extraction, gene summary |
@@ -54,6 +55,7 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
    Rscript scripts/02b_qc_snapshot.R
    Rscript scripts/02c_qc_figures.R
    Rscript scripts/03_novel_isoform_analysis.R
+   Rscript scripts/04_comparison_T_vs_U.R
    ```
 
    If you run from `scripts/`, the bootstrap still finds the project as long as `config/config.yml` is discoverable (see `utils/bootstrap.R`).
@@ -64,12 +66,14 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
    quarto render reports/isoform_switching_overview.qmd
    quarto render reports/ht_switch_analysis.qmd
    quarto render reports/novel_isoform_analysis.qmd
+   quarto render reports/ut_t_vs_u_comparison.qmd
    ```
 
    Outputs (with `embed-resources: true`):
    - `reports/isoform_switching_overview.html`
    - `reports/ht_switch_analysis.html`
    - `reports/novel_isoform_analysis.html`
+   - `reports/ut_t_vs_u_comparison.html`
 
 ## What each step does (implemented)
 
@@ -78,6 +82,7 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
 - **`02b_qc_snapshot.R`**: One-row-per-dataset QC and `results/tables/qc_top10_genes_per_dataset.csv`.
 - **`02c_qc_figures.R`**: Writes PNGs under `results/figures/` (gene + isoform QC plots).
 - **`03_novel_isoform_analysis.R`**: Novel vs known contrasts (effect sizes, class codes, top novel switching genes/isoforms), plus **HT vs UT** novelty rates and shared novel-involved gene-symbol overlap → `results/tables/novel_*` and `results/figures/novel/`.
+- **`04_comparison_T_vs_U.R`**: UT-reference WT (`T_UT`) vs knockout (`U_UT`) comparison — shared/T-only/U-only genes & isoforms, concordance/delta-dIF stats, overlap figures, gene explorer panels, ISA switchPlots → `results/tables/ut_*`, `results/figures/ut_t_vs_u/`, report `reports/ut_t_vs_u_comparison.qmd`.
 - **`06_visualization.R`**: HT-focused top-30 switch ranks, ISA `switchPlot`s, and T↔H overlap tables/report.
 
 **Gene table columns** (typical): `gene_id`, `gene_name`, `n_isoforms`, `n_switching_isoforms`, `min_isoform_switch_q`, `min_gene_switch_q`, `max_abs_dif`, `novel_involved`.
@@ -119,7 +124,6 @@ git push -u origin main
 
 ## What is scaffold only (for your feedback, then we extend)
 
-- `04_comparison_T_vs_U.R` — shared/unique switching genes, Δ(ΔIF) style metrics.
 - `05_pathway_enrichment.R` — `clusterProfiler` and pathway plots.
 
 ## License
