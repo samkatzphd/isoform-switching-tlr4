@@ -54,6 +54,21 @@ min_finite <- function(v) {
   if (is.infinite(m)) NA_real_ else m
 }
 
+is_real_gene_symbol <- function(x) {
+  x <- as.character(x)
+  !is.na(x) & nzchar(x) & !grepl("^(XLOC_|ENS[GTFP]\\d)", x, perl = TRUE)
+}
+
+# Prefer a HGNC-like symbol when isoforms of one gene_id disagree
+# (some GFF rows carry ENSG / XLOC placeholders in gene_name).
+pick_gene_symbol <- function(names) {
+  names <- unique(as.character(names))
+  names <- names[!is.na(names) & nzchar(names)]
+  if (!length(names)) return(NA_character_)
+  good <- names[is_real_gene_symbol(names)]
+  if (length(good)) good[[1L]] else names[[1L]]
+}
+
 compute_switching_gene_rank <- function(iso_tbl, dataset_key, dataset_label) {
   z <- as_tibble(iso_tbl)
   if (!"gene_id" %in% names(z) || !"isoform_id" %in% names(z)) {
@@ -64,6 +79,11 @@ compute_switching_gene_rank <- function(iso_tbl, dataset_key, dataset_label) {
   if (!"isoform_switch_q_value" %in% names(z) && !"gene_switch_q_value" %in% names(z)) {
     stop("Need isoform_switch_q_value or gene_switch_q_value.")
   }
+  # Collapse inconsistent gene_name annotations (XLOC / ENSG / symbol mix).
+  z <- z |>
+    group_by(.data$gene_id) |>
+    mutate(gene_name = pick_gene_symbol(.data$gene_name)) |>
+    ungroup()
   z$q_i <- if ("isoform_switch_q_value" %in% names(z)) as.numeric(z$isoform_switch_q_value) else as.numeric(z$gene_switch_q_value)
   z$q_g <- if ("gene_switch_q_value" %in% names(z)) as.numeric(z$gene_switch_q_value) else NA_real_
   z$dIF_n <- as.numeric(z$dIF)
@@ -111,23 +131,100 @@ compute_switching_gene_rank <- function(iso_tbl, dataset_key, dataset_label) {
   list(iso = z, ranks = ranks)
 }
 
+# ISA objects often store gene_name as XLOC placeholders. Real symbols and PB
+# novelty live in our processed isoform table (after GFF3 join). Patch the
+# in-memory ISA list so switchPlot titles/labels use symbols and mark novels.
+annotate_isa_for_plotting <- function(isa_obj, processed_iso) {
+  if (is.null(isa_obj) || is.null(processed_iso)) return(isa_obj)
+  proc <- as_tibble(processed_iso)
+  if (!all(c("gene_id", "isoform_id") %in% names(proc))) return(isa_obj)
+
+  # Prefer symbols from processed table over XLOC/ENSG placeholders in ISA.
+  if ("gene_name" %in% names(proc) && "isoformFeatures" %in% names(isa_obj)) {
+    gmap <- proc |>
+      group_by(.data$gene_id) |>
+      summarize(
+        gene_name = pick_gene_symbol(.data$gene_name),
+        .groups = "drop"
+      ) |>
+      filter(is_real_gene_symbol(.data$gene_name)) |>
+      transmute(
+        gene_id = as.character(.data$gene_id),
+        gene_name = as.character(.data$gene_name)
+      )
+    feat <- isa_obj$isoformFeatures
+    feat$gene_id <- as.character(feat$gene_id)
+    m <- match(feat$gene_id, gmap$gene_id)
+    hit <- !is.na(m)
+    if (any(hit)) {
+      feat$gene_name[hit] <- gmap$gene_name[m[hit]]
+      isa_obj$isoformFeatures <- feat
+    }
+  }
+
+  # Relabel novel PacBio isoforms as "<TCONS> (PB)" across ID-bearing slots.
+  if (!"is_novel_pacbio" %in% names(proc)) return(isa_obj)
+  novel_ids <- unique(as.character(proc$isoform_id[proc$is_novel_pacbio %in% TRUE]))
+  novel_ids <- novel_ids[!is.na(novel_ids) & nzchar(novel_ids)]
+  if (!length(novel_ids)) return(isa_obj)
+  # Avoid double-tagging on re-runs
+  novel_ids <- novel_ids[!grepl(" \\(PB\\)$", novel_ids)]
+  if (!length(novel_ids)) return(isa_obj)
+  new_ids <- paste0(novel_ids, " (PB)")
+  names(new_ids) <- novel_ids
+
+  remap_ids <- function(ids) {
+    ids <- as.character(ids)
+    hit <- ids %in% names(new_ids)
+    ids[hit] <- unname(new_ids[ids[hit]])
+    ids
+  }
+
+  for (nm in names(isa_obj)) {
+    x <- isa_obj[[nm]]
+    if (is.data.frame(x) && "isoform_id" %in% names(x)) {
+      x$isoform_id <- remap_ids(x$isoform_id)
+      isa_obj[[nm]] <- x
+    } else if (inherits(x, "GRanges")) {
+      mc <- S4Vectors::mcols(x)
+      if ("isoform_id" %in% names(mc)) {
+        mc$isoform_id <- remap_ids(mc$isoform_id)
+        S4Vectors::mcols(x) <- mc
+        isa_obj[[nm]] <- x
+      }
+    } else if (inherits(x, "DNAStringSet") || inherits(x, "XStringSet")) {
+      nms <- names(x)
+      if (!is.null(nms)) {
+        names(x) <- remap_ids(nms)
+        isa_obj[[nm]] <- x
+      }
+    }
+  }
+  isa_obj
+}
+
 plot_gene_fallback <- function(gene_row, iso_tbl, dataset_label) {
   gid <- as.character(gene_row$gene_id[[1]])
   gname <- as.character(gene_row$gene_name[[1]])
-  if (is.na(gname) || !nzchar(gname)) gname <- gid
+  if (!is_real_gene_symbol(gname)) gname <- gid
 
   iso_tbl |>
     filter(.data$gene_id == gid) |>
     arrange(desc(abs(.data$dIF_n)), .data$q_i) |>
     slice_head(n = 12L) |>
-    mutate(isoform_id = as.character(.data$isoform_id)) |>
-    ggplot(aes(x = reorder(.data$isoform_id, .data$dIF_n), y = .data$dIF_n, fill = .data$is_switching)) +
+    mutate(
+      isoform_label = paste0(
+        as.character(.data$isoform_id),
+        ifelse(.data$is_novel_pacbio %in% TRUE, " (PB)", "")
+      )
+    ) |>
+    ggplot(aes(x = reorder(.data$isoform_label, .data$dIF_n), y = .data$dIF_n, fill = .data$is_switching)) +
     geom_col() +
     coord_flip() +
     scale_fill_manual(values = c(`TRUE` = "#1b7837", `FALSE` = "#bdbdbd")) +
     labs(
-      title = paste0(dataset_label, " | ", gname, " (", gid, ")"),
-      subtitle = "Fallback dIF view (switchPlot failed for this gene)",
+      title = paste0(dataset_label, " | ", gname),
+      subtitle = paste0("Fallback dIF view (switchPlot failed); gene_id=", gid),
       x = "Isoform",
       y = "dIF",
       fill = "Significant"
@@ -140,30 +237,40 @@ make_switch_plot <- function(isa_obj, gene_id, gene_name, out_png) {
     return(list(ok = FALSE, message = "IsoformSwitchAnalyzeR is not installed."))
   }
   switch_fn <- get("switchPlot", envir = asNamespace("IsoformSwitchAnalyzeR"))
-  candidates <- unique(na.omit(c(as.character(gene_id), as.character(gene_name))))
+  # Prefer human-readable gene_name so the plot title is a symbol, not XLOC.
+  candidates <- character()
+  if (is_real_gene_symbol(gene_name)) candidates <- c(candidates, as.character(gene_name)[1L])
+  if (!is.na(gene_id) && nzchar(as.character(gene_id)[1L])) {
+    candidates <- c(candidates, as.character(gene_id)[1L])
+  }
+  candidates <- unique(candidates)
   if (!length(candidates)) {
     return(list(ok = FALSE, message = "No gene identifier available."))
   }
 
-  # switchPlot draws directly, so render inside png device.
   for (g in candidates) {
     ok <- tryCatch({
       png(filename = out_png, width = 2400, height = 1500, res = 180)
-      on.exit(dev.off(), add = TRUE)
-      # Try the most common function signatures across package versions.
-      tryCatch(
-        do.call(switch_fn, list(switchAnalyzeRlist = isa_obj, gene = g)),
-        error = function(e1) do.call(switch_fn, list(isa_obj, gene = g))
+      on.exit({
+        if (grDevices::dev.cur() > 1L) grDevices::dev.off()
+      }, add = TRUE)
+      do.call(
+        switch_fn,
+        list(
+          switchAnalyzeRlist = isa_obj,
+          gene = g,
+          plotTopology = FALSE
+        )
       )
       TRUE
     }, error = function(e) {
       FALSE
     })
-    if (ok && file.exists(out_png) && file.info(out_png)$size > 0) {
+    if (ok && file.exists(out_png) && isTRUE(file.info(out_png)$size > 0)) {
       return(list(ok = TRUE, message = paste0("switchPlot succeeded for ", g)))
     }
   }
-  list(ok = FALSE, message = "switchPlot failed for both gene_id and gene_name.")
+  list(ok = FALSE, message = "switchPlot failed for gene_name and gene_id candidates.")
 }
 
 load_isa_for_dataset <- function(ds) {
@@ -276,7 +383,22 @@ for (ds_key in target_datasets) {
   isa_obj <- load_isa_for_dataset(ds)
   if (is.null(isa_obj)) {
     warning("[", ds_key, "] Could not load ISA object; switchPlot outputs will be skipped.")
+  } else {
+    message("[", ds_key, "] Annotating ISA object with gene symbols and PB isoform labels ...")
+    isa_obj <- annotate_isa_for_plotting(isa_obj, iso_scored)
   }
+
+  # Drop stale rank plots from earlier ranking schemas before rewriting.
+  old_plots <- list.files(
+    out_fig_dir,
+    pattern = paste0("^switch_plot_", label_clean, "_rank[0-9]{2}_.*\\.png$"),
+    full.names = TRUE
+  )
+  if (length(old_plots)) {
+    unlink(old_plots)
+  }
+  # Remove any leftover test plots
+  unlink(file.path(out_fig_dir, "_test_NCOA7_labels.png"))
 
   gene_rows <- top_tbl |>
     slice_head(n = min(plot_top_n, nrow(top_tbl)))
@@ -286,7 +408,9 @@ for (ds_key in target_datasets) {
   }
   for (i in seq_len(nrow(gene_rows))) {
     gr <- gene_rows[i, , drop = FALSE]
-    gene_stub <- sanitize(as.character(gr$gene_name[[1]] %||% gr$gene_id[[1]]))
+    gene_stub <- sanitize(
+      if (is_real_gene_symbol(gr$gene_name[[1]])) gr$gene_name[[1]] else gr$gene_id[[1]]
+    )
     out_png <- file.path(out_fig_dir, paste0("switch_plot_", label_clean, "_rank", sprintf("%02d", i), "_", gene_stub, ".png"))
 
     made <- FALSE
@@ -299,7 +423,9 @@ for (ds_key in target_datasets) {
       )
       made <- isTRUE(sp$ok)
       if (!made) {
-        message("[", ds_key, "] switchPlot unavailable for ", gr$gene_id[[1]], "; writing fallback plot.")
+        message("[", ds_key, "] switchPlot unavailable for ", gene_stub, "; writing fallback plot.")
+      } else {
+        message("[", ds_key, "] Wrote ", basename(out_png), " (", sp$message, ")")
       }
     }
     if (!made) {
