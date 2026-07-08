@@ -15,9 +15,11 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
 |------|------|
 | `data/raw/` | Placeholder for copies of inputs if you do not use absolute paths in `config` |
 | `data/processed/` | Isoform tibbles from `01_load_data.R` |
-| `results/tables/` | Gene tables, QC snapshots, comparisons (`02`+) |
-| `results/figures/` | QC and overview plots from `02c_qc_figures.R` |
-| `reports/isoform_switching_overview.qmd` | First HTML report (tables + figures; render with Quarto) |
+| `results/tables/` | Gene tables, QC snapshots, novel summaries, HT comparisons (`02`+) |
+| `results/figures/` | QC, novel, and HT switch plots |
+| `reports/isoform_switching_overview.qmd` | QC overview report |
+| `reports/ht_switch_analysis.qmd` | HT top-switch + T↔H overlap report |
+| `reports/novel_isoform_analysis.qmd` | Novel PacBio isoform report (per-dataset + HT vs UT) |
 | `_quarto.yml` | Shared Quarto defaults for reports |
 | `config/config.yml` | Input paths, labels (T/U/H), q-value cutoffs, novel id column/prefix |
 | `utils/helper_functions.R` + `utils/bootstrap.R` | Shared I/O, extraction, gene summary |
@@ -51,17 +53,23 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
    Rscript scripts/02_gene_level_summary.R
    Rscript scripts/02b_qc_snapshot.R
    Rscript scripts/02c_qc_figures.R
+   Rscript scripts/03_novel_isoform_analysis.R
    ```
 
    If you run from `scripts/`, the bootstrap still finds the project as long as `config/config.yml` is discoverable (see `utils/bootstrap.R`).
 
-4. **HTML report (optional, requires [Quarto](https://quarto.org/docs/get-started/))**:
+4. **HTML reports (optional, requires [Quarto](https://quarto.org/docs/get-started/))**:
 
    ```bash
    quarto render reports/isoform_switching_overview.qmd
+   quarto render reports/ht_switch_analysis.qmd
+   quarto render reports/novel_isoform_analysis.qmd
    ```
 
-   Output: `reports/isoform_switching_overview.html` (embed-resources on).
+   Outputs (with `embed-resources: true`):
+   - `reports/isoform_switching_overview.html`
+   - `reports/ht_switch_analysis.html`
+   - `reports/novel_isoform_analysis.html`
 
 ## What each step does (implemented)
 
@@ -69,6 +77,8 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
 - **`02_gene_level_summary.R`**: Reads all `data/processed/isoformFeatures_*.rds`, runs `summarize_genes_from_isoform_table()` with thresholds from `config/config.yml` → `results/tables/gene_level_summary_<label>.{rds,csv}`.
 - **`02b_qc_snapshot.R`**: One-row-per-dataset QC and `results/tables/qc_top10_genes_per_dataset.csv`.
 - **`02c_qc_figures.R`**: Writes PNGs under `results/figures/` (gene + isoform QC plots).
+- **`03_novel_isoform_analysis.R`**: Novel vs known contrasts (effect sizes, class codes, top novel switching genes/isoforms), plus **HT vs UT** novelty rates and shared novel-involved gene-symbol overlap → `results/tables/novel_*` and `results/figures/novel/`.
+- **`06_visualization.R`**: HT-focused top-30 switch ranks, ISA `switchPlot`s, and T↔H overlap tables/report.
 
 **Gene table columns** (typical): `gene_id`, `gene_name`, `n_isoforms`, `n_switching_isoforms`, `min_isoform_switch_q`, `min_gene_switch_q`, `max_abs_dif`, `novel_involved`.
 
@@ -77,6 +87,8 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
 ## Novel isoforms (PacBio)
 
 - Default rule: `oId` (or `config$novel$id_column`) with prefix `PB` (see `config$novel$pb_prefix`) → `is_novel_pacbio` in isoform tables, then aggregated to `novel_involved` at gene level.
+- Script `03` ranks novel switching isoforms/genes, summarizes annotation `class_code`, and contrasts HT vs UT novelty (rates + gene-symbol overlap).
+- Report: `reports/novel_isoform_analysis.qmd` (render after running `03`).
 
 ## Reproducibility: `renv` (optional)
 
@@ -107,10 +119,8 @@ git push -u origin main
 
 ## What is scaffold only (for your feedback, then we extend)
 
-- `03_novel_isoform_analysis.R` — distribution / contrast plots for novel genes.
 - `04_comparison_T_vs_U.R` — shared/unique switching genes, Δ(ΔIF) style metrics.
 - `05_pathway_enrichment.R` — `clusterProfiler` and pathway plots.
-- `06_visualization.R` — publication figures (volcano, per-gene isoform panels).
 
 ## License
 

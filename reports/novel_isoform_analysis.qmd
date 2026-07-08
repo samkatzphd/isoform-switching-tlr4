@@ -1,0 +1,186 @@
+---
+title: "Novel PacBio isoform analysis"
+author: "Project"
+date: last-modified
+format:
+  html:
+    embed-resources: true
+    toc: true
+    number-sections: true
+    fig-align: center
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+## Scope
+
+This report summarizes **novel (PacBio / `PB*`) isoforms** relative to known transcripts across all configured datasets, then contrasts novelty patterns between the **HT** and **UT** reference transcriptomes.
+
+Novel isoforms are tagged when `oId` starts with the configured prefix (`PB` by default).
+
+```{r}
+#| label: setup
+library(knitr)
+library(dplyr)
+
+# Stay in reports/ so graphic paths ../results/... resolve for pandoc embed-resources.
+PROJECT_ROOT <- normalizePath("..", mustWork = TRUE)
+tab <- function(...) file.path(PROJECT_ROOT, "results", "tables", ...)
+fig <- function(...) file.path("..", "results", "figures", "novel", ...)
+```
+
+```{r}
+#| label: load-data
+need <- c(
+  "novel_isoform_dataset_summary.csv",
+  "novel_isoform_HT_vs_UT_summary.csv",
+  "novel_involved_genes_HT_vs_UT_overlap_summary.csv",
+  "novel_involved_genes_shared_HT_UT.csv",
+  "top_novel_switching_genes.csv",
+  "top_novel_switching_isoforms.csv",
+  "novel_isoform_class_code_counts.csv"
+)
+need_abs <- vapply(need, tab, character(1))
+miss <- need_abs[!file.exists(need_abs)]
+if (length(miss)) {
+  stop(
+    "Missing novel analysis outputs. Run: Rscript scripts/03_novel_isoform_analysis.R\n",
+    paste(miss, collapse = "\n")
+  )
+}
+
+ds <- read.csv(need_abs[[1]], stringsAsFactors = FALSE, check.names = FALSE)
+ref <- read.csv(need_abs[[2]], stringsAsFactors = FALSE, check.names = FALSE)
+ov <- read.csv(need_abs[[3]], stringsAsFactors = FALSE, check.names = FALSE)
+shared <- read.csv(need_abs[[4]], stringsAsFactors = FALSE, check.names = FALSE)
+top_genes <- read.csv(need_abs[[5]], stringsAsFactors = FALSE, check.names = FALSE)
+top_iso <- read.csv(need_abs[[6]], stringsAsFactors = FALSE, check.names = FALSE)
+cc <- read.csv(need_abs[[7]], stringsAsFactors = FALSE, check.names = FALSE)
+```
+
+## Dataset panel
+
+### Summary table
+
+```{r}
+knitr::kable(ds, digits = 2, caption = "Novel isoform summary by dataset")
+```
+
+### Overview figures
+
+```{r}
+#| fig-cap: "Fraction of isoforms tagged novel PacBio"
+knitr::include_graphics(fig("fig_novel_pct_isoforms_by_dataset.png"))
+```
+
+```{r}
+#| fig-cap: "Among switching isoforms, percent that are novel"
+knitr::include_graphics(fig("fig_novel_pct_among_switching.png"))
+```
+
+```{r}
+#| fig-cap: "Gene-level novel involvement fractions"
+knitr::include_graphics(fig("fig_novel_gene_involvement.png"))
+```
+
+```{r}
+#| fig-cap: "|dIF| for novel vs known isoforms"
+knitr::include_graphics(fig("fig_novel_vs_known_abs_dif.png"))
+```
+
+```{r}
+#| fig-cap: "|dIF| among switching isoforms: novel vs known"
+knitr::include_graphics(fig("fig_novel_vs_known_abs_dif_switching.png"))
+```
+
+```{r}
+#| fig-cap: "Novel isoforms by annotation class_code"
+knitr::include_graphics(fig("fig_novel_class_code_counts.png"))
+```
+
+## Top novel switching events
+
+### Top novel switching genes (top 15 per dataset)
+
+```{r}
+top_g_show <- top_genes |>
+  group_by(.data$dataset_label) |>
+  slice_head(n = 15) |>
+  ungroup() |>
+  select(
+    dataset_label, rank, gene_name, gene_id,
+    n_novel_switching_isoforms, max_abs_dif_novel_switching, min_novel_switch_q
+  )
+knitr::kable(top_g_show, digits = 4, caption = "Top novel-involved switching genes")
+```
+
+### Top novel switching isoforms (top 10 per dataset)
+
+```{r}
+top_i_show <- top_iso |>
+  group_by(.data$dataset_label) |>
+  slice_head(n = 10) |>
+  ungroup() |>
+  select(
+    dataset_label, gene_name, isoform_id, oId, class_code,
+    dIF, abs_dIF, isoform_switch_q
+  )
+knitr::kable(top_i_show, digits = 4, caption = "Top novel switching isoforms")
+```
+
+## HT vs UT contrast panel
+
+This panel aggregates datasets by `reference_transcriptome` (HT vs UT) and compares novelty burden, then asks which **gene symbols** with novel involvement appear in both references.
+
+### Aggregated HT vs UT rates
+
+```{r}
+knitr::kable(ref, digits = 2, caption = "HT vs UT novelty summary")
+```
+
+```{r}
+#| fig-cap: "HT vs UT percent novel isoforms"
+knitr::include_graphics(fig("fig_novel_HT_vs_UT_pct_isoforms.png"))
+```
+
+```{r}
+#| fig-cap: "HT vs UT percent novel among switching isoforms"
+knitr::include_graphics(fig("fig_novel_HT_vs_UT_pct_among_switching.png"))
+```
+
+### Novel-involved gene-symbol overlap
+
+```{r}
+knitr::kable(ov, digits = 0, caption = "Overlap of novel-involved gene symbols (HT vs UT)")
+```
+
+```{r}
+#| fig-cap: "Shared vs reference-specific novel-involved genes"
+knitr::include_graphics(fig("fig_novel_HT_vs_UT_gene_overlap.png"))
+```
+
+### Shared novel-involved genes (top by HT effect size)
+
+```{r}
+shared_show <- shared |>
+  arrange(desc(.data$max_abs_dif_novel_switching_HT), desc(.data$max_abs_dif_novel_switching_UT)) |>
+  head(40)
+knitr::kable(
+  shared_show,
+  digits = 4,
+  caption = "Shared novel-involved gene symbols across HT and UT (first 40)"
+)
+```
+
+## Notes
+
+- Overlap uses **gene symbols**, because `XLOC_*` / ISA gene IDs are transcriptome-specific.
+- “Novel involved” means at least one significant switching isoform is tagged PacBio novel under config q / |dIF| cutoffs.
+- Rebuild with:
+
+```bash
+Rscript scripts/03_novel_isoform_analysis.R
+quarto render reports/novel_isoform_analysis.qmd
+```
