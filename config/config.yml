@@ -65,5 +65,6 @@ novel:
 significance:
   isoform_q: 0.05
   gene_q: 0.05
-  # Optional minimum |dIF| to count as a "strong" switch (0 = not required)
-  min_abs_dif: 0.0
+  # Minimum |dIF| after q-filtering. 0.15 prioritizes fraction changes
+  # more likely to matter functionally (sensitivity scan supported 0.15-0.20).
+  min_abs_dif: 0.15

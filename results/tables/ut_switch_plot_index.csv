@@ -5,18 +5,18 @@
 "NCOA7","Shared (T and U)","U_UT","switch_U_Shared_T_and_U__02_NCOA7.png",TRUE
 "IL23A","Shared (T and U)","T_UT","switch_T_Shared_T_and_U__03_IL23A.png",TRUE
 "IL23A","Shared (T and U)","U_UT","switch_U_Shared_T_and_U__03_IL23A.png",TRUE
-"RBKS","Shared (T and U)","T_UT","switch_T_Shared_T_and_U__04_RBKS.png",TRUE
-"RBKS","Shared (T and U)","U_UT","switch_U_Shared_T_and_U__04_RBKS.png",TRUE
-"TNFSF4","Shared (T and U)","T_UT","switch_T_Shared_T_and_U__05_TNFSF4.png",TRUE
-"TNFSF4","Shared (T and U)","U_UT","switch_U_Shared_T_and_U__05_TNFSF4.png",TRUE
-"KDM6B","Shared (T and U)","T_UT","switch_T_Shared_T_and_U__06_KDM6B.png",TRUE
-"KDM6B","Shared (T and U)","U_UT","switch_U_Shared_T_and_U__06_KDM6B.png",TRUE
+"TNFSF4","Shared (T and U)","T_UT","switch_T_Shared_T_and_U__04_TNFSF4.png",TRUE
+"TNFSF4","Shared (T and U)","U_UT","switch_U_Shared_T_and_U__04_TNFSF4.png",TRUE
+"KDM6B","Shared (T and U)","T_UT","switch_T_Shared_T_and_U__05_KDM6B.png",TRUE
+"KDM6B","Shared (T and U)","U_UT","switch_U_Shared_T_and_U__05_KDM6B.png",TRUE
+"MREG","Shared (T and U)","T_UT","switch_T_Shared_T_and_U__06_MREG.png",TRUE
+"MREG","Shared (T and U)","U_UT","switch_U_Shared_T_and_U__06_MREG.png",TRUE
 "PGM5","T-only","T_UT","switch_T_T_only_07_PGM5.png",TRUE
 "ZNF18","T-only","T_UT","switch_T_T_only_08_ZNF18.png",TRUE
 "SYTL4","T-only","T_UT","switch_T_T_only_09_SYTL4.png",TRUE
 "PRKAG2-AS1","T-only","T_UT","switch_T_T_only_10_PRKAG2_AS1.png",TRUE
-"LINGO1","T-only","T_UT","switch_T_T_only_11_LINGO1.png",TRUE
-"CD86","T-only","T_UT","switch_T_T_only_12_CD86.png",TRUE
+"RBKS","T-only","T_UT","switch_T_T_only_11_RBKS.png",TRUE
+"LINGO1","T-only","T_UT","switch_T_T_only_12_LINGO1.png",TRUE
 "CCDC153","U-only","U_UT","switch_U_U_only_13_CCDC153.png",TRUE
 "FSTL3","U-only","U_UT","switch_U_U_only_14_FSTL3.png",TRUE
 "TAF12-DT","U-only","U_UT","switch_U_U_only_15_TAF12_DT.png",TRUE

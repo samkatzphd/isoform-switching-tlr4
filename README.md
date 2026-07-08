@@ -87,7 +87,7 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
 
 **Gene table columns** (typical): `gene_id`, `gene_name`, `n_isoforms`, `n_switching_isoforms`, `min_isoform_switch_q`, `min_gene_switch_q`, `max_abs_dif`, `novel_involved`.
 
-*Switching* is defined in helpers as: isoform q and gene q (if present) below the configured FDR, and an optional `min_abs_dif` on |dIF| when `dIF` is available.
+*Switching* is defined in helpers as: isoform q and gene q (if present) below the configured FDR, **and** `|dIF| >= config$significance$min_abs_dif` (currently **0.15** after a sensitivity scan; values of 0.15–0.20 keep larger, more functionally plausible fraction changes).
 
 ## Novel isoforms (PacBio)
 
