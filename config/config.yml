@@ -2,7 +2,7 @@
 # Project root: /Users/samkatz/projects/isoform-switch-pipeline
 # Set ISOFORM_PROJECT_ROOT if you run scripts from outside the project tree.
 
-version: 2
+version: 3
 
 paths:
   processed_dir: "data/processed"
@@ -12,12 +12,17 @@ paths:
 
 # Explicit datasets so both reference transcriptomes are represented cleanly.
 # Each dataset maps one ISA object to its matching final annotation (GFF3).
+#
+# object_name is pinned: each .Rdata holds 13 objects (isa_list, args,
+# genome_wide_splicing, top_gene_switches, ...). With object_name null the loader
+# auto-picks the first list/data.frame it finds, so which object gets analysed
+# depended on storage order inside the file.
 datasets:
   T_HT:
     label: "T_HT_anchor"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/T_minus-T_plus_2024-Dec-18/T_minus-T_plus_IsoformSwitchAnalyzeR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/H_T/H_T.gff3"
-    object_name: null
+    object_name: "isa_list"
     condition: "T"
     reference_transcriptome: "HT"
 
@@ -25,7 +30,7 @@ datasets:
     label: "H_HT_supplementary"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/H_minus-H_plus_2024-Dec-18/H_minus-H_plus_IsoformSwitchAnalyzeR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/H_T/H_T.gff3"
-    object_name: null
+    object_name: "isa_list"
     condition: "H"
     reference_transcriptome: "HT"
 
@@ -33,7 +38,7 @@ datasets:
     label: "U_UT"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/U-T_Comparisons/U_minus-U_plus_2025-Feb-11/U_minus-U_plus_IsoformSwitchAnalyzeR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/U_T/U_T.gff3"
-    object_name: null
+    object_name: "isa_list"
     condition: "U"
     reference_transcriptome: "UT"
 
@@ -41,7 +46,7 @@ datasets:
     label: "T_UT"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/U-T_Comparisons/T_minus-T_plus_2025-Feb-11/T_minus-T_plus_IsoformSwitchAnalyzeR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/U_T/U_T.gff3"
-    object_name: null
+    object_name: "isa_list"
     condition: "T"
     reference_transcriptome: "UT"
 
@@ -69,3 +74,26 @@ significance:
   # Minimum |dIF| after q-filtering. 0.15 prioritizes fraction changes
   # more likely to matter functionally (sensitivity scan supported 0.15-0.20).
   min_abs_dif: 0.15
+  # TRUE: an isoform with a missing/non-finite dIF or gene q FAILS the filter.
+  # FALSE restores the original behaviour, where such rows passed on the isoform
+  # q alone -- i.e. could be called switching with no measured effect size.
+  # No NAs exist in the current inputs, so this changes nothing today.
+  require_finite_dif: true
+
+# Analysis knobs that used to be hard-coded inside the scripts.
+analysis:
+  top_n_genes: 30            # rows in top_switching_genes_* tables (03, 04, 06)
+  plot_top_n: 30             # switchPlots drawn per HT dataset (06)
+  gene_panels_per_class: 12  # gene explorer panels per overlap class (04)
+  switch_plots_per_class: 6  # ISA switchPlots per overlap class (04)
+  explorer_max_isoforms: 12  # isoforms shown per gene explorer panel (04)
+  threshold_scan: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]  # grid for 00
+
+# Output policy. Every table is written as .rds; the .csv twin is for spreadsheets.
+output:
+  csv_twin: true
+  csv_twin_max_rows: 20000
+  # Wide isoform-level tables (isoformFeatures_*, *_isoform_overlap_*_all) get .rds
+  # only. Their CSV twins were duplicating megabytes into git on every regeneration
+  # and nothing reads them -- reports read the summary tables.
+  csv_twin_isoform_level: false

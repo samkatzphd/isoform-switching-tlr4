@@ -268,87 +268,293 @@ tag_novel_isoforms <- function(
   if (is.null(x) || (length(x) == 0L)) y else x
 }
 
-# ---- Gene-level summary from isoform tibble ------------------------------------------------
+# ---- Small shared utilities -----------------------------------------------------------
 
-#' @description
-#' One row per gene. A *switching* isoform passes isoform q, gene q (if present), and
-#' optional |dIF| cutoffs. *novel_involved* is TRUE if any switching isoform is
-#' flagged PacBio-novel.
-summarize_genes_from_isoform_table <- function(iso, cfg) {
-  if (!tibble::is_tibble(iso) && !is.data.frame(iso)) {
-    stop("summarize_genes_from_isoform_table: `iso` must be a tibble or data frame.")
+#' Filesystem-safe token (used for dataset labels and gene stubs in filenames)
+sanitize <- function(x) gsub("[^A-Za-z0-9_]+", "_", as.character(x), perl = TRUE)
+
+#' min() that returns NA rather than Inf on an all-NA/empty vector
+min_finite <- function(v) {
+  if (!length(v)) {
+    return(NA_real_)
   }
+  m <- suppressWarnings(min(v, na.rm = TRUE))
+  if (is.infinite(m)) NA_real_ else m
+}
+
+#' max(|v|) that returns NA rather than -Inf on an all-NA/empty vector
+max_abs_finite <- function(v) {
+  w <- abs(as.numeric(v))
+  w <- w[is.finite(w)]
+  if (!length(w)) NA_real_ else max(w)
+}
+
+#' Read an analysis knob from config$analysis, falling back to `default`
+analysis_param <- function(cfg, name, default) {
+  v <- (cfg$analysis %||% list())[[name]]
+  if (is.null(v) || (is.character(v) && !nzchar(v))) default else v
+}
+
+# ---- Gene symbol handling -------------------------------------------------------------
+# Reference transcriptomes assign their own XLOC_* gene ids, and some GFF rows carry
+# ENSG/ENST placeholders in gene_name. A "real" symbol is neither. Cross-dataset joins
+# use symbols (ids are transcriptome-specific), so this rule must be identical
+# everywhere -- it previously differed between scripts 03 and 04/06.
+
+is_real_gene_symbol <- function(x) {
+  x <- as.character(x)
+  !is.na(x) & nzchar(x) & !grepl("^(XLOC_|ENS[GTFP]\\d)", x, perl = TRUE)
+}
+
+#' Pick one representative symbol when isoforms of a gene_id disagree
+pick_gene_symbol <- function(names) {
+  names <- unique(as.character(names))
+  names <- names[!is.na(names) & nzchar(names)]
+  if (!length(names)) {
+    return(NA_character_)
+  }
+  good <- names[is_real_gene_symbol(names)]
+  if (length(good)) good[[1L]] else names[[1L]]
+}
+
+#' Force one gene_name per gene_id.
+#'
+#' Without this, `group_by(gene_id, gene_name)` splits a gene across several rows
+#' whenever its isoforms disagree on the symbol (11-18% of gene_ids in this project),
+#' which inflates gene counts and makes any later join on gene_id fan out.
+collapse_gene_symbols <- function(iso) {
   iso <- tibble::as_tibble(iso, .name_repair = "unique")
   if (!"gene_id" %in% names(iso)) {
-    stop("Column 'gene_id' not found in isoform table.")
+    stop("collapse_gene_symbols: 'gene_id' column required.")
   }
+  if (!"gene_name" %in% names(iso)) {
+    iso$gene_name <- NA_character_
+    return(iso)
+  }
+  iso |>
+    dplyr::group_by(.data$gene_id) |>
+    dplyr::mutate(gene_name = pick_gene_symbol(.data$gene_name)) |>
+    dplyr::ungroup()
+}
+
+# ---- Canonical switching rule ---------------------------------------------------------
+
+#' @description
+#' Score isoforms against the config significance rule. This is the single definition
+#' of "switching" for the whole pipeline; scripts 02/03/04/06 all call it rather than
+#' re-implementing the comparison (they used to, and had drifted apart).
+#'
+#' An isoform is *switching* when isoform q < `isoform_q`, gene q < `gene_q` (only
+#' applied when the column exists), and `|dIF| >= min_abs_dif`.
+#'
+#' NA handling: with `significance.require_finite_dif: true` (the default) an isoform
+#' with a missing or non-finite dIF or gene q *fails* the filter. The original code
+#' let those rows through, so an isoform with no measured effect size could be called
+#' switching on the q-value alone. Set the flag to false to restore the old behaviour.
+#'
+#' @return the input tibble plus q_i, q_g, dIF_n, abs_dIF, is_novel, is_switching
+score_isoforms <- function(iso, cfg, dataset_key = NA_character_,
+                           dataset_label = NA_character_, collapse_symbols = TRUE) {
+  z <- tibble::as_tibble(iso, .name_repair = "unique")
+  if (!all(c("gene_id", "isoform_id") %in% names(z))) {
+    stop("score_isoforms: need gene_id and isoform_id (dataset: ", dataset_key, ")")
+  }
+  has_iso_q <- "isoform_switch_q_value" %in% names(z)
+  has_gene_q <- "gene_switch_q_value" %in% names(z)
+  if (!has_iso_q && !has_gene_q) {
+    stop(
+      "score_isoforms: need isoform_switch_q_value or gene_switch_q_value (dataset: ",
+      dataset_key, ")"
+    )
+  }
+  for (col in c("gene_name", "oId", "class_code", "cmp_ref")) {
+    if (!col %in% names(z)) z[[col]] <- NA_character_
+  }
+  if (!"dIF" %in% names(z)) z$dIF <- NA_real_
+  if (!"is_novel_pacbio" %in% names(z)) z$is_novel_pacbio <- NA
+
+  if (isTRUE(collapse_symbols)) {
+    z <- collapse_gene_symbols(z)
+  }
+
   sig <- cfg$significance
   if (is.null(sig)) {
-    stop("config must define `significance` (e.g. isoform_q, gene_q).")
+    stop("config must define `significance` (isoform_q, gene_q, min_abs_dif).")
   }
   i_q <- as.numeric(sig$isoform_q %||% 0.05)
   g_q <- as.numeric(sig$gene_q %||% 0.05)
   m_dif <- as.numeric(sig$min_abs_dif %||% 0.0)
-  if (!"isoform_switch_q_value" %in% names(iso) && !"gene_switch_q_value" %in% names(iso)) {
-    stop("Need at least one of: isoform_switch_q_value, gene_switch_q_value.")
-  }
-  if (!"gene_name" %in% names(iso)) {
-    iso$gene_name <- NA_character_
-  }
-  if (!"dIF" %in% names(iso)) {
-    iso$dIF <- NA_real_
-  }
-  if (!"is_novel_pacbio" %in% names(iso)) {
-    iso$is_novel_pacbio <- NA
-  }
-  iso$q_i <- if ("isoform_switch_q_value" %in% names(iso)) {
-    as.numeric(iso$isoform_switch_q_value)
+  strict_na <- isTRUE(sig$require_finite_dif %||% TRUE)
+
+  z$q_i <- if (has_iso_q) as.numeric(z$isoform_switch_q_value) else as.numeric(z$gene_switch_q_value)
+  z$q_g <- if (has_gene_q) as.numeric(z$gene_switch_q_value) else NA_real_
+  z$dIF_n <- as.numeric(z$dIF)
+  z$abs_dIF <- abs(z$dIF_n)
+  z$is_novel <- z$is_novel_pacbio %in% TRUE
+
+  ok_i <- is.finite(z$q_i) & z$q_i < i_q
+  ok_g <- if (!has_gene_q) {
+    rep(TRUE, nrow(z))
+  } else if (strict_na) {
+    is.finite(z$q_g) & z$q_g < g_q
   } else {
-    as.numeric(iso$gene_switch_q_value)
+    is.na(z$q_g) | (is.finite(z$q_g) & z$q_g < g_q)
   }
-  iso$q_g <- if ("gene_switch_q_value" %in% names(iso)) {
-    as.numeric(iso$gene_switch_q_value)
+  ok_d <- if (strict_na) {
+    is.finite(z$dIF_n) & abs(z$dIF_n) >= m_dif
   } else {
-    as.numeric(NA)
+    !is.finite(z$dIF_n) | abs(z$dIF_n) >= m_dif
   }
-  iso$dIF_n <- as.numeric(iso$dIF)
-  ok_i <- is.finite(iso$q_i) & (iso$q_i < i_q)
-  ok_g <- is.na(iso$q_g) | (is.finite(iso$q_g) & (iso$q_g < g_q))
-  ok_d <- is.na(iso$dIF_n) | is.nan(iso$dIF_n) | (abs(iso$dIF_n) >= m_dif)
-  iso$is_switching <- ok_i & ok_g & ok_d
-  iso$is_switching <- replace(iso$is_switching, is.na(iso$is_switching), FALSE)
-  min_finite <- function(v) {
-    if (!length(v)) {
-      return(NA_real_)
-    }
-    m <- suppressWarnings(min(v, na.rm = TRUE))
-    if (is.infinite(m)) {
-      as.numeric(NA)
-    } else {
-      m
-    }
+
+  z$is_switching <- ok_i & ok_g & ok_d
+  z$is_switching <- replace(z$is_switching, is.na(z$is_switching), FALSE)
+  z$dataset_key <- dataset_key
+  z$dataset_label <- dataset_label
+  z
+}
+
+# ---- Gene-level summary from isoform tibble ------------------------------------------------
+
+#' @description
+#' One row per gene_id (guaranteed: symbols are collapsed first). *novel_involved* is
+#' TRUE if any switching isoform is flagged PacBio-novel.
+#'
+#' Two distinct effect-size columns are reported because conflating them is easy:
+#'   - `max_abs_dif_all_isoforms` -- max |dIF| over every isoform of the gene
+#'   - `max_abs_dif_switching`    -- max |dIF| over switching isoforms only (NA if none)
+#' The old single `max_abs_dif` column was the former while scripts 03/04/06 ranked on
+#' the latter under a near-identical name.
+summarize_genes_from_isoform_table <- function(iso, cfg) {
+  if (!tibble::is_tibble(iso) && !is.data.frame(iso)) {
+    stop("summarize_genes_from_isoform_table: `iso` must be a tibble or data frame.")
   }
-  max_abs_finite <- function(v) {
-    w <- abs(v)
-    w <- w[is.finite(w)]
-    if (!length(w)) {
-      as.numeric(NA)
-    } else {
-      max(w, na.rm = TRUE)
-    }
-  }
-  iso |>
+  z <- score_isoforms(iso, cfg)
+  z |>
     dplyr::group_by(.data$gene_id, .data$gene_name) |>
     dplyr::summarize(
       n_isoforms = dplyr::n(),
       n_switching_isoforms = sum(.data$is_switching, na.rm = TRUE),
+      n_novel_isoforms = sum(.data$is_novel, na.rm = TRUE),
       min_isoform_switch_q = min_finite(.data$q_i),
       min_gene_switch_q = min_finite(.data$q_g),
-      max_abs_dif = max_abs_finite(.data$dIF_n),
-      novel_involved = any(
-        .data$is_switching & (.data$is_novel_pacbio %in% TRUE),
-        na.rm = TRUE
-      ),
+      max_abs_dif_all_isoforms = max_abs_finite(.data$dIF_n),
+      max_abs_dif_switching = max_abs_finite(.data$dIF_n[.data$is_switching]),
+      novel_involved = any(.data$is_switching & .data$is_novel, na.rm = TRUE),
       .groups = "drop"
     )
+}
+
+# ---- Output helpers -------------------------------------------------------------------
+
+#' Write a table as .rds (always) and .csv (unless suppressed by config).
+#'
+#' `output.csv_twin: false` drops every CSV twin; `output.csv_twin_max_rows` drops it
+#' above a row count. Pass `csv = FALSE` at a call site for wide isoform-level tables,
+#' whose CSV twins were adding megabytes to git on every regeneration.
+write_table_pair <- function(x, dir, stem, cfg = NULL, csv = NULL, quiet = FALSE) {
+  rds <- file.path(dir, paste0(stem, ".rds"))
+  saveRDS(x, rds, compress = "xz")
+  out <- cfg$output %||% list()
+  want_csv <- isTRUE(out$csv_twin %||% TRUE)
+  if (!is.null(csv)) want_csv <- isTRUE(csv) && isTRUE(out$csv_twin %||% TRUE)
+  max_rows <- suppressWarnings(as.numeric(out$csv_twin_max_rows %||% Inf))
+  if (is.na(max_rows)) max_rows <- Inf
+  csv <- file.path(dir, paste0(stem, ".csv"))
+  if (want_csv && nrow(x) <= max_rows) {
+    utils::write.csv(x, csv, row.names = FALSE, fileEncoding = "UTF-8", na = "")
+    if (!quiet) message("Wrote: ", csv, " | ", basename(rds))
+  } else {
+    if (file.exists(csv)) unlink(csv)
+    if (!quiet) message("Wrote: ", rds, " (csv suppressed by config)")
+  }
+  invisible(rds)
+}
+
+# ---- Provenance -----------------------------------------------------------------------
+
+#' TRUE when every gene in the table already carries a significant gene-level q.
+#'
+#' IsoformSwitchAnalyzeR's `isoformSwitchTestDEXSeq(reduceToSwitchingGenes = TRUE)` (the
+#' default) drops non-switching genes before the object is saved. Downstream that makes
+#' "genes present" mean "genes already called significant", so overlap counts, novel
+#' fractions and any background-dependent test describe the subsetting rather than the
+#' biology. Detect it explicitly instead of assuming a full tested background.
+detect_isa_reduction <- function(iso, cfg) {
+  z <- tibble::as_tibble(iso, .name_repair = "unique")
+  g_q <- as.numeric((cfg$significance %||% list())$gene_q %||% 0.05)
+  n_genes <- length(unique(z$gene_id))
+  if (!"gene_switch_q_value" %in% names(z) || !n_genes) {
+    return(list(
+      n_genes = n_genes, n_genes_significant = NA_integer_,
+      pct_genes_significant = NA_real_, looks_reduced = NA
+    ))
+  }
+  sig_by_gene <- tapply(
+    as.numeric(z$gene_switch_q_value), z$gene_id,
+    function(v) any(is.finite(v) & v < g_q)
+  )
+  n_sig <- sum(sig_by_gene, na.rm = TRUE)
+  list(
+    n_genes = n_genes,
+    n_genes_significant = as.integer(n_sig),
+    pct_genes_significant = 100 * n_sig / n_genes,
+    looks_reduced = isTRUE(n_sig == n_genes)
+  )
+}
+
+git_sha <- function(root = find_project_root()) {
+  out <- tryCatch(
+    system2("git", c("-C", shQuote(root), "rev-parse", "HEAD"), stdout = TRUE, stderr = FALSE),
+    error = function(e) NA_character_, warning = function(w) NA_character_
+  )
+  if (!length(out) || !nzchar(out[[1L]])) NA_character_ else out[[1L]]
+}
+
+#' Record what produced the current contents of results/.
+#'
+#' The pipeline advertises reproducibility but previously recorded nothing about the
+#' code version, package versions or thresholds behind a given set of tables.
+write_run_manifest <- function(script, cfg, root, extra = list()) {
+  if (!requireNamespace("jsonlite", quietly = TRUE)) {
+    message("jsonlite not installed; skipping run manifest.")
+    return(invisible(NULL))
+  }
+  dir <- ensure_dir(resolve_path(
+    (cfg$paths %||% list())$results_tables %||% "results/tables",
+    root = root
+  ))
+  path <- file.path(dirname(dir), "run_manifest.json")
+  prev <- if (file.exists(path)) {
+    tryCatch(jsonlite::read_json(path, simplifyVector = TRUE), error = function(e) list())
+  } else {
+    list()
+  }
+  si <- utils::sessionInfo()
+  entry <- list(
+    script = script,
+    run_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z"),
+    git_sha = git_sha(root),
+    r_version = si$R.version$version.string,
+    platform = si$platform,
+    key_packages = vapply(
+      c("dplyr", "tibble", "ggplot2", "yaml", "IsoformSwitchAnalyzeR"),
+      function(p) {
+        v <- tryCatch(as.character(utils::packageVersion(p)), error = function(e) NA_character_)
+        if (is.na(v)) "not installed" else v
+      },
+      character(1)
+    ),
+    significance = cfg$significance,
+    analysis = cfg$analysis
+  )
+  for (nm in names(extra)) entry[[nm]] <- extra[[nm]]
+  runs <- prev$runs %||% list()
+  if (is.data.frame(runs)) runs <- split(runs, seq_len(nrow(runs)))
+  runs <- c(Filter(function(r) !identical(r$script, script), runs), list(entry))
+  jsonlite::write_json(
+    list(runs = unname(runs)), path,
+    auto_unbox = TRUE, pretty = TRUE, null = "null"
+  )
+  message("Run manifest: ", path)
+  invisible(path)
 }
