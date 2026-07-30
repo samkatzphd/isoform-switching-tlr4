@@ -48,7 +48,10 @@ gene_long <- lapply(gs, function(f) {
 gdf <- do.call(rbind, gene_long)
 gdf$novel_flag <- gdf$novel_involved %in% TRUE
 gdf$n_switching_isoforms <- as.numeric(gdf$n_switching_isoforms)
-gdf$max_abs_dif <- as.numeric(gdf$max_abs_dif)
+# Two distinct effect sizes since the 02 rename: the QC distribution below is over all
+# isoforms of each gene; ranking elsewhere uses the switching-only version.
+gdf$max_abs_dif_all_isoforms <- as.numeric(gdf$max_abs_dif_all_isoforms)
+gdf$max_abs_dif_switching <- as.numeric(gdf$max_abs_dif_switching)
 if (!"min_isoform_switch_q" %in% names(gdf)) {
   gdf$min_isoform_switch_q <- NA_real_
 } else {
@@ -85,13 +88,14 @@ ggplot2::ggsave(
 
 p_violin_dif <- ggplot2::ggplot(
   gdf,
-  ggplot2::aes(x = .data$._dataset, y = .data$max_abs_dif)
+  ggplot2::aes(x = .data$._dataset, y = .data$max_abs_dif_all_isoforms)
 ) +
   ggplot2::geom_violin(trim = TRUE, alpha = 0.5, fill = "grey80") +
   ggplot2::geom_boxplot(width = 0.15, outlier.alpha = 0.3) +
   ggplot2::labs(
-    title = "Distribution of max |dIF| per gene",
-    x = NULL, y = "max |dIF| (gene level)"
+    title = "Distribution of max |dIF| per gene (all isoforms)",
+    subtitle = "Genes shown are those retained in each ISA object (already switching-significant)",
+    x = NULL, y = "max |dIF| (gene level, all isoforms)"
   ) +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 35, hjust = 1))
 
@@ -190,4 +194,5 @@ if (length(iso_files) < 1L) {
   }
 }
 
+write_run_manifest("02c_qc_figures.R", cfg, root)
 message("02c_qc_figures.R: done — figures in: ", out_dir)

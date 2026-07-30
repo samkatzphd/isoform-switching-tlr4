@@ -43,7 +43,7 @@ sig <- cfg$significance %||% list()
 iso_q_cutoff <- as.numeric(sig$isoform_q %||% 0.05)
 gene_q_cutoff <- as.numeric(sig$gene_q %||% 0.05)
 min_abs_dif <- as.numeric(sig$min_abs_dif %||% 0.0)
-top_n <- 30L
+top_n <- as.integer(analysis_param(cfg, "top_n_genes", 30L))
 
 theme_set(
   theme_bw(base_size = 11) +
@@ -53,50 +53,11 @@ theme_set(
     )
 )
 
-sanitize <- function(x) gsub("[^A-Za-z0-9_]+", "_", x, perl = TRUE)
-
-min_finite <- function(v) {
-  if (!length(v)) return(NA_real_)
-  m <- suppressWarnings(min(v, na.rm = TRUE))
-  if (is.infinite(m)) NA_real_ else m
-}
-
-max_abs_finite <- function(v) {
-  w <- abs(v)
-  w <- w[is.finite(w)]
-  if (!length(w)) NA_real_ else max(w, na.rm = TRUE)
-}
-
-score_isoforms <- function(iso_tbl, dataset_label) {
-  z <- as_tibble(iso_tbl)
-  if (!"gene_id" %in% names(z) || !"isoform_id" %in% names(z)) {
-    stop("Isoform table must include gene_id and isoform_id for ", dataset_label)
-  }
-  if (!"gene_name" %in% names(z)) z$gene_name <- NA_character_
-  if (!"dIF" %in% names(z)) z$dIF <- NA_real_
-  if (!"is_novel_pacbio" %in% names(z)) z$is_novel_pacbio <- NA
-  if (!"class_code" %in% names(z)) z$class_code <- NA_character_
-  if (!"oId" %in% names(z)) z$oId <- NA_character_
-  if (!"cmp_ref" %in% names(z)) z$cmp_ref <- NA_character_
-
-  z$q_i <- if ("isoform_switch_q_value" %in% names(z)) {
-    as.numeric(z$isoform_switch_q_value)
-  } else if ("gene_switch_q_value" %in% names(z)) {
-    as.numeric(z$gene_switch_q_value)
-  } else {
-    stop("Need isoform_switch_q_value or gene_switch_q_value for ", dataset_label)
-  }
-  z$q_g <- if ("gene_switch_q_value" %in% names(z)) as.numeric(z$gene_switch_q_value) else NA_real_
-  z$dIF_n <- as.numeric(z$dIF)
-  z$abs_dIF <- abs(z$dIF_n)
-  z$is_novel <- z$is_novel_pacbio %in% TRUE
-  z$is_switching <- is.finite(z$q_i) & z$q_i < iso_q_cutoff &
-    (is.na(z$q_g) | (is.finite(z$q_g) & z$q_g < gene_q_cutoff)) &
-    (is.na(z$dIF_n) | abs(z$dIF_n) >= min_abs_dif)
-  z$is_switching <- replace(z$is_switching, is.na(z$is_switching), FALSE)
-  z$dataset_label <- dataset_label
-  z
-}
+# sanitize(), min_finite(), max_abs_finite(), score_isoforms(), is_real_gene_symbol()
+# and pick_gene_symbol() now come from utils/helper_functions.R. This script used to
+# carry its own copies; they had drifted from the versions in 04/06 (notably a weaker
+# gene-symbol rule that let ENSG identifiers through as symbols, and no symbol
+# collapsing, which split genes across rows).
 
 iso_files <- list.files(
   processed_dir,
@@ -117,7 +78,7 @@ top_gene_rows <- list()
 for (rds in iso_files) {
   label <- sub("^isoformFeatures_(.+)\\.rds$", "\\1", basename(rds), perl = TRUE, ignore.case = TRUE)
   message("[", label, "] Scoring isoforms ...")
-  iso <- score_isoforms(readRDS(rds), label)
+  iso <- score_isoforms(readRDS(rds), cfg, dataset_key = label, dataset_label = label)
   scored_list[[label]] <- iso
 
   n_iso <- nrow(iso)
@@ -217,12 +178,8 @@ top_novel_genes <- bind_rows(top_gene_rows)
 all_iso <- bind_rows(scored_list)
 
 # ---- Write tables ----
-write_out <- function(x, stem) {
-  csv <- file.path(results_tables, paste0(stem, ".csv"))
-  rds <- file.path(results_tables, paste0(stem, ".rds"))
-  utils::write.csv(x, csv, row.names = FALSE, fileEncoding = "UTF-8", na = "")
-  saveRDS(x, rds, compress = "xz")
-  message("Wrote: ", csv)
+write_out <- function(x, stem, csv = NULL) {
+  write_table_pair(x, results_tables, stem, cfg = cfg, csv = csv)
 }
 
 write_out(class_code_summary, "novel_isoform_class_code_counts")
@@ -398,10 +355,12 @@ gene_novel_ref <- gene_novel |>
       function(x) label_to_ref[[x]] %||% "unknown",
       character(1)
     ),
+    # Shared symbol rule: this used to filter only ^XLOC_, so ENSG/ENST identifiers
+    # leaked into the HT-vs-UT "gene symbol" overlap as if they were symbols.
     gene_name_clean = ifelse(
-      is.na(.data$gene_name) | !nzchar(as.character(.data$gene_name)) | grepl("^XLOC_", .data$gene_name),
-      NA_character_,
-      as.character(.data$gene_name)
+      is_real_gene_symbol(.data$gene_name),
+      as.character(.data$gene_name),
+      NA_character_
     )
   ) |>
   filter(!is.na(.data$gene_name_clean), .data$novel_involved)
@@ -417,7 +376,15 @@ gene_overlap_summary <- tibble(
   n_novel_involved_genes_UT = length(ut_novel_genes),
   n_shared_gene_names = length(shared_novel_genes),
   n_HT_only = length(ht_only_novel),
-  n_UT_only = length(ut_only_novel)
+  n_UT_only = length(ut_only_novel),
+  # Both inputs were reduced to significant switching genes before saving, so
+  # "HT only" largely means "absent from the UT objects", not "tested in UT and not
+  # novel-involved". Symbol overlap here is bounded by object retention.
+  n_symbols_present_in_both_references = length(intersect(
+    unique(gene_novel_ref$gene_name_clean[gene_novel_ref$reference_transcriptome == "HT"]),
+    unique(gene_novel_ref$gene_name_clean[gene_novel_ref$reference_transcriptome == "UT"])
+  )),
+  overlap_is_bounded_by_object_retention = TRUE
 )
 write_out(gene_overlap_summary, "novel_involved_genes_HT_vs_UT_overlap_summary")
 
@@ -490,6 +457,7 @@ p_ov <- ggplot(overlap_bar, aes(x = .data$category, y = .data$n, fill = .data$ca
   )
 ggsave(file.path(fig_dir, "fig_novel_HT_vs_UT_gene_overlap.png"), p_ov, width = 6.5, height = 4.2, dpi = 200)
 
+write_run_manifest("03_novel_isoform_analysis.R", cfg, root)
 message("03_novel_isoform_analysis.R: done")
 message("  Tables: ", results_tables)
 message("  Figures: ", fig_dir)

@@ -49,13 +49,10 @@ for (rds in fl) {
   message("Summarizing genes: ", rds, "  [", key, "] ...")
   iso <- readRDS(rds)
   gtab <- summarize_genes_from_isoform_table(iso, cfg)
-  out_b <- file.path(
-    out_tab, paste0("gene_level_summary_", gsub("[^A-Za-z0-9_]+", "_", key, perl = TRUE))
-  )
-  rds_name <- paste0(out_b, ".rds")
-  csv_name <- paste0(out_b, ".csv")
-  saveRDS(gtab, rds_name, compress = "xz")
-  utils::write.csv(gtab, file = csv_name, row.names = FALSE, fileEncoding = "UTF-8", na = "")
-  message("  Wrote: ", rds_name, " | ", csv_name)
+  # summarize_genes_from_isoform_table() collapses gene symbols first, so this must
+  # hold. It did not before: disagreeing gene_name values split a gene across rows.
+  stopifnot(nrow(gtab) == length(unique(gtab$gene_id)))
+  write_table_pair(gtab, out_tab, paste0("gene_level_summary_", sanitize(key)), cfg = cfg)
 }
+write_run_manifest("02_gene_level_summary.R", cfg, root)
 message("02_gene_level_summary.R: done")
