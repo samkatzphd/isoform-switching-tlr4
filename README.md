@@ -4,6 +4,8 @@ Reproducible, modular R workflow for **isoform-level switching** results from [I
 
 **Remote:** [samkatzphd/isoform-switching-tlr4](https://github.com/samkatzphd/isoform-switching-tlr4)
 
+**Local path:** `/Users/samkatz/projects/isoform-switch-pipeline`
+
 ## Biological framing
 
 Two reference transcriptomes and four IsoformSwitchAnalyzeR (ISA) objects:
@@ -117,10 +119,10 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 
 ## Quick start
 
-1. **Clone** and use the project root as the working directory, or set:
+1. **Clone / open** the project at `/Users/samkatz/projects/isoform-switch-pipeline` and use that as the working directory, or set:
 
    ```bash
-   export ISOFORM_PROJECT_ROOT="/absolute/path/to/isoform-switch-pipeline"
+   export ISOFORM_PROJECT_ROOT="/Users/samkatz/projects/isoform-switch-pipeline"
    ```
 
 2. **Edit** `config/config.yml` — `datasets:` paths (`isa_path`, `annotation_path`), and optionally `significance.min_abs_dif`.

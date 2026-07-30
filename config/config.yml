@@ -1,4 +1,5 @@
 # Isoform switching pipeline - paths and analysis parameters
+# Project root: /Users/samkatz/projects/isoform-switch-pipeline
 # Set ISOFORM_PROJECT_ROOT if you run scripts from outside the project tree.
 
 version: 2
