@@ -299,3 +299,20 @@ Checks worth repeating:
   (`02`/`02b` assert this).
 - `ht_switch_analysis.html` should now contain embedded images (it had none).
 - `ut_T_vs_U_stats_summary.csv` should contain no `fisher_*` columns.
+
+### Verified after full regeneration (2026-07-30)
+
+| check | result |
+|---|---|
+| Embedded images per report | overview 5, novel 9, **HT 24 (was 0)**, UT 36 |
+| HT switchPlots | 58 real (2400×1500), 2 fallback — unchanged, so the device fix cost nothing |
+| `fisher_*` columns in stats summary | 0 |
+| Gene summary rows == genes | asserted in `02`/`02b`, passes for all four datasets |
+| Stale `ut_T_vs_U_fisher_gene_contingency.*` | deleted from the working tree and from git |
+
+The one-way concordance that replaced the removed test is also the more informative
+result. Of 35 isoforms significant in T and retained in U, **94% change in the same
+direction** in U and 66% would pass the |dIF| threshold there; of 28 significant in U,
+89% agree in direction and 79% would pass. Directional agreement is high — but note the
+small n, which is itself a consequence of item 0: only 25 symbols survive in both
+objects, so this is all the overlap that exists to measure.

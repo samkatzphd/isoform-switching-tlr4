@@ -1,0 +1,2 @@
+"symbols_retained_in_T_object","symbols_retained_in_U_object","symbols_retained_in_both","of_those_switching_in_T_only","of_those_switching_in_U_only","of_those_switching_in_both","of_those_switching_in_neither","note"
+239,118,25,3,1,18,3,"Both objects were reduced to significant switching genes before saving; 'retained' is not 'tested'. Gene overlap cannot exceed symbols_retained_in_both."
