@@ -14,7 +14,7 @@ format:
 
 This report summarizes **post-IsoformSwitchAnalyzeR** outputs: four datasets (HT and UT reference transcriptomes), gene-level collapse, and QC figures. Regenerate after running the pipeline and figure script from the project root.
 
-**Pipeline order**
+**Pipeline order** (this report covers through QC; see README for `03`–`06`)
 
 1. `Rscript scripts/01_load_data.R`
 2. `Rscript scripts/02_gene_level_summary.R`
@@ -53,16 +53,18 @@ library(knitr)
   }
   stop("Could not find config/config.yml (run `quarto render` from the repo, or set working directory to project/reports as usual).")
 }
-knitr::opts_knit$set(root.dir = .infer_project_root())
+PROJECT_ROOT <- .infer_project_root()
+# Prefer absolute paths (do not set knitr root.dir — it breaks include_graphics + embed-resources).
+proj_path <- function(...) normalizePath(file.path(PROJECT_ROOT, ...), mustWork = FALSE)
 ```
 
 ## Gene-level snapshot
 
 ```{r}
 #| label: tbl-qc
-qc_path <- "results/tables/qc_snapshot_gene_level.csv"
+qc_path <- proj_path("results/tables/qc_snapshot_gene_level.csv")
 if (!file.exists(qc_path)) {
-  stop("Run scripts/02b_qc_snapshot.R first; missing: ", normalizePath(qc_path, mustWork = FALSE))
+  stop("Run scripts/02b_qc_snapshot.R first; missing: ", qc_path)
 }
 qc <- read.csv(qc_path, check.names = FALSE, stringsAsFactors = FALSE)
 knitr::kable(qc, digits = 2, caption = "Per-dataset gene counts and % with novel (PacBio) involvement")
@@ -77,19 +79,19 @@ All figures are written to `results/figures/` by `02c_qc_figures.R` and included
 ```{r}
 #| label: fig-gene-qc
 #| fig-cap: "Stacked bar: fraction of genes with any switching involving a novel PacBio isoform"
-knitr::include_graphics("results/figures/fig_qc_novel_fraction_stacked.png")
+knitr::include_graphics(proj_path("results/figures/fig_qc_novel_fraction_stacked.png"))
 ```
 
 ```{r}
 #| label: fig-max-dif
 #| fig-cap: "Max |dIF| per gene (violin + box)"
-knitr::include_graphics("results/figures/fig_qc_gene_max_abs_dif_violin.png")
+knitr::include_graphics(proj_path("results/figures/fig_qc_gene_max_abs_dif_violin.png"))
 ```
 
 ```{r}
 #| label: fig-n-switch
 #| fig-cap: "Number of switching isoforms per gene"
-knitr::include_graphics("results/figures/fig_qc_gene_n_switching_isoforms_violin.png")
+knitr::include_graphics(proj_path("results/figures/fig_qc_gene_n_switching_isoforms_violin.png"))
 ```
 
 ### Isoform-level
@@ -97,8 +99,9 @@ knitr::include_graphics("results/figures/fig_qc_gene_n_switching_isoforms_violin
 ```{r}
 #| label: fig-hist-dif
 #| fig-cap: "Distribution of |dIF| at isoform level (facets)"
-if (file.exists("results/figures/fig_qc_isoform_abs_dif_histogram.png")) {
-  knitr::include_graphics("results/figures/fig_qc_isoform_abs_dif_histogram.png")
+p <- proj_path("results/figures/fig_qc_isoform_abs_dif_histogram.png")
+if (file.exists(p)) {
+  knitr::include_graphics(p)
 } else {
   knitr::asis_output("_Isoform figures not found — run 01 and 02c._\n\n")
 }
@@ -107,8 +110,9 @@ if (file.exists("results/figures/fig_qc_isoform_abs_dif_histogram.png")) {
 ```{r}
 #| label: fig-volcano
 #| fig-cap: "Volcano: dIF vs -log10(isoform q) (facets; novel PB highlighted)"
-if (file.exists("results/figures/fig_qc_isoform_volcano_by_dataset.png")) {
-  knitr::include_graphics("results/figures/fig_qc_isoform_volcano_by_dataset.png")
+p <- proj_path("results/figures/fig_qc_isoform_volcano_by_dataset.png")
+if (file.exists(p)) {
+  knitr::include_graphics(p)
 } else {
   knitr::asis_output("_Isoform figures not found — run 01 and 02c._\n\n")
 }
@@ -118,7 +122,7 @@ if (file.exists("results/figures/fig_qc_isoform_volcano_by_dataset.png")) {
 
 ```{r}
 #| label: tbl-top10
-top_path <- "results/tables/qc_top10_genes_per_dataset.csv"
+top_path <- proj_path("results/tables/qc_top10_genes_per_dataset.csv")
 if (file.exists(top_path)) {
   top10 <- read.csv(top_path, check.names = FALSE, stringsAsFactors = FALSE)
   knitr::kable(top10, caption = "Top 10 genes per dataset (heuristic: n switching isoforms, then max |dIF|)")
