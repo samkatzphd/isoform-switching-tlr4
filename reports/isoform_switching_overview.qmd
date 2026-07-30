@@ -39,34 +39,45 @@ The `setup` chunk locates the project by walking up until it finds `config/confi
 #| label: setup
 #| message: false
 library(knitr)
-.infer_project_root <- function() {
-  p <- getwd()
-  for (i in 1:20) {
-    if (file.exists(file.path(p, "config", "config.yml"))) {
-      return(normalizePath(p, mustWork = TRUE))
-    }
-    p2 <- dirname(p)
-    if (identical(p, p2)) {
-      break
-    }
-    p <- p2
-  }
-  stop("Could not find config/config.yml (run `quarto render` from the repo, or set working directory to project/reports as usual).")
+source("_setup.R")
+```
+
+```{r}
+#| output: asis
+cat(reduction_caveat())
+```
+
+## Input provenance
+
+Recorded by `01_load_data.R` on every run, alongside `results/run_manifest.json`
+(git SHA, R and package versions, thresholds in force).
+
+```{r}
+#| label: tbl-reduction
+red_path <- tab("input_object_reduction_check.csv")
+if (file.exists(red_path)) {
+  knitr::kable(
+    read_tab("input_object_reduction_check.csv"),
+    digits = 2,
+    caption = "Per-dataset input check: are the saved ISA objects already reduced to switching genes?"
+  )
+} else {
+  knitr::asis_output("_Run `Rscript scripts/01_load_data.R` to generate the input check._")
 }
-PROJECT_ROOT <- .infer_project_root()
-# Prefer absolute paths (do not set knitr root.dir — it breaks include_graphics + embed-resources).
-proj_path <- function(...) normalizePath(file.path(PROJECT_ROOT, ...), mustWork = FALSE)
 ```
 
 ## Gene-level snapshot
 
+One row per gene: `02_gene_level_summary.R` collapses disagreeing gene symbols before
+grouping, so these are gene counts rather than row counts.
+
 ```{r}
 #| label: tbl-qc
-qc_path <- proj_path("results/tables/qc_snapshot_gene_level.csv")
-if (!file.exists(qc_path)) {
-  stop("Run scripts/02b_qc_snapshot.R first; missing: ", qc_path)
-}
-qc <- read.csv(qc_path, check.names = FALSE, stringsAsFactors = FALSE)
+require_outputs(
+  "qc_snapshot_gene_level.csv",
+  "Run scripts/02b_qc_snapshot.R first."
+)
+qc <- read_tab("qc_snapshot_gene_level.csv")
 knitr::kable(qc, digits = 2, caption = "Per-dataset gene counts and % with novel (PacBio) involvement")
 ```
 

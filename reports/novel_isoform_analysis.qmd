@@ -25,10 +25,13 @@ Novel isoforms are tagged when `oId` starts with the configured prefix (`PB` by 
 library(knitr)
 library(dplyr)
 
-# Stay in reports/ so graphic paths ../results/... resolve for pandoc embed-resources.
-PROJECT_ROOT <- normalizePath("..", mustWork = TRUE)
-tab <- function(...) file.path(PROJECT_ROOT, "results", "tables", ...)
-fig <- function(...) file.path("..", "results", "figures", "novel", ...)
+source("_setup.R")
+fig <- make_fig("novel")
+```
+
+```{r}
+#| output: asis
+cat(reduction_caveat())
 ```
 
 ```{r}

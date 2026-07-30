@@ -14,4 +14,5 @@ Suggests:
     clusterProfiler,
     ggplot2,
     scales,
-    readr
+    readr,
+    jsonlite

@@ -23,3 +23,6 @@ __pycache__/
 
 # Quarto
 *_files/
+
+/.quarto/
+**/*.quarto_ipynb

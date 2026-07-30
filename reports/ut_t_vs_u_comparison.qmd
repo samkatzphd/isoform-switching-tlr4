@@ -31,61 +31,90 @@ This report:
 library(knitr)
 library(dplyr)
 
-PROJECT_ROOT <- normalizePath("..", mustWork = TRUE)
-tab <- function(...) file.path(PROJECT_ROOT, "results", "tables", ...)
-fig <- function(...) file.path("..", "results", "figures", "ut_t_vs_u", ...)
-gene_fig <- function(...) file.path("..", "results", "figures", "ut_t_vs_u", "gene_explorer", ...)
-switch_fig <- function(...) file.path("..", "results", "figures", "ut_t_vs_u", "switch_plots", ...)
+source("_setup.R")
+fig <- make_fig("ut_t_vs_u")
+gene_fig <- make_fig(file.path("ut_t_vs_u", "gene_explorer"))
+switch_fig <- make_fig(file.path("ut_t_vs_u", "switch_plots"))
+```
+
+```{r}
+#| output: asis
+cat(reduction_caveat())
 ```
 
 ```{r}
 #| label: load
-need <- c(
-  "ut_T_vs_U_stats_summary.csv",
-  "ut_gene_overlap_T_vs_U_summary.csv",
-  "ut_gene_overlap_T_vs_U.csv",
-  "ut_isoform_overlap_T_vs_U_significant.csv",
-  "ut_T_vs_U_fisher_gene_contingency.csv",
-  "top_switching_genes_T_UT.csv",
-  "top_switching_genes_U_UT.csv",
-  "ut_gene_explorer_index.csv",
-  "ut_switch_plot_index.csv"
+abs_need <- require_outputs(
+  c(
+    "ut_T_vs_U_stats_summary.csv",
+    "ut_gene_overlap_T_vs_U_summary.csv",
+    "ut_gene_overlap_T_vs_U.csv",
+    "ut_isoform_overlap_T_vs_U_significant.csv",
+    "ut_T_vs_U_retention_accounting.csv",
+    "ut_T_vs_U_retention_contingency.csv",
+    "ut_T_vs_U_one_way_concordance.csv",
+    "top_switching_genes_T_UT.csv",
+    "top_switching_genes_U_UT.csv",
+    "ut_gene_explorer_index.csv",
+    "ut_switch_plot_index.csv"
+  ),
+  "Missing UT comparison outputs. Run: Rscript scripts/04_comparison_T_vs_U.R"
 )
-abs_need <- vapply(need, tab, character(1))
-miss <- abs_need[!file.exists(abs_need)]
-if (length(miss)) {
-  stop("Missing UT comparison outputs. Run: Rscript scripts/04_comparison_T_vs_U.R\n", paste(miss, collapse = "\n"))
-}
 
-stats <- read.csv(abs_need[[1]], stringsAsFactors = FALSE, check.names = FALSE)
-gsum <- read.csv(abs_need[[2]], stringsAsFactors = FALSE, check.names = FALSE)
-gover <- read.csv(abs_need[[3]], stringsAsFactors = FALSE, check.names = FALSE)
-isig <- read.csv(abs_need[[4]], stringsAsFactors = FALSE, check.names = FALSE)
-ftab <- read.csv(abs_need[[5]], stringsAsFactors = FALSE, check.names = FALSE)
-top_t <- read.csv(abs_need[[6]], stringsAsFactors = FALSE, check.names = FALSE)
-top_u <- read.csv(abs_need[[7]], stringsAsFactors = FALSE, check.names = FALSE)
-gidx <- read.csv(abs_need[[8]], stringsAsFactors = FALSE, check.names = FALSE)
-sidx <- read.csv(abs_need[[9]], stringsAsFactors = FALSE, check.names = FALSE)
+stats <- read_tab("ut_T_vs_U_stats_summary.csv")
+gsum <- read_tab("ut_gene_overlap_T_vs_U_summary.csv")
+gover <- read_tab("ut_gene_overlap_T_vs_U.csv")
+isig <- read_tab("ut_isoform_overlap_T_vs_U_significant.csv")
+retention <- read_tab("ut_T_vs_U_retention_accounting.csv")
+rtab <- read_tab("ut_T_vs_U_retention_contingency.csv")
+oneway <- read_tab("ut_T_vs_U_one_way_concordance.csv")
+top_t <- read_tab("top_switching_genes_T_UT.csv")
+top_u <- read_tab("top_switching_genes_U_UT.csv")
+gidx <- read_tab("ut_gene_explorer_index.csv")
+sidx <- read_tab("ut_switch_plot_index.csv")
+```
+
+## What can and cannot be concluded here
+
+Read this before the numbers.
+
+- **Effect sizes are the interpretable quantities.** With thousands of matched isoforms,
+  the Wilcoxon p-values below are driven by sample size; the median ΔdIF is what says
+  whether knockout shifts isoform usage, and by how much.
+- **T-only / U-only counts are bounded by object retention**, not by biology. Only the
+  symbols retained in *both* saved objects can ever be called shared, so the great
+  majority of "T-only" genes are simply absent from the U object.
+- **No enrichment test is reported.** A Fisher test of "significant in T" × "significant
+  in U" previously appeared here. Its background was 25 already-significant genes, so it
+  measured association inside a set already selected on the outcome. It has been removed
+  rather than reported with a caveat.
+- **Statistics prefixed `selconf_` are conditioned on significance in both datasets.**
+  Selecting on the outcome in both and then measuring agreement manufactures agreement;
+  treat them as descriptions of the shared set, not as evidence of concordance.
+
+### Retention accounting
+
+```{r}
+knitr::kable(
+  retention |> select(-note),
+  caption = "How many gene symbols survive in each saved object, and how they split"
+)
+knitr::kable(rtab, caption = "Symbols retained in both objects: switching in T × switching in U (counts only, no test)")
+```
+
+### One-way concordance (the defensible comparison)
+
+Condition on significance in **one** dataset, then measure the effect in the other. Unlike
+the shared-significant statistics, this does not select on the outcome twice.
+
+```{r}
+knitr::kable(oneway, digits = 2, caption = "Effect in the other dataset, conditioning on significance in one")
 ```
 
 ## Statistical summary
 
 ```{r}
 knitr::kable(stats, digits = 4, caption = "UT T vs U statistical summary")
-```
-
-Key interpretation cues:
-
-- **Gene overlap counts / Jaccard**: shared vs genotype-specific switching genes.
-- **Fisher odds ratio / p (both-present background)**: among gene symbols observed in *both* T_UT and U_UT, are significant calls co-enriched?
-- **Spearman rho** on shared-significant isoform dIF: concordance of effect sizes when both are significant.
-- **Binomial test**: whether shared-significant isoforms more often change in the **same direction**.
-- **Wilcoxon / Kruskal**: whether |dIF| / delta-dIF distributions differ by class.
-
-### Gene-significance contingency (genes present in both UT datasets)
-
-```{r}
-knitr::kable(ftab, caption = "Contingency of significant switching genes among both-present symbols (T_sig × U_sig)")
 ```
 
 ### Gene overlap tallies
@@ -201,13 +230,9 @@ show <- ok |>
   group_by(.data$overlap_class) |>
   slice_head(n = 6) |>
   ungroup()
-paths <- vapply(show$figure, gene_fig, character(1))
-exist_abs <- file.path(
-  PROJECT_ROOT, "results", "figures", "ut_t_vs_u", "gene_explorer", show$figure
-)
-keep <- file.exists(exist_abs)
-if (any(keep)) {
-  knitr::include_graphics(paths[keep])
+paths <- existing_figs(vapply(show$figure, gene_fig, character(1)))
+if (length(paths)) {
+  knitr::include_graphics(paths)
 } else {
   knitr::asis_output("_No gene explorer figures found._\n")
 }
@@ -235,13 +260,9 @@ show_sw <- ok |>
   group_by(.data$overlap_class, .data$dataset) |>
   slice_head(n = 3) |>
   ungroup()
-paths_sw <- vapply(show_sw$figure, switch_fig, character(1))
-exist_sw <- file.path(
-  PROJECT_ROOT, "results", "figures", "ut_t_vs_u", "switch_plots", show_sw$figure
-)
-keep_sw <- file.exists(exist_sw)
-if (any(keep_sw)) {
-  knitr::include_graphics(paths_sw[keep_sw])
+paths_sw <- existing_figs(vapply(show_sw$figure, switch_fig, character(1)))
+if (length(paths_sw)) {
+  knitr::include_graphics(paths_sw)
 } else {
   knitr::asis_output("_No switch plots found._\n")
 }
@@ -256,9 +277,10 @@ knitr::kable(
 
 ## Methods notes
 
-- Significance uses `config/config.yml` thresholds (`isoform_q`, `gene_q`, optional `min_abs_dif`).
+- Significance uses `config/config.yml` thresholds (`isoform_q`, `gene_q`, `min_abs_dif`).
 - **Gene overlap** uses cleaned gene symbols (not `XLOC_*` / `ENSG*`), because those IDs are not stably shared across condition objects.
-- **Isoform matching** uses `isoform_id` (`TCONS`) within the UT reference; many isoforms are unique to one genotype’s ISA output, so “missing in U/T” is an informative category.
+- **Isoform matching** uses `isoform_id` (`TCONS`) within the UT reference. Isoforms absent from one genotype's object are labelled *not retained in*, not *missing* — they were dropped when that object was reduced to switching genes, so their status there is unknown rather than negative.
+- **|dIF| by class** measures each isoform in exactly one dataset. It previously summarised the Shared class with `pmax(T, U)` against single values for T-only/U-only, which biased Shared upward by construction.
 - Rebuild:
 
 ```bash

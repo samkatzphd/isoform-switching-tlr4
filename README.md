@@ -33,25 +33,48 @@ Configured analysis questions (`config/config.yml` → `analysis_questions`):
 
 | Path | Role |
 |------|------|
-| `config/config.yml` | Dataset paths, significance cutoffs, novel-id rule |
-| `data/processed/` | Isoform tibbles from step `01` |
+| `config/config.yml` | Dataset paths, significance cutoffs, `analysis:` knobs, output policy |
+| `data/processed/` | Isoform tibbles from step `01` (`.rds`; CSV twins suppressed) |
 | `results/tables/` | Gene summaries, QC, novel, HT, and UT comparison tables |
 | `results/figures/` | QC, novel, HT switchPlots, UT T-vs-U figures |
+| `results/run_manifest.json` | Per-script provenance: git SHA, R/package versions, thresholds |
 | `scripts/` | Numbered analysis steps (see below) |
-| `utils/` | Bootstrap + shared helpers |
+| `utils/` | Bootstrap + shared helpers (single switching rule, symbol rule, writers) |
+| `reports/_setup.R` | Shared report setup (root discovery, path helpers, caveat callout) |
 | `reports/*.qmd` | Quarto sources; HTML companions committed where rendered |
+| `docs/REVIEW_CHANGES.md` | Review of the original code and every correction made |
 | `_quarto.yml` | Shared Quarto defaults (`embed-resources: true`) |
 | `environment.yml` | Optional Conda stack |
+
+## ⚠️ Input caveat: the ISA objects are pre-reduced
+
+All four saved `switchAnalyzeRlist` objects contain **only genes that already pass the
+gene-level q cutoff** — they were written after
+`isoformSwitchTestDEXSeq(reduceToSwitchingGenes = TRUE)`, the ISA default. Verified per
+run and recorded in `results/tables/input_object_reduction_check.csv`.
+
+This means gene counts are *genes retained*, not *genes tested*; "present in the other
+dataset" means *retained in that saved object*; and every percentage-of-genes has a
+denominator already selected on the outcome. Cross-dataset overlap is bounded by how many
+symbols survive in both objects (only 25 for T_UT ∩ U_UT). **No enrichment test against
+this background is reported.** Fixing this properly means re-exporting the objects with
+`reduceToSwitchingGenes = FALSE`. See [`docs/REVIEW_CHANGES.md`](docs/REVIEW_CHANGES.md).
 
 ## Significance definition
 
 An isoform (and its gene) is treated as *switching* when:
 
 - isoform q-value &lt; `significance.isoform_q` (default **0.05**),
-- gene q-value (if present) &lt; `significance.gene_q` (default **0.05**),
+- gene q-value (when the column exists) &lt; `significance.gene_q` (default **0.05**),
 - and **`|dIF| >= significance.min_abs_dif`** (currently **0.15**).
 
-The `|dIF|` floor was chosen after a sensitivity scan (`00`): 0.15–0.20 keeps larger, more functionally plausible fraction changes than an unfiltered q-only call.
+With `significance.require_finite_dif: true` (default) an isoform with a missing or
+non-finite `dIF` or gene q **fails** the filter rather than passing on the q-value alone.
+
+This rule has exactly one implementation — `score_isoforms()` in
+`utils/helper_functions.R`. Every script calls it; none re-implements it.
+
+The `|dIF|` floor was chosen after a sensitivity scan (`00`): 0.15–0.20 keeps larger, more functionally plausible fraction changes than an unfiltered q-only call. Note that the scan operates inside the already-significant set described above, so it shows how the floor *prunes*, not a power curve.
 
 ## Pipeline steps (what each script does)
 
@@ -65,18 +88,26 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 
 ### `01_load_data.R` — load ISA objects and annotate isoforms
 
-- Load each configured ISA object (`.rds` / `.RData`).
+- Load each configured ISA object (`.rds` / `.RData`), using the **pinned** `object_name`
+  (each `.Rdata` holds 13 objects, so auto-picking was order-dependent).
 - Extract isoform-level features (`extract_isoform_features()`).
-- Join final reference **GFF3** (`annotation_path`) for `oId` / `cmp_ref` / `class_code` and gene symbols.
+- Join final reference **GFF3** (`annotation_path`) for `oId` / `cmp_ref` / `class_code` and gene symbols — each column joined only if actually missing.
 - Tag PacBio novel isoforms (`oId` prefix `PB` → `is_novel_pacbio`).
-- **Writes:** `data/processed/isoformFeatures_<dataset>.{rds,csv}` for `T_HT`, `H_HT`, `T_UT`, `U_UT`.
+- Check whether each object was pre-reduced to switching genes.
+- **Writes:** `data/processed/isoformFeatures_<dataset>.rds`,
+  `results/tables/input_object_reduction_check.{rds,csv}`, `results/run_manifest.json`.
 
 ### `02_gene_level_summary.R` — collapse isoforms to genes
 
 - Read all processed isoform tables.
 - Apply config q and `|dIF|` cutoffs via `summarize_genes_from_isoform_table()`.
+- **One row per gene** — gene symbols are collapsed before grouping, and the script asserts
+  `rows == distinct gene_id`.
 - **Writes:** `results/tables/gene_level_summary_<dataset>.{rds,csv}`.
-- Typical columns: `gene_id`, `gene_name`, `n_isoforms`, `n_switching_isoforms`, q / `|dIF|` summaries, `novel_involved`.
+- Columns: `gene_id`, `gene_name`, `n_isoforms`, `n_switching_isoforms`, `n_novel_isoforms`,
+  `min_isoform_switch_q`, `min_gene_switch_q`, **`max_abs_dif_all_isoforms`**,
+  **`max_abs_dif_switching`**, `novel_involved`. The two `max_abs_dif_*` columns are
+  different quantities and are named apart on purpose — ranking uses the switching one.
 
 ### `02b_qc_snapshot.R` — tabular QC
 
@@ -98,8 +129,13 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 ### `04_comparison_T_vs_U.R` — UT WT (T) vs knockout (U)
 
 - Shared / T-only / U-only switching genes (by clean gene symbol) and isoforms (by `isoform_id`).
-- Concordance and ΔdIF-style stats on genes present in both analyses.
+- Retention accounting, ΔdIF effect sizes, and **one-way concordance** (condition on
+  significance in one dataset, measure the effect in the other).
+- **No enrichment test.** A Fisher test previously reported here had a background of 25
+  already-significant genes; it was removed rather than caveated. Columns prefixed
+  `selconf_` are conditioned on significance in both datasets and are descriptive only.
 - Overlap figures, per-gene explorer panels, ISA `switchPlot`s where available.
+- Skips plotting (rather than deleting existing figures) when the ISA objects are unreachable.
 - **Writes:** `results/tables/ut_*`, `results/figures/ut_t_vs_u/`.
 - **Report:** `reports/ut_t_vs_u_comparison.{qmd,html}`.
 
@@ -130,9 +166,12 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 3. **Install packages** (minimum for `01`–`04`; add ggplot2/scales for figures; IsoformSwitchAnalyzeR for `06` switchPlots):
 
    ```r
-   install.packages(c("yaml", "tibble", "dplyr", "ggplot2", "scales"))
+   install.packages(c("yaml", "tibble", "dplyr", "ggplot2", "scales", "jsonlite"))
    # BiocManager::install("IsoformSwitchAnalyzeR")  # for switchPlot in 06 / 04
    ```
+
+   `jsonlite` is only needed for `results/run_manifest.json`; the pipeline degrades
+   gracefully without it.
 
 4. **Run the core pipeline:**
 
