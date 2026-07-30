@@ -42,56 +42,15 @@ gene_q_cutoff <- as.numeric(sig$gene_q %||% 0.05)
 min_abs_dif <- as.numeric(sig$min_abs_dif %||% 0.0)
 
 target_datasets <- c("T_HT", "H_HT")
-top_n_genes <- 30L
-plot_top_n <- 30L
+top_n_genes <- as.integer(analysis_param(cfg, "top_n_genes", 30L))
+plot_top_n <- as.integer(analysis_param(cfg, "plot_top_n", 30L))
 
-sanitize <- function(x) {
-  gsub("[^A-Za-z0-9_]+", "_", x, perl = TRUE)
-}
-min_finite <- function(v) {
-  if (!length(v)) return(NA_real_)
-  m <- suppressWarnings(min(v, na.rm = TRUE))
-  if (is.infinite(m)) NA_real_ else m
-}
-
-is_real_gene_symbol <- function(x) {
-  x <- as.character(x)
-  !is.na(x) & nzchar(x) & !grepl("^(XLOC_|ENS[GTFP]\\d)", x, perl = TRUE)
-}
-
-# Prefer a HGNC-like symbol when isoforms of one gene_id disagree
-# (some GFF rows carry ENSG / XLOC placeholders in gene_name).
-pick_gene_symbol <- function(names) {
-  names <- unique(as.character(names))
-  names <- names[!is.na(names) & nzchar(names)]
-  if (!length(names)) return(NA_character_)
-  good <- names[is_real_gene_symbol(names)]
-  if (length(good)) good[[1L]] else names[[1L]]
-}
+# sanitize(), min_finite(), is_real_gene_symbol(), pick_gene_symbol() and
+# score_isoforms() come from utils/helper_functions.R -- this script used to keep its
+# own copies alongside near-identical ones in 03 and 04.
 
 compute_switching_gene_rank <- function(iso_tbl, dataset_key, dataset_label) {
-  z <- as_tibble(iso_tbl)
-  if (!"gene_id" %in% names(z) || !"isoform_id" %in% names(z)) {
-    stop("Isoform table must include gene_id and isoform_id.")
-  }
-  if (!"gene_name" %in% names(z)) z$gene_name <- NA_character_
-  if (!"dIF" %in% names(z)) z$dIF <- NA_real_
-  if (!"isoform_switch_q_value" %in% names(z) && !"gene_switch_q_value" %in% names(z)) {
-    stop("Need isoform_switch_q_value or gene_switch_q_value.")
-  }
-  # Collapse inconsistent gene_name annotations (XLOC / ENSG / symbol mix).
-  z <- z |>
-    group_by(.data$gene_id) |>
-    mutate(gene_name = pick_gene_symbol(.data$gene_name)) |>
-    ungroup()
-  z$q_i <- if ("isoform_switch_q_value" %in% names(z)) as.numeric(z$isoform_switch_q_value) else as.numeric(z$gene_switch_q_value)
-  z$q_g <- if ("gene_switch_q_value" %in% names(z)) as.numeric(z$gene_switch_q_value) else NA_real_
-  z$dIF_n <- as.numeric(z$dIF)
-  z$abs_dIF <- abs(z$dIF_n)
-  z$is_switching <- is.finite(z$q_i) & z$q_i < iso_q_cutoff &
-    (is.na(z$q_g) | (is.finite(z$q_g) & z$q_g < gene_q_cutoff)) &
-    (is.na(z$dIF_n) | abs(z$dIF_n) >= min_abs_dif)
-  z$is_switching <- replace(z$is_switching, is.na(z$is_switching), FALSE)
+  z <- score_isoforms(iso_tbl, cfg, dataset_key, dataset_label)
 
   ranks <- z |>
     group_by(.data$gene_id, .data$gene_name) |>
@@ -232,6 +191,16 @@ plot_gene_fallback <- function(gene_row, iso_tbl, dataset_label) {
     theme_bw(base_size = 10)
 }
 
+#' Draw an ISA switchPlot, trying the gene symbol first and the gene_id as a fallback.
+#'
+#' Device handling detail that used to be wrong here: `on.exit()` called inside a
+#' `tryCatch({...})` registers on the *enclosing function* frame, not per iteration.
+#' Devices therefore stayed open until the function returned and then closed LIFO, so
+#' (a) the `file.info()$size` check ran before the PNG had been flushed, and (b) when
+#' the symbol attempt failed and the gene_id attempt succeeded, the failed device --
+#' opened first, closed last, on the same path -- overwrote the good plot. Each attempt
+#' now renders to its own temp file, closes its device immediately, and is promoted to
+#' the destination only after it is verified non-empty.
 make_switch_plot <- function(isa_obj, gene_id, gene_name, out_png) {
   if (!requireNamespace("IsoformSwitchAnalyzeR", quietly = TRUE)) {
     return(list(ok = FALSE, message = "IsoformSwitchAnalyzeR is not installed."))
@@ -249,11 +218,10 @@ make_switch_plot <- function(isa_obj, gene_id, gene_name, out_png) {
   }
 
   for (g in candidates) {
+    tmp <- tempfile(fileext = ".png")
     ok <- tryCatch({
-      png(filename = out_png, width = 2400, height = 1500, res = 180)
-      on.exit({
-        if (grDevices::dev.cur() > 1L) grDevices::dev.off()
-      }, add = TRUE)
+      grDevices::png(filename = tmp, width = 2400, height = 1500, res = 180)
+      on.exit(if (grDevices::dev.cur() > 1L) grDevices::dev.off(), add = TRUE)
       do.call(
         switch_fn,
         list(
@@ -262,13 +230,18 @@ make_switch_plot <- function(isa_obj, gene_id, gene_name, out_png) {
           plotTopology = FALSE
         )
       )
+      grDevices::dev.off()
       TRUE
     }, error = function(e) {
       FALSE
     })
-    if (ok && file.exists(out_png) && isTRUE(file.info(out_png)$size > 0)) {
+    if (grDevices::dev.cur() > 1L) grDevices::dev.off()
+    if (ok && file.exists(tmp) && isTRUE(file.info(tmp)$size > 0)) {
+      file.copy(tmp, out_png, overwrite = TRUE)
+      unlink(tmp)
       return(list(ok = TRUE, message = paste0("switchPlot succeeded for ", g)))
     }
+    unlink(tmp)
   }
   list(ok = FALSE, message = "switchPlot failed for gene_name and gene_id candidates.")
 }
@@ -374,19 +347,23 @@ for (ds_key in target_datasets) {
 
   top_tbl <- ranks |>
     slice_head(n = min(top_n_genes, nrow(ranks)))
-  out_csv <- file.path(results_tables, paste0("top_switching_genes_", label_clean, ".csv"))
-  out_rds <- file.path(results_tables, paste0("top_switching_genes_", label_clean, ".rds"))
-  utils::write.csv(top_tbl, out_csv, row.names = FALSE, fileEncoding = "UTF-8", na = "")
-  saveRDS(top_tbl, out_rds, compress = "xz")
-  message("[", ds_key, "] Wrote top genes: ", out_csv)
+  write_table_pair(
+    top_tbl, results_tables, paste0("top_switching_genes_", label_clean), cfg = cfg
+  )
 
   isa_obj <- load_isa_for_dataset(ds)
   if (is.null(isa_obj)) {
-    warning("[", ds_key, "] Could not load ISA object; switchPlot outputs will be skipped.")
-  } else {
-    message("[", ds_key, "] Annotating ISA object with gene symbols and PB isoform labels ...")
-    isa_obj <- annotate_isa_for_plotting(isa_obj, iso_scored)
+    # Skip plotting entirely rather than replacing existing switchPlots with fallback
+    # figures. The ISA objects live on an external drive; running this script without
+    # it mounted used to delete the real plots and write dIF bar charts over them.
+    warning(
+      "[", ds_key, "] ISA object unavailable (is the external drive mounted?). ",
+      "Keeping existing figures and skipping all plotting for this dataset."
+    )
+    next
   }
+  message("[", ds_key, "] Annotating ISA object with gene symbols and PB isoform labels ...")
+  isa_obj <- annotate_isa_for_plotting(isa_obj, iso_scored)
 
   # Drop stale rank plots from earlier ranking schemas before rewriting.
   old_plots <- list.files(
@@ -438,13 +415,7 @@ for (ds_key in target_datasets) {
 if (length(all_rankings)) {
   combined <- bind_rows(all_rankings) |>
     arrange(.data$dataset_key, .data$rank)
-  utils::write.csv(
-    combined,
-    file.path(results_tables, "top_switching_genes_HT_combined.csv"),
-    row.names = FALSE,
-    fileEncoding = "UTF-8",
-    na = ""
-  )
+  write_table_pair(combined, results_tables, "top_switching_genes_HT_combined", cfg = cfg)
 }
 
 if (all(c("T_HT", "H_HT") %in% names(all_iso))) {
@@ -455,27 +426,17 @@ if (all(c("T_HT", "H_HT") %in% names(all_iso))) {
     gene_q_cutoff = gene_q_cutoff,
     min_abs_dif = min_abs_dif
   )
-  utils::write.csv(
-    ov$all,
-    file.path(results_tables, "isoform_overlap_T_HT_vs_H_HT_all.csv"),
-    row.names = FALSE,
-    fileEncoding = "UTF-8",
-    na = ""
+  write_table_pair(
+    ov$all, results_tables, "isoform_overlap_T_HT_vs_H_HT_all", cfg = cfg,
+    csv = isTRUE((cfg$output %||% list())$csv_twin_isoform_level %||% FALSE)
   )
-  utils::write.csv(
-    ov$t_sig_in_h,
-    file.path(results_tables, "isoform_overlap_T_significant_in_H_context.csv"),
-    row.names = FALSE,
-    fileEncoding = "UTF-8",
-    na = ""
+  write_table_pair(
+    ov$t_sig_in_h, results_tables, "isoform_overlap_T_significant_in_H_context", cfg = cfg
   )
-  utils::write.csv(
-    ov$summary,
-    file.path(results_tables, "isoform_overlap_T_HT_vs_H_HT_summary.csv"),
-    row.names = FALSE,
-    fileEncoding = "UTF-8",
-    na = ""
+  write_table_pair(
+    ov$summary, results_tables, "isoform_overlap_T_HT_vs_H_HT_summary", cfg = cfg
   )
 }
 
+write_run_manifest("06_visualization.R", cfg, root)
 message("06_visualization.R: done")

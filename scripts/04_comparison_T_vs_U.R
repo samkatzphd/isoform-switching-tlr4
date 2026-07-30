@@ -48,32 +48,14 @@ iso_q_cutoff <- as.numeric(sig$isoform_q %||% 0.05)
 gene_q_cutoff <- as.numeric(sig$gene_q %||% 0.05)
 min_abs_dif <- as.numeric(sig$min_abs_dif %||% 0.0)
 
-top_n_genes <- 30L
-n_gene_panels_per_class <- 12L
-n_switch_plots_per_class <- 6L
+top_n_genes <- as.integer(analysis_param(cfg, "top_n_genes", 30L))
+n_gene_panels_per_class <- as.integer(analysis_param(cfg, "gene_panels_per_class", 12L))
+n_switch_plots_per_class <- as.integer(analysis_param(cfg, "switch_plots_per_class", 6L))
+explorer_max_isoforms <- as.integer(analysis_param(cfg, "explorer_max_isoforms", 12L))
 
-sanitize <- function(x) gsub("[^A-Za-z0-9_]+", "_", as.character(x), perl = TRUE)
-min_finite <- function(v) {
-  if (!length(v)) return(NA_real_)
-  m <- suppressWarnings(min(v, na.rm = TRUE))
-  if (is.infinite(m)) NA_real_ else m
-}
-max_abs_finite <- function(v) {
-  w <- abs(as.numeric(v))
-  w <- w[is.finite(w)]
-  if (!length(w)) NA_real_ else max(w)
-}
-is_real_gene_symbol <- function(x) {
-  x <- as.character(x)
-  !is.na(x) & nzchar(x) & !grepl("^(XLOC_|ENS[GTFP]\\d)", x, perl = TRUE)
-}
-pick_gene_symbol <- function(names) {
-  names <- unique(as.character(names))
-  names <- names[!is.na(names) & nzchar(names)]
-  if (!length(names)) return(NA_character_)
-  good <- names[is_real_gene_symbol(names)]
-  if (length(good)) good[[1L]] else names[[1L]]
-}
+# sanitize(), min_finite(), max_abs_finite(), is_real_gene_symbol(), pick_gene_symbol()
+# and score_isoforms() come from utils/helper_functions.R -- this script used to keep
+# its own copies alongside near-identical ones in 03 and 06.
 
 theme_set(
   theme_bw(base_size = 11) +
@@ -82,43 +64,6 @@ theme_set(
       strip.text = element_text(face = "bold")
     )
 )
-
-score_isoforms <- function(iso_tbl, dataset_key, dataset_label) {
-  z <- as_tibble(iso_tbl)
-  if (!all(c("gene_id", "isoform_id") %in% names(z))) {
-    stop("Need gene_id and isoform_id for ", dataset_key)
-  }
-  if (!"gene_name" %in% names(z)) z$gene_name <- NA_character_
-  if (!"dIF" %in% names(z)) z$dIF <- NA_real_
-  if (!"is_novel_pacbio" %in% names(z)) z$is_novel_pacbio <- NA
-  if (!"oId" %in% names(z)) z$oId <- NA_character_
-  if (!"class_code" %in% names(z)) z$class_code <- NA_character_
-  if (!"isoform_switch_q_value" %in% names(z) && !"gene_switch_q_value" %in% names(z)) {
-    stop("Need isoform/gene switch q for ", dataset_key)
-  }
-
-  z <- z |>
-    group_by(.data$gene_id) |>
-    mutate(gene_name = pick_gene_symbol(.data$gene_name)) |>
-    ungroup()
-
-  z$q_i <- if ("isoform_switch_q_value" %in% names(z)) {
-    as.numeric(z$isoform_switch_q_value)
-  } else {
-    as.numeric(z$gene_switch_q_value)
-  }
-  z$q_g <- if ("gene_switch_q_value" %in% names(z)) as.numeric(z$gene_switch_q_value) else NA_real_
-  z$dIF_n <- as.numeric(z$dIF)
-  z$abs_dIF <- abs(z$dIF_n)
-  z$is_novel <- z$is_novel_pacbio %in% TRUE
-  z$is_switching <- is.finite(z$q_i) & z$q_i < iso_q_cutoff &
-    (is.na(z$q_g) | (is.finite(z$q_g) & z$q_g < gene_q_cutoff)) &
-    (is.na(z$dIF_n) | abs(z$dIF_n) >= min_abs_dif)
-  z$is_switching <- replace(z$is_switching, is.na(z$is_switching), FALSE)
-  z$dataset_key <- dataset_key
-  z$dataset_label <- dataset_label
-  z
-}
 
 gene_rank_from_scored <- function(z, dataset_key, dataset_label) {
   z |>
@@ -151,13 +96,10 @@ gene_rank_from_scored <- function(z, dataset_key, dataset_label) {
     mutate(rank = row_number())
 }
 
-write_out <- function(x, stem) {
-  csv <- file.path(results_tables, paste0(stem, ".csv"))
-  rds <- file.path(results_tables, paste0(stem, ".rds"))
-  utils::write.csv(x, csv, row.names = FALSE, fileEncoding = "UTF-8", na = "")
-  saveRDS(x, rds, compress = "xz")
-  message("Wrote: ", csv)
+write_out <- function(x, stem, csv = NULL) {
+  write_table_pair(x, results_tables, stem, cfg = cfg, csv = csv)
 }
+isoform_level_csv <- isTRUE((cfg$output %||% list())$csv_twin_isoform_level %||% FALSE)
 
 load_processed <- function(dataset_key) {
   ds <- cfg$datasets[[dataset_key]] %||% NULL
@@ -226,6 +168,16 @@ annotate_isa_for_plotting <- function(isa_obj, processed_iso) {
   isa_obj
 }
 
+#' Draw an ISA switchPlot, trying the gene symbol first and the gene_id as a fallback.
+#'
+#' Device handling detail that used to be wrong here: `on.exit()` called inside a
+#' `tryCatch({...})` registers on the *enclosing function* frame, not per iteration.
+#' Devices therefore stayed open until the function returned and then closed LIFO, so
+#' (a) the `file.info()$size` check ran before the PNG had been flushed, and (b) when
+#' the symbol attempt failed and the gene_id attempt succeeded, the failed device --
+#' opened first, closed last, on the same path -- overwrote the good plot. Each attempt
+#' now renders to its own temp file, closes its device immediately, and is promoted to
+#' the destination only after it is verified non-empty.
 make_switch_plot <- function(isa_obj, gene_id, gene_name, out_png) {
   if (is.null(isa_obj) || !requireNamespace("IsoformSwitchAnalyzeR", quietly = TRUE)) {
     return(FALSE)
@@ -238,15 +190,21 @@ make_switch_plot <- function(isa_obj, gene_id, gene_name, out_png) {
   }
   candidates <- unique(candidates)
   for (g in candidates) {
+    tmp <- tempfile(fileext = ".png")
     ok <- tryCatch({
-      grDevices::png(filename = out_png, width = 2400, height = 1500, res = 180)
-      on.exit({
-        if (grDevices::dev.cur() > 1L) grDevices::dev.off()
-      }, add = TRUE)
+      grDevices::png(filename = tmp, width = 2400, height = 1500, res = 180)
+      on.exit(if (grDevices::dev.cur() > 1L) grDevices::dev.off(), add = TRUE)
       do.call(switch_fn, list(switchAnalyzeRlist = isa_obj, gene = g, plotTopology = FALSE))
+      grDevices::dev.off()
       TRUE
     }, error = function(e) FALSE)
-    if (ok && file.exists(out_png) && isTRUE(file.info(out_png)$size > 0)) return(TRUE)
+    if (grDevices::dev.cur() > 1L) grDevices::dev.off()
+    if (ok && file.exists(tmp) && isTRUE(file.info(tmp)$size > 0)) {
+      file.copy(tmp, out_png, overwrite = TRUE)
+      unlink(tmp)
+      return(TRUE)
+    }
+    unlink(tmp)
   }
   FALSE
 }
@@ -255,8 +213,8 @@ make_switch_plot <- function(isa_obj, gene_id, gene_name, out_png) {
 message("Loading T_UT and U_UT ...")
 t_pack <- load_processed("T_UT")
 u_pack <- load_processed("U_UT")
-t_iso <- score_isoforms(t_pack$iso, "T_UT", t_pack$label)
-u_iso <- score_isoforms(u_pack$iso, "U_UT", u_pack$label)
+t_iso <- score_isoforms(t_pack$iso, cfg, "T_UT", t_pack$label)
+u_iso <- score_isoforms(u_pack$iso, cfg, "U_UT", u_pack$label)
 
 t_genes <- gene_rank_from_scored(t_iso, "T_UT", t_pack$label)
 u_genes <- gene_rank_from_scored(u_iso, "U_UT", u_pack$label)
@@ -360,12 +318,16 @@ iso_overlap <- full_join(t_iso_key, u_iso_key, by = "isoform_id") |>
     gene_id = dplyr::coalesce(.data$gene_id, .data$U_gene_id),
     T_switching = .data$T_switching %in% TRUE,
     U_switching = .data$U_switching %in% TRUE,
+    # "present" means "retained in the saved ISA object", which -- because both objects
+    # were reduced to significant switching genes -- is NOT the same as "tested". The
+    # labels say retained/not retained so the tables cannot be misread as
+    # tested-and-non-significant.
     overlap_class = case_when(
       .data$T_switching & .data$U_switching ~ "Shared significant",
-      .data$T_switching & !.data$U_switching & .data$present_in_U ~ "T-significant / U-present non-sig",
-      .data$T_switching & !.data$present_in_U ~ "T-significant / missing in U",
-      .data$U_switching & !.data$T_switching & .data$present_in_T ~ "U-significant / T-present non-sig",
-      .data$U_switching & !.data$present_in_T ~ "U-significant / missing in T",
+      .data$T_switching & !.data$U_switching & .data$present_in_U ~ "T-significant / retained in U, not significant",
+      .data$T_switching & !.data$present_in_U ~ "T-significant / not retained in U",
+      .data$U_switching & !.data$T_switching & .data$present_in_T ~ "U-significant / retained in T, not significant",
+      .data$U_switching & !.data$present_in_T ~ "U-significant / not retained in T",
       TRUE ~ "Non-significant / other"
     ),
     same_direction = dplyr::case_when(
@@ -379,7 +341,7 @@ iso_overlap <- full_join(t_iso_key, u_iso_key, by = "isoform_id") |>
     abs_delta_dIF = abs(.data$delta_dIF)
   )
 
-write_out(iso_overlap, "ut_isoform_overlap_T_vs_U_all")
+write_out(iso_overlap, "ut_isoform_overlap_T_vs_U_all", csv = isoform_level_csv)
 
 iso_focus <- iso_overlap |>
   filter(.data$T_switching | .data$U_switching) |>
@@ -387,48 +349,63 @@ iso_focus <- iso_overlap |>
 write_out(iso_focus, "ut_isoform_overlap_T_vs_U_significant")
 
 # ---- Statistics ----
-# Background for co-occurrence: gene symbols observed in BOTH UT datasets.
-# Keep a full 2x2 even when some cells are zero.
+#
+# NO ENRICHMENT TEST IS REPORTED HERE, deliberately.
+#
+# This section used to run fisher.test() on a 2x2 of "significant in T" x "significant
+# in U" over gene symbols present in both datasets, and report the odds ratio and p in
+# the headline summary. That test is not interpretable for these inputs: both ISA
+# objects were saved after reduceToSwitchingGenes = TRUE, so a gene is only "present"
+# if it had already been called significant. The background was 25 genes and the table
+# was 3/1/3/18 -- an association measured inside a set already selected on the outcome.
+# What remains is the descriptive retention/overlap accounting, which is honest about
+# what it counts. See docs/REVIEW_CHANGES.md.
 bg_t <- unique(t_iso$gene_name[is_real_gene_symbol(t_iso$gene_name)])
 bg_u <- unique(u_iso$gene_name[is_real_gene_symbol(u_iso$gene_name)])
 bg_both <- intersect(bg_t, bg_u)
 in_t_sig_both <- bg_both %in% t_gene_key$gene_name
 in_u_sig_both <- bg_both %in% u_gene_key$gene_name
-tab_both <- matrix(
-  c(
-    sum(!in_t_sig_both & !in_u_sig_both),
-    sum(!in_t_sig_both & in_u_sig_both),
-    sum(in_t_sig_both & !in_u_sig_both),
-    sum(in_t_sig_both & in_u_sig_both)
-  ),
-  nrow = 2,
-  byrow = TRUE,
-  dimnames = list(
-    T_sig = c("FALSE", "TRUE"),
-    U_sig = c("FALSE", "TRUE")
+retention_tbl <- tibble(
+  symbols_retained_in_T_object = length(bg_t),
+  symbols_retained_in_U_object = length(bg_u),
+  symbols_retained_in_both = length(bg_both),
+  of_those_switching_in_T_only = sum(in_t_sig_both & !in_u_sig_both),
+  of_those_switching_in_U_only = sum(!in_t_sig_both & in_u_sig_both),
+  of_those_switching_in_both = sum(in_t_sig_both & in_u_sig_both),
+  of_those_switching_in_neither = sum(!in_t_sig_both & !in_u_sig_both),
+  note = paste(
+    "Both objects were reduced to significant switching genes before saving;",
+    "'retained' is not 'tested'. Gene overlap cannot exceed symbols_retained_in_both."
   )
 )
-fisher_gene <- tryCatch({
-  ft <- fisher.test(tab_both)
-  list(
-    table = tab_both,
-    odds_ratio = unname(ft$estimate),
-    p_value = ft$p.value,
-    conf_low = ft$conf.int[[1]],
-    conf_high = ft$conf.int[[2]],
-    n_background_both_present = length(bg_both)
+write_out(retention_tbl, "ut_T_vs_U_retention_accounting")
+
+# Condition on significance in ONE dataset, then describe the effect in the OTHER.
+# This is the defensible concordance measure: the shared-significant statistics below
+# select on the outcome in both datasets, which manufactures agreement.
+one_way_concordance <- function(df, sig_col, this_dIF, other_dIF, label) {
+  d <- df[df[[sig_col]] %in% TRUE & is.finite(df[[this_dIF]]) & is.finite(df[[other_dIF]]), ]
+  if (!nrow(d)) {
+    return(tibble(
+      direction = label, n = 0L, median_abs_dIF_conditioned = NA_real_,
+      median_abs_dIF_other = NA_real_, pct_same_direction_in_other = NA_real_,
+      pct_passing_min_abs_dif_in_other = NA_real_
+    ))
+  }
+  tibble(
+    direction = label,
+    n = nrow(d),
+    median_abs_dIF_conditioned = stats::median(abs(d[[this_dIF]]), na.rm = TRUE),
+    median_abs_dIF_other = stats::median(abs(d[[other_dIF]]), na.rm = TRUE),
+    pct_same_direction_in_other = 100 * mean(sign(d[[this_dIF]]) == sign(d[[other_dIF]]), na.rm = TRUE),
+    pct_passing_min_abs_dif_in_other = 100 * mean(abs(d[[other_dIF]]) >= min_abs_dif, na.rm = TRUE)
   )
-}, error = function(e) {
-  list(
-    table = tab_both,
-    odds_ratio = NA_real_,
-    p_value = NA_real_,
-    conf_low = NA_real_,
-    conf_high = NA_real_,
-    n_background_both_present = length(bg_both),
-    error = conditionMessage(e)
-  )
-})
+}
+concordance_one_way <- bind_rows(
+  one_way_concordance(iso_overlap, "T_switching", "T_dIF", "U_dIF", "significant in T -> measured in U"),
+  one_way_concordance(iso_overlap, "U_switching", "U_dIF", "T_dIF", "significant in U -> measured in T")
+)
+write_out(concordance_one_way, "ut_T_vs_U_one_way_concordance")
 
 jaccard_genes <- {
   a <- sum(gene_overlap$overlap_class == "Shared (T and U)")
@@ -454,7 +431,14 @@ binom_dir <- if ((same_dir_n + opp_dir_n) > 0L) {
   NULL
 }
 
-# Compare |dIF| distributions: T-only switching isoforms vs U-only vs shared
+# Compare |dIF| distributions: T-only switching isoforms vs U-only vs shared.
+#
+# The Shared group used to be summarised with pmax(T_abs_dIF, U_abs_dIF) while T-only
+# and U-only used a single dataset's value. A maximum of two draws is upward-biased
+# relative to one draw, so "Shared isoforms have larger |dIF|" was partly an artefact
+# of the summary rather than a finding. Each isoform is now measured in exactly one
+# dataset: the one it was called significant in (Shared uses T, and the paired T-vs-U
+# comparison for those isoforms is covered by delta_dIF below).
 eff_cmp <- iso_focus |>
   mutate(
     effect_group = case_when(
@@ -464,10 +448,15 @@ eff_cmp <- iso_focus |>
       TRUE ~ "Other"
     ),
     effect_abs = dplyr::case_when(
-      .data$effect_group == "Shared" ~ pmax(.data$T_abs_dIF, .data$U_abs_dIF, na.rm = TRUE),
+      .data$effect_group == "Shared" ~ .data$T_abs_dIF,
       .data$effect_group == "T-only" ~ .data$T_abs_dIF,
       .data$effect_group == "U-only" ~ .data$U_abs_dIF,
       TRUE ~ NA_real_
+    ),
+    effect_measured_in = dplyr::case_when(
+      .data$effect_group %in% c("Shared", "T-only") ~ "T_UT",
+      .data$effect_group == "U-only" ~ "U_UT",
+      TRUE ~ NA_character_
     )
   ) |>
   filter(.data$effect_group != "Other", is.finite(.data$effect_abs))
@@ -508,31 +497,49 @@ stats_summary <- tibble(
   n_genes_T_only = sum(gene_overlap$overlap_class == "T-only"),
   n_genes_U_only = sum(gene_overlap$overlap_class == "U-only"),
   jaccard_gene_overlap = jaccard_genes,
-  n_background_genes_present_in_both = fisher_gene$n_background_both_present %||% length(bg_both),
-  fisher_odds_ratio_gene_sig_both_present = fisher_gene$odds_ratio %||% NA_real_,
-  fisher_p_gene_sig_both_present = fisher_gene$p_value %||% NA_real_,
-  spearman_rho_shared_sig_dIF = if (!is.null(cor_dIF)) unname(cor_dIF$estimate) else NA_real_,
-  spearman_p_shared_sig_dIF = if (!is.null(cor_dIF)) cor_dIF$p.value else NA_real_,
-  n_shared_sig_same_direction = same_dir_n,
-  n_shared_sig_opposite_direction = opp_dir_n,
-  binom_p_same_direction = if (!is.null(binom_dir)) binom_dir$p.value else NA_real_,
+  # Retention ceiling: gene overlap is bounded by how many symbols survive in both
+  # saved objects, not by biology.
+  n_symbols_retained_in_both_objects = length(bg_both),
+  # Effect sizes first -- with thousands of matched isoforms the p-values below are
+  # driven by n, and the medians are the interpretable quantities.
+  median_delta_dIF_matched = suppressWarnings(median(paired_present$delta_dIF, na.rm = TRUE)),
+  median_abs_delta_dIF_matched = suppressWarnings(median(abs(paired_present$delta_dIF), na.rm = TRUE)),
+  n_matched_isoforms_both_finite = nrow(paired_present),
+  # One-way concordance: condition on significance in one dataset, measure in the other.
+  pct_T_sig_same_direction_in_U = concordance_one_way$pct_same_direction_in_other[[1L]],
+  pct_T_sig_passing_threshold_in_U = concordance_one_way$pct_passing_min_abs_dif_in_other[[1L]],
+  pct_U_sig_same_direction_in_T = concordance_one_way$pct_same_direction_in_other[[2L]],
+  pct_U_sig_passing_threshold_in_T = concordance_one_way$pct_passing_min_abs_dif_in_other[[2L]],
+  # The next four are conditioned on significance in BOTH datasets. Selecting on the
+  # outcome in both and then measuring agreement manufactures agreement -- these are
+  # descriptive of the shared set only, not evidence of concordance.
+  selconf_spearman_rho_shared_sig_dIF = if (!is.null(cor_dIF)) unname(cor_dIF$estimate) else NA_real_,
+  selconf_n_shared_sig_same_direction = same_dir_n,
+  selconf_n_shared_sig_opposite_direction = opp_dir_n,
+  selconf_binom_p_same_direction = if (!is.null(binom_dir)) binom_dir$p.value else NA_real_,
   kruskal_p_abs_dIF_by_class = if (!is.null(kw)) kw$p.value else NA_real_,
   wilcox_paired_abs_dIF_U_vs_T_p = if (!is.null(wilcox_abs)) wilcox_abs$p.value else NA_real_,
   wilcox_delta_dIF_vs_0_p = if (!is.null(wilcox_delta)) wilcox_delta$p.value else NA_real_,
-  median_delta_dIF_shared_present = suppressWarnings(median(paired_present$delta_dIF, na.rm = TRUE)),
-  median_abs_delta_dIF_shared_present = suppressWarnings(median(abs(paired_present$delta_dIF), na.rm = TRUE))
+  inputs_pre_reduced_to_switching_genes = TRUE
 )
 write_out(stats_summary, "ut_T_vs_U_stats_summary")
 
-# Fisher table for report (explicit 2x2)
-fisher_tbl <- data.frame(
-  T_sig = c("FALSE", "TRUE"),
-  U_sig_FALSE = tab_both[, "FALSE"],
-  U_sig_TRUE = tab_both[, "TRUE"],
+# Descriptive 2x2 over symbols retained in both objects. Reported as counts only --
+# no test is run on it (see the note above the retention accounting).
+retention_contingency <- data.frame(
+  switching_in_T = c("FALSE", "TRUE"),
+  switching_in_U_FALSE = c(
+    sum(!in_t_sig_both & !in_u_sig_both),
+    sum(in_t_sig_both & !in_u_sig_both)
+  ),
+  switching_in_U_TRUE = c(
+    sum(!in_t_sig_both & in_u_sig_both),
+    sum(in_t_sig_both & in_u_sig_both)
+  ),
   stringsAsFactors = FALSE,
   row.names = NULL
 )
-write_out(fisher_tbl, "ut_T_vs_U_fisher_gene_contingency")
+write_out(retention_contingency, "ut_T_vs_U_retention_contingency")
 
 # ---- Figures: overlap highlight ----
 class_colors <- c(
@@ -540,10 +547,11 @@ class_colors <- c(
   "T-only" = "#3182bd",
   "U-only" = "#e6550d",
   "Shared significant" = "#756bb1",
-  "T-significant / U-present non-sig" = "#9ecae1",
-  "T-significant / missing in U" = "#08519c",
-  "U-significant / T-present non-sig" = "#fdd0a2",
-  "U-significant / missing in T" = "#a63603",
+  "T-significant / retained in U, not significant" = "#9ecae1",
+  "T-significant / not retained in U" = "#08519c",
+  "U-significant / retained in T, not significant" = "#fdd0a2",
+  "U-significant / not retained in T" = "#a63603",
+  "Non-significant / other" = "grey70",
   "Shared" = "#756bb1",
   "Other" = "grey70"
 )
@@ -554,7 +562,10 @@ p_gene_bar <- ggplot(gene_overlap_summary, aes(x = .data$overlap_class, y = .dat
   scale_fill_manual(values = class_colors) +
   labs(
     title = "UT gene-level switching overlap: T (WT) vs U (knockout)",
-    subtitle = "Genes with >=1 significant isoform switch (q cutoff from config)",
+    subtitle = paste(
+      "Genes with >=1 significant isoform switch (cutoffs from config).",
+      "T-only/U-only are dominated by genes absent from the other saved object."
+    ),
     x = NULL, y = "Number of genes"
   ) +
   ylim(0, max(gene_overlap_summary$n_genes) * 1.15)
@@ -579,8 +590,8 @@ scatter_df <- iso_overlap |>
   mutate(
     point_class = case_when(
       .data$T_switching & .data$U_switching ~ "Shared significant",
-      .data$T_switching & !.data$U_switching ~ "T-significant / U-present non-sig",
-      .data$U_switching & !.data$T_switching ~ "U-significant / T-present non-sig",
+      .data$T_switching & !.data$U_switching ~ "T-significant / retained in U, not significant",
+      .data$U_switching & !.data$T_switching ~ "U-significant / retained in T, not significant",
       TRUE ~ "Non-significant / other"
     )
   )
@@ -616,6 +627,7 @@ p_eff <- ggplot(eff_cmp, aes(x = .data$effect_group, y = .data$effect_abs, fill 
   scale_fill_manual(values = class_colors, guide = "none") +
   labs(
     title = "|dIF| among significant isoform classes",
+    subtitle = "Each isoform measured in one dataset only (Shared and T-only in T, U-only in U)",
     x = NULL, y = "|dIF|"
   )
 ggsave(file.path(fig_dir, "fig_ut_abs_dIF_by_overlap_class.png"), p_eff, width = 7, height = 4.5, dpi = 200)
@@ -680,7 +692,7 @@ plot_gene_explorer <- function(gname, out_png) {
     group_by(.data$isoform_label) |>
     summarize(m = max(abs(.data$dIF), na.rm = TRUE), .groups = "drop") |>
     arrange(desc(.data$m))
-  keep <- utils::head(ord$isoform_label, 12L)
+  keep <- utils::head(ord$isoform_label, explorer_max_isoforms)
   df <- df |>
     filter(.data$isoform_label %in% keep) |>
     mutate(isoform_label = factor(.data$isoform_label, levels = rev(keep)))
@@ -758,6 +770,17 @@ isa_u <- tryCatch(
 if (!is.null(isa_t)) isa_t <- annotate_isa_for_plotting(isa_t, t_iso)
 if (!is.null(isa_u)) isa_u <- annotate_isa_for_plotting(isa_u, u_iso)
 
+# Without the ISA objects every switchPlot attempt fails, and the loop below unlinks
+# the destination on failure -- which used to silently delete good plots from a
+# previous run whenever the external drive was not mounted.
+skip_switch_plots <- is.null(isa_t) && is.null(isa_u)
+if (skip_switch_plots) {
+  warning(
+    "ISA objects unavailable (is the external drive mounted?). ",
+    "Keeping existing switch plots and skipping switchPlot generation."
+  )
+}
+
 showcase <- bind_rows(
   gene_overlap |> filter(.data$overlap_class == "Shared (T and U)") |> slice_head(n = n_switch_plots_per_class),
   gene_overlap |> filter(.data$overlap_class == "T-only") |> slice_head(n = n_switch_plots_per_class),
@@ -766,7 +789,7 @@ showcase <- bind_rows(
   distinct(.data$gene_name, .keep_all = TRUE)
 
 switch_index <- list()
-for (i in seq_len(nrow(showcase))) {
+for (i in seq_len(if (skip_switch_plots) 0L else nrow(showcase))) {
   gname <- showcase$gene_name[[i]]
   cls <- sanitize(showcase$overlap_class[[i]])
   # Prefer plotting in the dataset(s) where the gene is significant
@@ -792,9 +815,13 @@ for (i in seq_len(nrow(showcase))) {
     if (ok) message("  switchPlot: ", basename(out_png))
   }
 }
-switch_index_df <- bind_rows(switch_index)
-write_out(switch_index_df, "ut_switch_plot_index")
+if (!skip_switch_plots) {
+  write_out(bind_rows(switch_index), "ut_switch_plot_index")
+} else {
+  message("Skipped ut_switch_plot_index (no ISA objects; existing index left in place).")
+}
 
+write_run_manifest("04_comparison_T_vs_U.R", cfg, root)
 message("04_comparison_T_vs_U.R: done")
 print(stats_summary)
 print(gene_overlap_summary)
