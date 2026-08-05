@@ -245,6 +245,41 @@ u_only <- gover |>
 knitr::kable(u_only, digits = 4, caption = "U-only significant genes")
 ```
 
+## Annotation class-code composition
+
+Do genotype-specific switches involve structurally different transcripts than shared ones?
+
+```{r}
+#| label: classcode
+cc_path <- tab("ut_class_code_by_overlap_class.csv")
+if (file.exists(cc_path)) {
+  knitr::kable(
+    read_tab("ut_class_code_by_overlap_class.csv") |>
+      mutate(pct_within_class = round(pct_within_class, 1)),
+    caption = "Class code within each isoform outcome class"
+  )
+  knitr::kable(
+    read_tab("ut_class_code_by_overlap_group.csv") |>
+      mutate(pct_within_group = round(pct_within_group, 1)),
+    caption = "Class code within the three coarse outcome groups"
+  )
+  knitr::kable(
+    read_tab("ut_class_code_composition_tests.csv") |> select(-note),
+    digits = 3,
+    caption = "Composition tests (exploratory, uncorrected)"
+  )
+  knitr::include_graphics(fig("fig_ut_class_code_by_overlap_group.png"))
+} else {
+  knitr::asis_output("_Run `Rscript scripts/04_comparison_T_vs_U.R` to generate class-code tables._")
+}
+```
+
+The novel-junction (`j`) fraction does **not** differ significantly between shared and
+genotype-specific switches. What differs is that contained (`c`) transcript models —
+shorter fragments nested inside a reference transcript — are absent from the shared set
+and make up ~19–22% of genotype-specific switches. See the seminar summary report for the
+interpretation and caveats.
+
 ## Gene-level explorer
 
 Each panel shows **isoform fraction before and after LPS in both genotypes**, for every

@@ -317,6 +317,12 @@ u_iso_key <- u_iso |>
     isoform_id = as.character(.data$isoform_id),
     U_gene_id = as.character(.data$gene_id),
     U_gene_name = as.character(.data$gene_name),
+    # class_code / oId are properties of the transcript in the shared UT annotation, not
+    # of the experiment. They were previously carried only from the T side, so isoforms
+    # significant in U but absent from T's reduced object lost them (78 of 85). Verified
+    # identical for all 172 isoforms present in both tables.
+    U_class_code = as.character(.data$class_code),
+    U_oId = as.character(.data$oId),
     U_dIF = .data$dIF_n,
     U_abs_dIF = .data$abs_dIF,
     U_q = .data$q_i,
@@ -337,6 +343,9 @@ iso_overlap <- full_join(t_iso_key, u_iso_key, by = "isoform_id") |>
       .data$U_gene_name
     ),
     gene_id = dplyr::coalesce(.data$gene_id, .data$U_gene_id),
+    class_code = dplyr::coalesce(.data$class_code, .data$U_class_code),
+    oId = dplyr::coalesce(.data$oId, .data$U_oId),
+    is_novel_pb = (.data$T_novel %in% TRUE) | (.data$U_novel %in% TRUE),
     T_switching = .data$T_switching %in% TRUE,
     U_switching = .data$U_switching %in% TRUE,
     # With the unfiltered context available, "tested in the other dataset" is a real
@@ -389,6 +398,151 @@ iso_focus <- iso_overlap |>
   filter(.data$T_switching | .data$U_switching) |>
   arrange(desc(pmax(.data$T_abs_dIF, .data$U_abs_dIF, na.rm = TRUE)))
 write_out(iso_focus, "ut_isoform_overlap_T_vs_U_significant")
+
+# ---- Annotation class-code composition by overlap class ----
+# Does a switch that happens in only one genotype involve a structurally different kind of
+# transcript than one that happens in both? gffcompare class codes describe how each
+# transcript model relates to the reference annotation:
+#   "="  intron chain identical to a reference transcript
+#   "j"  multi-exon with at least one novel splice-junction combination
+#   "c"  contained within a reference transcript (shorter/fragmentary model)
+# The rest are individually rare here and are pooled as "other".
+cc_label <- c(
+  "=" = "= (matches reference)",
+  "j" = "j (novel junction combination)",
+  "c" = "c (contained in reference)"
+)
+group_class_code <- function(x) {
+  x <- as.character(x)
+  x[is.na(x) | !nzchar(x)] <- "other"
+  out <- unname(cc_label[x])
+  out[is.na(out)] <- "other"
+  factor(out, levels = c(cc_label, "other"))
+}
+# Collapse the five outcome classes into the three the question is about.
+overlap_group <- function(x) {
+  dplyr::case_when(
+    grepl("^Shared", x) ~ "Shared (both genotypes)",
+    grepl("^T-significant", x) ~ "WT-only",
+    grepl("^U-significant", x) ~ "KO-only",
+    TRUE ~ NA_character_
+  )
+}
+
+cc_dat <- iso_focus |>
+  mutate(
+    cc = group_class_code(.data$class_code),
+    grp = overlap_group(.data$overlap_class)
+  ) |>
+  filter(!is.na(.data$grp))
+
+# Fine-grained: percentage within each of the five outcome classes.
+class_code_by_overlap <- cc_dat |>
+  count(.data$overlap_class, .data$cc, name = "n") |>
+  group_by(.data$overlap_class) |>
+  mutate(pct_within_class = 100 * .data$n / sum(.data$n), n_in_class = sum(.data$n)) |>
+  ungroup() |>
+  arrange(.data$overlap_class, desc(.data$n))
+write_out(class_code_by_overlap, "ut_class_code_by_overlap_class")
+
+# Coarse: the three-group comparison.
+class_code_by_group <- cc_dat |>
+  count(.data$grp, .data$cc, name = "n") |>
+  group_by(.data$grp) |>
+  mutate(pct_within_group = 100 * .data$n / sum(.data$n), n_in_group = sum(.data$n)) |>
+  ungroup() |>
+  arrange(.data$grp, desc(.data$n))
+write_out(class_code_by_group, "ut_class_code_by_overlap_group")
+
+# Tests. Counts are small (the shared set especially), so Fisher throughout; the omnibus
+# uses simulation because the table is larger than 2x2. These are exploratory and are NOT
+# corrected for multiple testing -- four related comparisons on the same data.
+fisher_safe <- function(tab, simulate = FALSE) {
+  tryCatch(
+    if (simulate) {
+      stats::fisher.test(tab, simulate.p.value = TRUE, B = 20000)
+    } else {
+      stats::fisher.test(tab)
+    },
+    error = function(e) NULL
+  )
+}
+tab_of <- function(groups) {
+  d <- cc_dat[cc_dat$grp %in% groups, , drop = FALSE]
+  t <- table(droplevels(d$cc), d$grp)
+  t[, colSums(t) > 0, drop = FALSE]
+}
+
+tests <- list()
+omni <- tab_of(c("Shared (both genotypes)", "WT-only", "KO-only"))
+ft <- fisher_safe(omni, simulate = TRUE)
+tests[[length(tests) + 1L]] <- tibble(
+  comparison = "All three groups x class code",
+  test = "Fisher (simulated p, B=20000)",
+  n = sum(omni),
+  odds_ratio = NA_real_, conf_low = NA_real_, conf_high = NA_real_,
+  p_value = if (!is.null(ft)) ft$p.value else NA_real_
+)
+for (other in c("WT-only", "KO-only")) {
+  tt <- tab_of(c("Shared (both genotypes)", other))
+  ft <- fisher_safe(tt, simulate = ncol(tt) > 2 || nrow(tt) > 2)
+  tests[[length(tests) + 1L]] <- tibble(
+    comparison = paste0("Shared vs ", other, " x class code"),
+    test = if (nrow(tt) > 2) "Fisher (simulated p)" else "Fisher exact",
+    n = sum(tt),
+    odds_ratio = NA_real_, conf_low = NA_real_, conf_high = NA_real_,
+    p_value = if (!is.null(ft)) ft$p.value else NA_real_
+  )
+}
+# Focused 2x2: novel-junction transcripts ("j") versus everything else.
+for (other in c("WT-only", "KO-only")) {
+  d <- cc_dat[cc_dat$grp %in% c("Shared (both genotypes)", other), , drop = FALSE]
+  j2 <- table(
+    factor(ifelse(grepl("^j ", as.character(d$cc)), "j", "not j"), levels = c("not j", "j")),
+    factor(d$grp, levels = c("Shared (both genotypes)", other))
+  )
+  ft <- fisher_safe(j2)
+  tests[[length(tests) + 1L]] <- tibble(
+    comparison = paste0("Shared vs ", other, ": novel junction (j) vs rest"),
+    test = "Fisher exact (2x2)",
+    n = sum(j2),
+    odds_ratio = if (!is.null(ft)) unname(ft$estimate) else NA_real_,
+    conf_low = if (!is.null(ft)) ft$conf.int[[1L]] else NA_real_,
+    conf_high = if (!is.null(ft)) ft$conf.int[[2L]] else NA_real_,
+    p_value = if (!is.null(ft)) ft$p.value else NA_real_
+  )
+}
+class_code_tests <- bind_rows(tests) |>
+  mutate(note = "Exploratory; not corrected for multiple testing. Shared group is small.")
+write_out(class_code_tests, "ut_class_code_composition_tests")
+print(class_code_by_group)
+print(class_code_tests)
+
+p_cc <- ggplot(
+  cc_dat |> count(.data$grp, .data$cc, name = "n") |>
+    group_by(.data$grp) |>
+    mutate(pct = 100 * .data$n / sum(.data$n), lab = paste0("n=", sum(.data$n))) |>
+    ungroup(),
+  aes(x = .data$grp, y = .data$pct, fill = .data$cc)
+) +
+  geom_col(colour = "grey25", linewidth = 0.2, width = 0.7) +
+  geom_text(aes(x = .data$grp, y = 103, label = .data$lab), inherit.aes = FALSE,
+            data = ~ distinct(.x, .data$grp, .data$lab), size = 3.2) +
+  scale_fill_manual(
+    values = c(
+      "= (matches reference)" = "#b3cde3",
+      "j (novel junction combination)" = "#8856a7",
+      "c (contained in reference)" = "#9ebcda",
+      "other" = "grey75"
+    ),
+    name = "Annotation class code"
+  ) +
+  labs(
+    title = "Structural class of switching isoforms by outcome group",
+    subtitle = "Does a genotype-specific switch involve a different kind of transcript than a shared one?",
+    x = NULL, y = "% of switching isoforms in group"
+  )
+ggsave(file.path(fig_dir, "fig_ut_class_code_by_overlap_group.png"), p_cc, width = 8.5, height = 5, dpi = 200)
 
 # ---- Statistics ----
 #

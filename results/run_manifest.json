@@ -204,8 +204,8 @@
       }
     ],
     {
-      "script": "04_comparison_T_vs_U.R",
-      "run_at": "2026-08-05T09:22:08+0200",
+      "script": "06_visualization.R",
+      "run_at": "2026-08-05T09:25:17+0200",
       "git_sha": "60e11db61f10a12ca9181cec80284f86e019671e",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
@@ -226,9 +226,9 @@
       }
     },
     {
-      "script": "06_visualization.R",
-      "run_at": "2026-08-05T09:25:17+0200",
-      "git_sha": "60e11db61f10a12ca9181cec80284f86e019671e",
+      "script": "04_comparison_T_vs_U.R",
+      "run_at": "2026-08-05T10:02:13+0200",
+      "git_sha": "a602c730ce3c988f09dc251339033498aeb56dc7",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
       "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],

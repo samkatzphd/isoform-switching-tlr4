@@ -1,0 +1,17 @@
+"overlap_class","cc","n","pct_within_class","n_in_class"
+"Shared significant","= (matches reference)",18,85.7142857142857,21
+"Shared significant","j (novel junction combination)",3,14.2857142857143,21
+"T-significant / not detected in U","= (matches reference)",17,77.2727272727273,22
+"T-significant / not detected in U","c (contained in reference)",2,9.09090909090909,22
+"T-significant / not detected in U","other",2,9.09090909090909,22
+"T-significant / not detected in U","j (novel junction combination)",1,4.54545454545455,22
+"T-significant / tested in U, not switching","= (matches reference)",109,67.7018633540373,161
+"T-significant / tested in U, not switching","c (contained in reference)",32,19.8757763975155,161
+"T-significant / tested in U, not switching","j (novel junction combination)",20,12.4223602484472,161
+"U-significant / not detected in T","= (matches reference)",4,50,8
+"U-significant / not detected in T","j (novel junction combination)",2,25,8
+"U-significant / not detected in T","other",2,25,8
+"U-significant / tested in T, not switching","= (matches reference)",49,63.6363636363636,77
+"U-significant / tested in T, not switching","c (contained in reference)",19,24.6753246753247,77
+"U-significant / tested in T, not switching","j (novel junction combination)",5,6.49350649350649,77
+"U-significant / tested in T, not switching","other",4,5.1948051948052,77
