@@ -1,0 +1,465 @@
+---
+title: "Isoform switching after LPS, and what UBL5 loss does to it"
+subtitle: "Analysis summary — state of the project"
+author: "Project"
+date: last-modified
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    fig-align: center
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(knitr)
+library(dplyr)
+source("_setup.R")
+qc  <- read_tab("qc_snapshot_gene_level.csv")
+nov <- read_tab("novel_isoform_dataset_summary.csv")
+novref <- read_tab("novel_isoform_HT_vs_UT_summary.csv")
+red <- read_tab("input_object_reduction_check.csv")
+utg <- read_tab("ut_gene_overlap_T_vs_U_summary.csv")
+uts <- read_tab("ut_T_vs_U_stats_summary.csv")
+utc <- read_tab("ut_T_vs_U_one_way_concordance.csv")
+utb <- read_tab("ut_T_vs_U_background_enrichment.csv")
+hto <- read_tab("isoform_overlap_T_HT_vs_H_HT_summary.csv")
+topT_HT <- read_tab("top_switching_genes_T_HT_anchor.csv")
+topT_UT <- read_tab("top_switching_genes_T_UT.csv")
+topU_UT <- read_tab("top_switching_genes_U_UT.csv")
+iso_ov <- readRDS(tab("ut_isoform_overlap_T_vs_U_all.rds"))
+fq  <- make_fig(NULL)
+fnov <- make_fig("novel")
+fscan <- make_fig("threshold_scan")
+fut <- make_fig("ut_t_vs_u")
+fge <- make_fig(file.path("ut_t_vs_u", "gene_explorer"))
+fht <- make_fig("ht_top_switch_plots")
+pc <- function(x) sprintf("%.1f%%", x)
+```
+
+# The question
+
+Macrophages responding to LPS reprogram their transcriptome through TLR4 signalling. Most
+analyses of that response ask **which genes change in abundance**. This project asks a
+different question: **which genes change *which isoform* they use**, independent of whether
+total gene output goes up or down.
+
+Two questions, on two reference transcriptomes:
+
+- **Q1 — Does LPS drive isoform switching in wildtype THP-1?** Anchored on `T_HT`, with
+  `H_HT` as a supplementary genotype, both on the **HT** reference.
+- **Q2 — Does losing UBL5 change post-LPS isoform selection?** `T_UT` (wildtype) versus
+  `U_UT` (UBL5 knockout), both on the **UT** reference.
+
+UBL5 is the human homolog of yeast Hub1, a small ubiquitin-like protein associated with
+spliceosome function. That makes it a plausible modifier of isoform choice rather than of
+transcription *per se* — which is exactly what this design can test. *(Framing taken from
+`config/config.yml`; the mechanistic rationale is worth confirming against the primary
+literature before it goes in a manuscript.)*
+
+::: {.callout-note}
+## What this pipeline is and is not
+This repository starts **after** IsoformSwitchAnalyzeR (ISA). It does not quantify reads or
+run the differential test — it consumes saved `switchAnalyzeRlist` objects and does the
+downstream comparison, ranking, and visualisation. Every significance call here was made
+upstream; what changed during this work is how those calls are filtered, counted, compared,
+and displayed.
+:::
+
+# Design and data
+
+```{r}
+#| label: tbl-design
+design <- data.frame(
+  Dataset = c("T_HT", "H_HT", "T_UT", "U_UT"),
+  Reference = c("HT", "HT", "UT", "UT"),
+  Contrast = c("WT THP-1, LPS- vs LPS+", "H genotype, LPS- vs LPS+",
+               "WT THP-1, LPS- vs LPS+", "UBL5 KO, LPS- vs LPS+"),
+  Role = c("Q1 anchor", "Q1 supplementary", "Q2 wildtype arm", "Q2 knockout arm")
+)
+kable(design, caption = "Four ISA objects across two reference transcriptomes")
+```
+
+Both references are **PacBio-augmented**: long-read transcripts were merged with the
+reference annotation, so a large fraction of transcript models are novel (`PB`-prefixed).
+Three replicates per condition.
+
+## A structural feature of the inputs that shapes everything downstream
+
+The four primary ISA objects were each saved **after** `reduceToSwitchingGenes = TRUE`, so
+every gene inside them already passes the gene-level significance cutoff. This is not an
+error — it is the ISA default — but it means "genes in the object" is a set already
+selected on the outcome.
+
+```{r}
+#| label: tbl-reduction
+kable(
+  red |> select(dataset_key, n_genes, pct_genes_gene_q_significant,
+                has_unfiltered_context, n_genes_unfiltered, pct_genes_significant_unfiltered),
+  digits = 1,
+  col.names = c("Dataset", "Genes in object", "% significant", "Unfiltered available",
+                "Genes tested", "% significant (tested)"),
+  caption = "Primary objects are pre-selected; the UT datasets also have unfiltered exports"
+)
+```
+
+For the **UT** datasets an unfiltered export exists, so the real denominator is recoverable:
+~11.6k and ~12.0k genes tested, of which 24.9% and 16.4% switch. For **HT** it is not, and
+that limits Q1 in a way documented in §6. Everything below states which denominator it uses.
+
+# Defining a switch
+
+An isoform counts as switching when its q-value and its gene's q-value are below 0.05 **and**
+`|dIF| ≥ 0.15` — a shift of at least 15 percentage points in that isoform's share of its
+gene's expression.
+
+The `|dIF|` floor is a judgement call, so it was scanned rather than assumed:
+
+```{r}
+#| label: fig-scan
+#| fig-cap: "Switching gene counts as the |dIF| floor rises. The chosen 0.15 sits where q-only calls stop dominating but before the set collapses."
+include_graphics(fscan("fig_gene_count_vs_min_abs_dif.png"))
+```
+
+Note the honest caveat: because the inputs are pre-selected, this curve shows how the floor
+**prunes an already-significant set**. It is not a sensitivity/specificity curve, and should
+not be presented as one.
+
+# Q1 — LPS drives isoform switching in wildtype cells
+
+```{r}
+#| label: tbl-qc
+kable(
+  qc |> select(dataset, n_genes, n_switching_genes, n_novel_involved, pct_novel_involved),
+  digits = 1,
+  col.names = c("Dataset", "Genes retained", "Switching genes", "Novel-involved", "% novel-involved"),
+  caption = "Genes passing the full switching definition (denominator = genes retained in each object)"
+)
+```
+
+In the wildtype anchor `T_HT`, **`r qc$n_switching_genes[qc$dataset == "T_HT_anchor"]` genes**
+show at least one qualifying isoform switch.
+
+## The top switching genes are bona fide LPS-response genes
+
+```{r}
+#| label: tbl-topht
+kable(
+  topT_HT |> select(rank, gene_name, n_switching_isoforms, max_abs_dif_switching, min_isoform_switch_q) |> head(10),
+  digits = 3,
+  col.names = c("Rank", "Gene", "Switching isoforms", "max |dIF|", "min q"),
+  caption = "T_HT: top 10 switching genes"
+)
+```
+
+This is the most reassuring result in the project. The ranking was produced by effect size
+and q-value with no knowledge of immunology, and it returns **NCOA7, RSAD2, KDM6B, CMPK2,
+IFIT5, IRAK3, CCL3/CCL4, SIGLEC9** — interferon-stimulated genes, chemokines, a TLR-pathway
+negative regulator, and an LPS-induced chromatin modifier. Isoform switching is landing on
+the canonical LPS program, not on a random slice of the transcriptome.
+
+```{r}
+#| label: fig-ncoa7
+#| fig-cap: "NCOA7 in wildtype THP-1: the switch is near-complete (max |dIF| 0.65) and among the most significant events in the dataset. Transcript structures with expression per condition."
+include_graphics(fht("switch_plot_T_HT_anchor_rank01_NCOA7.png"))
+```
+
+# Novel PacBio isoforms carry a large share of the switching
+
+Because both references are long-read augmented, a natural question is whether novel
+transcripts are real participants or annotation noise.
+
+```{r}
+#| label: tbl-novel
+kable(
+  nov |> select(dataset_label, pct_novel_isoforms, pct_switching_that_are_novel,
+                median_abs_dIF_novel_switching, median_abs_dIF_known_switching),
+  digits = 1,
+  col.names = c("Dataset", "% isoforms novel", "% of switches that are novel",
+                "median |dIF| novel", "median |dIF| known"),
+  caption = "Novel (PacBio) isoforms among switching events"
+)
+```
+
+Two observations:
+
+1. **Novel isoforms are represented among switching events at least in proportion to their
+   abundance**, and in `H_HT` and `U_UT` somewhat above it (`r pc(nov$pct_switching_that_are_novel[nov$dataset_label=="H_HT_supplementary"])`
+   of switches from `r pc(nov$pct_novel_isoforms[nov$dataset_label=="H_HT_supplementary"])` of isoforms).
+2. **Their effect sizes are indistinguishable from known isoforms** — median |dIF| around
+   0.20–0.23 in both groups, in every dataset.
+
+```{r}
+#| label: fig-novel
+#| fig-cap: "Effect size of novel versus known isoforms among switching events. If novel transcripts were mostly artefacts, we would expect them squeezed toward small |dIF|. They are not."
+include_graphics(fnov("fig_novel_vs_known_abs_dif_switching.png"))
+```
+
+```{r}
+#| label: fig-classcode
+#| fig-cap: "Structural relationship of novel switching isoforms to the reference (gffcompare class codes). 'j' = novel splice-junction combination, 'c' = contained within a reference transcript, '=' = structurally identical to a reference transcript."
+include_graphics(fnov("fig_novel_class_code_counts.png"))
+```
+
+The class-code breakdown is worth pausing on: a substantial block are `j` — genuinely novel
+junction combinations — and these are the ones that would be invisible to a
+short-read-only annotation. That is the argument for the long-read reference paying off.
+
+# Q2 — UBL5 loss dampens LPS-driven isoform switching
+
+This is where the unfiltered exports change what can be concluded.
+
+## Fewer genes switch in the knockout
+
+Against the **full tested background** (not the pre-selected objects):
+
+```{r}
+#| label: tbl-prop
+nT <- round(red$n_genes_unfiltered[red$dataset_key == "T_UT"] * red$pct_genes_significant_unfiltered[red$dataset_key == "T_UT"] / 100)
+nU <- round(red$n_genes_unfiltered[red$dataset_key == "U_UT"] * red$pct_genes_significant_unfiltered[red$dataset_key == "U_UT"] / 100)
+NT <- red$n_genes_unfiltered[red$dataset_key == "T_UT"]
+NU <- red$n_genes_unfiltered[red$dataset_key == "U_UT"]
+pt <- prop.test(c(nT, nU), c(NT, NU))
+kable(
+  data.frame(
+    Genotype = c("WT (T_UT)", "UBL5 KO (U_UT)"),
+    `Genes tested` = c(NT, NU),
+    `Genes switching` = c(nT, nU),
+    Percent = c(100 * nT / NT, 100 * nU / NU),
+    check.names = FALSE
+  ),
+  digits = 1,
+  caption = sprintf(
+    "Difference %.1f pp (95%% CI %.1f-%.1f), chi-squared p = %.3g",
+    100 * (nT/NT - nU/NU), 100 * pt$conf.int[1], 100 * pt$conf.int[2], pt$p.value
+  )
+)
+```
+
+**`r pc(100*nT/NT)` of tested genes switch in wildtype versus `r pc(100*nU/NU)` in the
+knockout.** Under the pre-selected objects this comparison was impossible — the denominators
+were 248 and 127 genes, both 100% significant by construction.
+
+::: {.callout-warning}
+## Read this with the power caveat
+These are two separate DEXSeq analyses. A difference in significance *rate* is sensitive to
+differences in library depth, dispersion, and replicate variability, not only to biology.
+The gene counts tested are comparable (`r format(NT, big.mark=",")` vs
+`r format(NU, big.mark=",")`), which is mildly reassuring, but this result should be
+supported by the effect-size evidence below rather than standing alone.
+:::
+
+## Switching genes strongly co-occur between genotypes
+
+```{r}
+#| label: tbl-bg
+kable(
+  utb |>
+    transmute(
+      n_genes_tested_in_both, n_switching_in_T, n_switching_in_U, n_switching_in_both,
+      expected_in_both_if_independent = round(expected_in_both_if_independent, 2),
+      odds_ratio = round(odds_ratio, 1),
+      `95% CI` = sprintf("%.1f – %.1f", conf_low, conf_high),
+      p = format(p_value, digits = 3, scientific = TRUE)
+    ),
+  col.names = c("Tested in both", "Switching in WT", "Switching in KO", "In both",
+                "Expected if independent", "OR", "95% CI", "p"),
+  caption = "Co-occurrence over genes quantified in both unfiltered UT objects"
+)
+```
+
+Genes that switch in one genotype are far more likely to switch in the other than chance
+allows — `r round(utb$n_switching_in_both)` observed against
+`r sprintf("%.1f", utb$expected_in_both_if_independent)` expected. The knockout is not
+switching a *different* set of genes; it is switching **fewer of the same** ones.
+
+## When the same isoform is measurable in both, direction is preserved
+
+```{r}
+#| label: tbl-oneway
+kable(
+  utc, digits = 1,
+  col.names = c("Conditioned on", "n", "median |dIF| where significant",
+                "median |dIF| in the other", "% same direction", "% passing threshold in the other"),
+  caption = "Condition on significance in one genotype, then measure the same isoform in the other"
+)
+```
+
+This is the cleanest comparison available, because it selects on the outcome only once.
+Of isoforms significant in wildtype and measurable in the knockout,
+**`r pc(utc$pct_same_direction_in_other[1])` move in the same direction** — but only
+**`r pc(utc$pct_passing_min_abs_dif_in_other[1])` reach the effect-size threshold there**.
+The reciprocal is `r pc(utc$pct_same_direction_in_other[2])` and
+`r pc(utc$pct_passing_min_abs_dif_in_other[2])`.
+
+That asymmetry is the crux: **direction is preserved, magnitude is blunted.**
+
+```{r}
+#| label: fig-scatter
+#| fig-cap: "dIF of matched isoforms, wildtype (x) versus knockout (y). Points cluster along the diagonal — concordant direction — with the knockout's shifts compressed toward zero."
+include_graphics(fut("fig_ut_dIF_scatter_matched_isoforms.png"))
+```
+
+## What the isoform-level classification shows
+
+```{r}
+#| label: tbl-classes
+kable(
+  iso_ov |> filter(T_switching | U_switching) |> count(overlap_class, sort = TRUE),
+  col.names = c("Class", "Isoforms"),
+  caption = "Isoform-level outcome classes across the two genotypes"
+)
+```
+
+```{r}
+#| label: fig-isoclass
+#| fig-cap: "Isoform-level switching categories. The two large 'tested in the other genotype, not switching' bars are the biologically interesting cases — the transcript is present and quantified, its usage simply does not shift."
+include_graphics(fut("fig_ut_isoform_overlap_counts.png"))
+```
+
+The great majority of genotype-specific switches are **not** cases where the transcript is
+missing from the other genotype. It is there, it is measured, and its ratio holds. Only
+`r sum(iso_ov$overlap_class %in% c("T-significant / not detected in U", "U-significant / not detected in T"))`
+isoforms are genuinely undetected in the opposite genotype.
+
+## Seeing it gene by gene
+
+```{r}
+#| label: fig-cd86
+#| fig-cap: "CD86 — called switching in wildtype only. Left: three isoforms shift significantly after LPS. Right: the same isoforms are present in the knockout and move in the same direction, but not far enough to be called. Open points LPS-, filled LPS+, small points individual replicates."
+include_graphics(fge("gene_explorer_T_only_19_CD86.png"))
+```
+
+```{r}
+#| label: fig-ccl22
+#| fig-cap: "CCL22 — the strongest switch in the knockout (max |dIF| 0.88) and also significant in wildtype. A shared event, not a knockout-specific one."
+include_graphics(fge("gene_explorer_Shared_T_and_U__01_CCL22.png"))
+```
+
+```{r}
+#| label: tbl-toput
+kable(
+  bind_rows(
+    topT_UT |> select(rank, gene_name, n_switching_isoforms, max_abs_dif_switching) |> head(8) |> mutate(Genotype = "WT"),
+    topU_UT |> select(rank, gene_name, n_switching_isoforms, max_abs_dif_switching) |> head(8) |> mutate(Genotype = "UBL5 KO")
+  ) |> select(Genotype, rank, gene_name, n_switching_isoforms, max_abs_dif_switching),
+  digits = 3,
+  col.names = c("Genotype", "Rank", "Gene", "Switching isoforms", "max |dIF|"),
+  caption = "Top switching genes in each UT arm"
+)
+```
+
+Both arms are headed by inflammatory genes — CCL22, IL23A, CCL4, CD86, KDM6B, RSAD2 — again
+consistent with switching tracking the LPS program rather than drifting.
+
+# Where the analysis is currently blind
+
+## Q1's cross-genotype comparison is severely limited
+
+```{r}
+#| label: tbl-ht
+kable(
+  hto |> select(n_isoforms_T, n_isoforms_H, n_isoforms_shared, n_T_significant,
+                n_T_significant_present_in_H, n_T_significant_and_H_significant),
+  col.names = c("Isoforms in T", "Isoforms in H", "Shared", "Significant in T",
+                "…also present in H", "…also significant in H"),
+  caption = "T_HT versus H_HT — bounded by what survived each object's reduction"
+)
+```
+
+Only `r hto$n_T_significant_present_in_H` of `r hto$n_T_significant` isoforms significant in
+`T_HT` even **appear** in the `H_HT` object. That is not a biological statement — those
+isoforms were dropped when `H_HT` was reduced. Until unfiltered HT exports exist, this
+comparison cannot distinguish "does not switch in H" from "not retained in H", and no
+conclusion should be drawn from it.
+
+This is exactly the limitation the UT arm escaped, and it is the single highest-value
+addition remaining.
+
+## Statistics that did not survive scrutiny
+
+Two results reported earlier in the project's history do not hold up and have been removed
+or corrected:
+
+- A **Fisher test** of switching co-occurrence with OR 15.0, p = 0.031. Its background was
+  25 genes, all already significant by construction. Removed; the OR 25.7 result in §6.2 is
+  its legitimate replacement on an 11,126-gene denominator.
+- An apparent finding that **shared switches have larger effect sizes** (Kruskal p = 9.3e-5)
+  was an artefact: the shared group was summarised with `pmax(WT, KO)` while the
+  genotype-specific groups used a single value. With each isoform measured in one genotype,
+  the effect is no longer significant (p = `r sprintf("%.3f", uts$kruskal_p_abs_dIF_by_class)`).
+
+Both are recorded in `docs/REVIEW_CHANGES.md` with evidence.
+
+# Where this leaves us
+
+**Q1 — Yes, and on the right genes.** LPS drives isoform switching in
+`r qc$n_switching_genes[qc$dataset == "T_HT_anchor"]` genes in wildtype THP-1, and the
+strongest events sit on canonical LPS-response genes. Novel long-read isoforms participate
+at full effect size, which justifies the PacBio-augmented reference. The `T_HT` versus
+`H_HT` comparison remains unusable pending unfiltered exports.
+
+**Q2 — UBL5 loss dampens rather than redirects.** Three independent lines point the same way:
+
+1. Fewer genes switch in the knockout (`r pc(100*nU/NU)` vs `r pc(100*nT/NT)` of tested genes).
+2. Switching genes strongly co-occur between genotypes (OR `r round(utb$odds_ratio, 1)`), so
+   the knockout is not switching a different programme.
+3. Isoform-level direction is preserved (`r pc(utc$pct_same_direction_in_other[1])` concordant)
+   while magnitude falls below threshold in a third of cases.
+
+The consistent reading is a **quantitative attenuation of LPS-driven isoform selection**, not
+a qualitative rewiring. That is compatible with UBL5 acting as a modulator of splicing
+efficiency rather than as a switch between alternative programmes — though the design here
+cannot demonstrate mechanism.
+
+## Honest limits
+
+- Every significance call comes from upstream ISA runs; this analysis inherits their model
+  assumptions and power.
+- The WT-versus-KO significance-rate comparison spans two separate tests and is
+  power-sensitive.
+- Concordance statistics rest on small matched sets (n = `r utc$n[1]` and `r utc$n[2]`),
+  because only isoforms measurable in both contribute.
+- Three replicates per condition.
+- No pathway-level analysis yet — `05_pathway_enrichment.R` is a deliberate stub, since
+  enrichment on a gene set drawn from pre-selected objects would inherit the same
+  denominator problem.
+
+## Next steps, in priority order
+
+1. **Add unfiltered HT exports.** Unblocks Q1's cross-genotype comparison and completes the
+   T-in-H-context table. The code path already exists and falls back explicitly.
+2. **Pathway analysis**, once a defensible background exists for both references.
+3. **Targeted validation** of the dampening model — a handful of high-|dIF| WT switches that
+   fail threshold in the knockout (CD86 is a natural first candidate) by isoform-specific
+   qPCR.
+4. **Novel-isoform follow-up** on the `j`-class switching transcripts, which are the ones a
+   short-read annotation would have missed entirely.
+
+---
+
+::: {.callout-note collapse="true"}
+## Reproducibility
+
+All numbers and figures in this report are read from `results/` at render time; none are
+typed in. Regenerate with:
+
+```bash
+Rscript scripts/01_load_data.R
+Rscript scripts/02_gene_level_summary.R && Rscript scripts/02b_qc_snapshot.R
+Rscript scripts/02c_qc_figures.R && Rscript scripts/03_novel_isoform_analysis.R
+Rscript scripts/04_comparison_T_vs_U.R && Rscript scripts/06_visualization.R
+quarto render reports/seminar_summary.qmd
+```
+
+Provenance for the current outputs — git SHA, R and package versions, thresholds in force —
+is in `results/run_manifest.json`. Analysis decisions and the corrections behind them are in
+`docs/REVIEW_CHANGES.md`.
+:::

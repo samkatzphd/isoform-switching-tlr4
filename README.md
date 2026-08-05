@@ -210,6 +210,7 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 5. **Render HTML reports** ([Quarto](https://quarto.org/docs/get-started/)):
 
    ```bash
+   quarto render reports/seminar_summary.qmd
    quarto render reports/isoform_switching_overview.qmd
    quarto render reports/ht_switch_analysis.qmd
    quarto render reports/novel_isoform_analysis.qmd
@@ -218,6 +219,7 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 
    Committed HTML (self-contained via `embed-resources`):
 
+   - `reports/seminar_summary.html` — narrative summary of the analysis and findings
    - `reports/isoform_switching_overview.html`
    - `reports/ht_switch_analysis.html`
    - `reports/novel_isoform_analysis.html`
