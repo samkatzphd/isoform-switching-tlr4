@@ -81,25 +81,52 @@ Read this before the numbers.
 - **Effect sizes are the interpretable quantities.** With thousands of matched isoforms,
   the Wilcoxon p-values below are driven by sample size; the median ΔdIF is what says
   whether knockout shifts isoform usage, and by how much.
-- **T-only / U-only counts are bounded by object retention**, not by biology. Only the
-  symbols retained in *both* saved objects can ever be called shared, so the great
-  majority of "T-only" genes are simply absent from the U object.
-- **No enrichment test is reported.** A Fisher test of "significant in T" × "significant
-  in U" previously appeared here. Its background was 25 already-significant genes, so it
-  measured association inside a set already selected on the outcome. It has been removed
-  rather than reported with a caveat.
+- **Enrichment is now tested against a real background.** The unfiltered UT objects
+  supply every quantified isoform, so the co-occurrence test below runs over the ~11k
+  genes measured in both datasets rather than the 25 already-significant ones available
+  from the reduced objects. The earlier version of this report reported a Fisher odds
+  ratio computed inside a set selected on the outcome; that statistic was removed, and
+  this one replaces it on a proper denominator.
+- **"T-only" no longer means "absent from U".** With the context layer, an isoform
+  significant in T can be classified as *tested in U and not switching* versus *not
+  detected in U* — a distinction the reduced objects could not express.
 - **Statistics prefixed `selconf_` are conditioned on significance in both datasets.**
   Selecting on the outcome in both and then measuring agreement manufactures agreement;
   treat them as descriptions of the shared set, not as evidence of concordance.
 
+### Co-occurrence against the tested background
+
+```{r}
+#| label: background
+bg_path <- tab("ut_T_vs_U_background_enrichment.csv")
+if (file.exists(bg_path)) {
+  bg <- read_tab("ut_T_vs_U_background_enrichment.csv")
+  bgc <- read_tab("ut_T_vs_U_background_contingency.csv")
+  knitr::kable(
+    bg |> select(-background),
+    digits = 4,
+    caption = paste0("Switching co-occurrence over ", bg$n_genes_tested_in_both[[1]],
+                     " genes quantified in both unfiltered UT objects")
+  )
+  knitr::kable(bgc, caption = "Contingency: switching in T × switching in U, tested background")
+} else {
+  knitr::asis_output(
+    "_No unfiltered context configured, so no enrichment test is reported. Set `isa_unfiltered_path` in config and rerun `01`/`04`._"
+  )
+}
+```
+
 ### Retention accounting
+
+How much of the comparison is limited by what survived in each *reduced* object. This is
+the ceiling the analysis used to be stuck at, kept for reference.
 
 ```{r}
 knitr::kable(
   retention |> select(-note),
-  caption = "How many gene symbols survive in each saved object, and how they split"
+  caption = "How many gene symbols survive in each saved (reduced) object, and how they split"
 )
-knitr::kable(rtab, caption = "Symbols retained in both objects: switching in T × switching in U (counts only, no test)")
+knitr::kable(rtab, caption = "Symbols retained in both reduced objects: switching in T × switching in U (counts only, no test)")
 ```
 
 ### One-way concordance (the defensible comparison)
@@ -220,7 +247,15 @@ knitr::kable(u_only, digits = 4, caption = "U-only significant genes")
 
 ## Gene-level explorer
 
-Each panel shows isoform dIF for the same gene in **T_UT** and **U_UT** (novel isoforms tagged `(PB)`).
+Each panel shows **isoform fraction before and after LPS in both genotypes**, for every
+isoform of the gene — not only the ones that reached significance. Open points are LPS−,
+filled are LPS+, and the arrow is the shift; small grey points are individual replicates.
+Green arrows are significant switches, purple are isoforms that were quantified but did
+not switch. Novel isoforms are tagged `(PB)`.
+
+This is what the unfiltered context layer buys: for a gene called switching in only one
+genotype, the other panel used to be empty. It now shows whether the transcript is
+present and simply holds its ratio, or is absent altogether.
 
 ```{r}
 #| fig-cap: "Gene explorer panels (subset by overlap class)"
@@ -279,7 +314,8 @@ knitr::kable(
 
 - Significance uses `config/config.yml` thresholds (`isoform_q`, `gene_q`, `min_abs_dif`).
 - **Gene overlap** uses cleaned gene symbols (not `XLOC_*` / `ENSG*`), because those IDs are not stably shared across condition objects.
-- **Isoform matching** uses `isoform_id` (`TCONS`) within the UT reference. Isoforms absent from one genotype's object are labelled *not retained in*, not *missing* — they were dropped when that object was reduced to switching genes, so their status there is unknown rather than negative.
+- **Isoform matching** uses `isoform_id` (`TCONS`) within the UT reference. Classification uses the unfiltered context tables, so *tested in the other genotype and not switching* is distinguished from *not detected there*. Without that context the labels fall back to *retained / not retained*, which only describes what survived the reduction.
+- **The context layer is display and classification only.** Every significance call in this report comes from the primary (reduced) objects; the unfiltered tables contribute isoform fractions, replicate values, and presence/absence.
 - **|dIF| by class** measures each isoform in exactly one dataset. It previously summarised the Shared class with `pmax(T, U)` against single values for T-only/U-only, which biased Shared upward by construction.
 - Rebuild:
 

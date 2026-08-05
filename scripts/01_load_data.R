@@ -163,6 +163,60 @@ for (k in names(datasets)) {
     cfg = cfg,
     csv = isTRUE((cfg$output %||% list())$csv_twin_isoform_level %||% FALSE)
   )
+
+  # ---- Unfiltered context layer (optional per dataset) ----
+  # The primary object above is reduced to significant switching genes, so a gene that
+  # switches in one dataset but not the other cannot be plotted in the other at all.
+  # When an unfiltered object is configured, keep a slim per-isoform context table (and
+  # per-replicate IF) so downstream plots and overlap classification can distinguish
+  # "tested and not switching" from "not present". Switching calls are NOT taken from
+  # here -- they continue to come from the primary object.
+  unf_raw <- ds$isa_unfiltered_path %||% NULL
+  unf_path <- if (!is.null(unf_raw) && nzchar(as.character(unf_raw)[1L]) &&
+    !identical(as.character(unf_raw)[1L], "null")) {
+    resolve_path(as.character(unf_raw)[1L], root = root)
+  } else {
+    NULL
+  }
+  if (is.null(unf_path) || !file.exists(unf_path)) {
+    message("  No unfiltered object for ", k, "; context layer unavailable.")
+    reduction_rows[[k]]$has_unfiltered_context <- FALSE
+    reduction_rows[[k]]$n_genes_unfiltered <- NA_integer_
+    reduction_rows[[k]]$pct_genes_significant_unfiltered <- NA_real_
+  } else {
+    message("  Loading unfiltered context from ", unf_path, " ...")
+    unf <- load_isa_input(unf_path, object_name = obj_name)
+    ctx <- extract_context_tables(unf)
+    red_unf <- detect_isa_reduction(ctx$features, cfg)
+    message(
+      "    context: ", nrow(ctx$features), " isoforms / ", red_unf$n_genes, " genes; ",
+      round(red_unf$pct_genes_significant, 1), "% of genes pass gene q -- a real tested background."
+    )
+    saveRDS(
+      ctx$features,
+      file.path(proc, paste0("isoformContext_", sanitize(key_label), ".rds")),
+      compress = "xz"
+    )
+    if (!is.null(ctx$rep_if)) {
+      saveRDS(
+        ctx$rep_if,
+        file.path(proc, paste0("isoformContextRepIF_", sanitize(key_label), ".rds")),
+        compress = "xz"
+      )
+    }
+    covered <- sum(iso$isoform_id %in% ctx$features$isoform_id)
+    if (covered < nrow(iso)) {
+      warning(
+        "[", k, "] ", nrow(iso) - covered, " of ", nrow(iso),
+        " analysed isoforms are absent from the unfiltered object -- are they the same run?"
+      )
+    }
+    reduction_rows[[k]]$has_unfiltered_context <- TRUE
+    reduction_rows[[k]]$n_genes_unfiltered <- red_unf$n_genes
+    reduction_rows[[k]]$pct_genes_significant_unfiltered <- round(red_unf$pct_genes_significant, 2)
+    rm(unf, ctx)
+    invisible(gc())
+  }
 }
 
 reduction_summary <- do.call(rbind, reduction_rows)

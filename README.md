@@ -53,12 +53,33 @@ gene-level q cutoff** — they were written after
 `isoformSwitchTestDEXSeq(reduceToSwitchingGenes = TRUE)`, the ISA default. Verified per
 run and recorded in `results/tables/input_object_reduction_check.csv`.
 
-This means gene counts are *genes retained*, not *genes tested*; "present in the other
-dataset" means *retained in that saved object*; and every percentage-of-genes has a
-denominator already selected on the outcome. Cross-dataset overlap is bounded by how many
-symbols survive in both objects (only 25 for T_UT ∩ U_UT). **No enrichment test against
-this background is reported.** Fixing this properly means re-exporting the objects with
-`reduceToSwitchingGenes = FALSE`. See [`docs/REVIEW_CHANGES.md`](docs/REVIEW_CHANGES.md).
+This means gene counts are *genes retained*, not *genes tested*, and every
+percentage-of-genes has a denominator already selected on the outcome.
+
+**The UT datasets work around this via the context layer** (below). The HT datasets do
+not yet — for them, cross-dataset overlap remains bounded by how many symbols survive in
+both objects, and no enrichment test is reported. See
+[`docs/REVIEW_CHANGES.md`](docs/REVIEW_CHANGES.md) §0 and §0b.
+
+## Unfiltered context layer
+
+`isa_unfiltered_path` in `config/config.yml` points a dataset at an *unreduced* export of
+the same analysis. Script `01` then writes a slim per-isoform context table plus
+per-replicate isoform fractions to `data/processed/isoformContext*_<label>.rds`.
+
+Configured for `T_UT` and `U_UT` (11,582 and 11,969 genes, vs 248 and 127 in the reduced
+objects); `null` for `T_HT`/`H_HT` until those exports exist — `01` and `06` handle the
+absence explicitly.
+
+**Significance calls never come from the context layer** — it is used for display and
+classification only, so novelty rates in `03` stay comparable between HT and UT. What it
+enables:
+
+- Gene explorer panels show **both genotypes for any gene**, whether or not it reached
+  significance in each (127 of 145 T-only genes gained a plottable U side).
+- Overlap classes distinguish *tested in the other dataset and not switching* (238
+  isoforms) from *not detected there* (30).
+- A co-occurrence test against a genuine background of 11,126 genes quantified in both.
 
 ## Significance definition
 

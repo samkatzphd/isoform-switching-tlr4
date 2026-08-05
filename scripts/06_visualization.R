@@ -255,7 +255,8 @@ load_isa_for_dataset <- function(ds) {
   load_isa_input(abs_in, object_name = obj_name)
 }
 
-extract_t_h_overlap <- function(t_iso, h_iso, iso_q_cutoff, gene_q_cutoff, min_abs_dif) {
+extract_t_h_overlap <- function(t_iso, h_iso, iso_q_cutoff, gene_q_cutoff, min_abs_dif,
+                                ctx_t = NULL, ctx_h = NULL) {
   select_cols <- c("isoform_id", "gene_id", "gene_name", "dIF_n", "q_i", "q_g", "is_switching")
   t_keep <- t_iso[, intersect(select_cols, names(t_iso)), drop = FALSE] |>
     mutate(
@@ -289,15 +290,35 @@ extract_t_h_overlap <- function(t_iso, h_iso, iso_q_cutoff, gene_q_cutoff, min_a
       )
     )
 
+  # The point of this table is to show isoforms significant in T alongside how they
+  # behave in H even when H is non-significant. The H object is reduced to significant
+  # switching genes, so without an unfiltered context "not found in H" conflates
+  # "quantified in H and did not switch" with "dropped when H was reduced". When an
+  # unfiltered H context is configured the distinction becomes real.
+  has_ctx <- !is.null(ctx_t) && !is.null(ctx_h)
+  merged <- merged |>
+    mutate(
+      tested_in_H = if (!is.null(ctx_h)) .data$isoform_id %in% ctx_h$isoform_id else NA,
+      tested_in_T = if (!is.null(ctx_t)) .data$isoform_id %in% ctx_t$isoform_id else NA
+    )
+
   t_sig_in_h <- merged |>
-    filter(.data$T_significant, .data$present_in_both) |>
+    filter(.data$T_significant, .data$present_in_both | (has_ctx & .data$tested_in_H %in% TRUE)) |>
     mutate(
       H_passes_significance = .data$H_significant,
-      overlap_note = case_when(
-        .data$H_significant ~ "Present in H and significant in H",
-        .data$in_H ~ "Present in H but not significant in H",
-        TRUE ~ "Not found in H"
-      )
+      overlap_note = if (has_ctx) {
+        case_when(
+          .data$H_significant ~ "Significant in H",
+          .data$tested_in_H %in% TRUE ~ "Tested in H, not switching",
+          TRUE ~ "Not detected in H"
+        )
+      } else {
+        case_when(
+          .data$H_significant ~ "Present in H and significant in H",
+          .data$in_H ~ "Present in H but not significant in H",
+          TRUE ~ "Not retained in H (status unknown without unfiltered object)"
+        )
+      }
     ) |>
     arrange(desc(abs(.data$T_dIF_n)), .data$T_q_i)
 
@@ -315,13 +336,20 @@ extract_t_h_overlap <- function(t_iso, h_iso, iso_q_cutoff, gene_q_cutoff, min_a
     n_T_significant_present_in_H_same_direction = sum(
       merged$T_significant & merged$present_in_both & (merged$same_direction %in% TRUE),
       na.rm = TRUE
-    )
+    ),
+    unfiltered_context_available = has_ctx,
+    n_T_significant_tested_in_H = if (has_ctx) {
+      sum(merged$T_significant & (merged$tested_in_H %in% TRUE), na.rm = TRUE)
+    } else {
+      NA_integer_
+    }
   )
   list(all = merged, t_sig_in_h = t_sig_in_h, summary = summary)
 }
 
 all_rankings <- list()
 all_iso <- list()
+all_ctx <- list()
 
 for (ds_key in target_datasets) {
   ds <- cfg$datasets[[ds_key]] %||% NULL
@@ -344,6 +372,13 @@ for (ds_key in target_datasets) {
   iso_scored <- out$iso
   all_rankings[[ds_key]] <- ranks
   all_iso[[ds_key]] <- iso_scored
+  all_ctx[[ds_key]] <- load_context_table(processed_dir, label_clean, "features")
+  if (is.null(all_ctx[[ds_key]])) {
+    message(
+      "[", ds_key, "] No unfiltered context configured; ",
+      "'not detected in the other dataset' cannot be distinguished from 'dropped when reduced'."
+    )
+  }
 
   top_tbl <- ranks |>
     slice_head(n = min(top_n_genes, nrow(ranks)))
@@ -424,7 +459,9 @@ if (all(c("T_HT", "H_HT") %in% names(all_iso))) {
     h_iso = all_iso[["H_HT"]],
     iso_q_cutoff = iso_q_cutoff,
     gene_q_cutoff = gene_q_cutoff,
-    min_abs_dif = min_abs_dif
+    min_abs_dif = min_abs_dif,
+    ctx_t = all_ctx[["T_HT"]],
+    ctx_h = all_ctx[["H_HT"]]
   )
   write_table_pair(
     ov$all, results_tables, "isoform_overlap_T_HT_vs_H_HT_all", cfg = cfg,

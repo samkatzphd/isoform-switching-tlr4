@@ -216,6 +216,27 @@ u_pack <- load_processed("U_UT")
 t_iso <- score_isoforms(t_pack$iso, cfg, "T_UT", t_pack$label)
 u_iso <- score_isoforms(u_pack$iso, cfg, "U_UT", u_pack$label)
 
+# Unfiltered context (written by 01 when isa_unfiltered_path is configured). Used for
+# plotting and for telling "tested and not switching" apart from "not detected"; the
+# switching calls above are unaffected.
+ctx_t <- load_context_table(processed_dir, t_pack$label, "features")
+ctx_u <- load_context_table(processed_dir, u_pack$label, "features")
+rep_t <- load_context_table(processed_dir, t_pack$label, "rep_if")
+rep_u <- load_context_table(processed_dir, u_pack$label, "rep_if")
+has_context <- !is.null(ctx_t) && !is.null(ctx_u)
+if (has_context) {
+  message(
+    "Context layer: T ", nrow(ctx_t), " isoforms / ", dplyr::n_distinct(ctx_t$gene_id),
+    " genes; U ", nrow(ctx_u), " / ", dplyr::n_distinct(ctx_u$gene_id), " genes."
+  )
+} else {
+  message(
+    "No unfiltered context tables found. Overlap classes fall back to object retention, ",
+    "and gene explorer panels can only show the dataset a gene was significant in. ",
+    "Set isa_unfiltered_path in config and rerun 01 to enable it."
+  )
+}
+
 t_genes <- gene_rank_from_scored(t_iso, "T_UT", t_pack$label)
 u_genes <- gene_rank_from_scored(u_iso, "U_UT", u_pack$label)
 write_out(t_genes |> slice_head(n = min(top_n_genes, nrow(t_genes))), "top_switching_genes_T_UT")
@@ -318,18 +339,39 @@ iso_overlap <- full_join(t_iso_key, u_iso_key, by = "isoform_id") |>
     gene_id = dplyr::coalesce(.data$gene_id, .data$U_gene_id),
     T_switching = .data$T_switching %in% TRUE,
     U_switching = .data$U_switching %in% TRUE,
-    # "present" means "retained in the saved ISA object", which -- because both objects
-    # were reduced to significant switching genes -- is NOT the same as "tested". The
-    # labels say retained/not retained so the tables cannot be misread as
-    # tested-and-non-significant.
-    overlap_class = case_when(
-      .data$T_switching & .data$U_switching ~ "Shared significant",
-      .data$T_switching & !.data$U_switching & .data$present_in_U ~ "T-significant / retained in U, not significant",
-      .data$T_switching & !.data$present_in_U ~ "T-significant / not retained in U",
-      .data$U_switching & !.data$T_switching & .data$present_in_T ~ "U-significant / retained in T, not significant",
-      .data$U_switching & !.data$present_in_T ~ "U-significant / not retained in T",
-      TRUE ~ "Non-significant / other"
-    ),
+    # With the unfiltered context available, "tested in the other dataset" is a real
+    # statement: the isoform was quantified there and simply did not switch. Without it,
+    # membership in the saved (reduced) object is all we know, so the labels say
+    # "retained" instead and must not be read as tested-and-non-significant.
+    tested_in_T = if (has_context) {
+      .data$isoform_id %in% ctx_t$isoform_id
+    } else {
+      .data$present_in_T
+    },
+    tested_in_U = if (has_context) {
+      .data$isoform_id %in% ctx_u$isoform_id
+    } else {
+      .data$present_in_U
+    },
+    overlap_class = if (has_context) {
+      case_when(
+        .data$T_switching & .data$U_switching ~ "Shared significant",
+        .data$T_switching & !.data$U_switching & .data$tested_in_U ~ "T-significant / tested in U, not switching",
+        .data$T_switching & !.data$tested_in_U ~ "T-significant / not detected in U",
+        .data$U_switching & !.data$T_switching & .data$tested_in_T ~ "U-significant / tested in T, not switching",
+        .data$U_switching & !.data$tested_in_T ~ "U-significant / not detected in T",
+        TRUE ~ "Non-significant / other"
+      )
+    } else {
+      case_when(
+        .data$T_switching & .data$U_switching ~ "Shared significant",
+        .data$T_switching & !.data$U_switching & .data$present_in_U ~ "T-significant / retained in U, not significant",
+        .data$T_switching & !.data$present_in_U ~ "T-significant / not retained in U",
+        .data$U_switching & !.data$T_switching & .data$present_in_T ~ "U-significant / retained in T, not significant",
+        .data$U_switching & !.data$present_in_T ~ "U-significant / not retained in T",
+        TRUE ~ "Non-significant / other"
+      )
+    },
     same_direction = dplyr::case_when(
       is.finite(.data$T_dIF) & is.finite(.data$U_dIF) ~ sign(.data$T_dIF) == sign(.data$U_dIF),
       TRUE ~ NA
@@ -379,6 +421,51 @@ retention_tbl <- tibble(
   )
 )
 write_out(retention_tbl, "ut_T_vs_U_retention_accounting")
+
+# With the unfiltered context there IS a genuine tested background -- genes quantified in
+# both datasets, most of which are not switching -- so a co-occurrence test is meaningful
+# here in a way it was not against the reduced objects. It is computed only when the
+# context is present, and reported separately from the retention accounting above so the
+# two can never be confused.
+background_enrichment <- NULL
+if (has_context) {
+  bg_genes <- intersect(unique(as.character(ctx_t$gene_id)), unique(as.character(ctx_u$gene_id)))
+  t_sw <- bg_genes %in% as.character(t_genes$gene_id)
+  u_sw <- bg_genes %in% as.character(u_genes$gene_id)
+  bg_tab <- matrix(
+    c(sum(!t_sw & !u_sw), sum(!t_sw & u_sw), sum(t_sw & !u_sw), sum(t_sw & u_sw)),
+    nrow = 2, byrow = TRUE,
+    dimnames = list(T_switching = c("FALSE", "TRUE"), U_switching = c("FALSE", "TRUE"))
+  )
+  ft <- tryCatch(stats::fisher.test(bg_tab), error = function(e) NULL)
+  background_enrichment <- tibble(
+    n_genes_tested_in_both = length(bg_genes),
+    n_switching_in_T = sum(t_sw),
+    n_switching_in_U = sum(u_sw),
+    n_switching_in_both = sum(t_sw & u_sw),
+    expected_in_both_if_independent = length(bg_genes) * mean(t_sw) * mean(u_sw),
+    odds_ratio = if (!is.null(ft)) unname(ft$estimate) else NA_real_,
+    conf_low = if (!is.null(ft)) ft$conf.int[[1L]] else NA_real_,
+    conf_high = if (!is.null(ft)) ft$conf.int[[2L]] else NA_real_,
+    p_value = if (!is.null(ft)) ft$p.value else NA_real_,
+    background = "genes quantified in both unfiltered UT objects"
+  )
+  write_out(background_enrichment, "ut_T_vs_U_background_enrichment")
+  write_out(
+    data.frame(
+      T_switching = c("FALSE", "TRUE"),
+      U_switching_FALSE = bg_tab[, "FALSE"],
+      U_switching_TRUE = bg_tab[, "TRUE"],
+      stringsAsFactors = FALSE, row.names = NULL
+    ),
+    "ut_T_vs_U_background_contingency"
+  )
+  message(
+    "Background enrichment over ", length(bg_genes), " genes tested in both: OR = ",
+    signif(background_enrichment$odds_ratio, 4), ", p = ",
+    signif(background_enrichment$p_value, 4)
+  )
+}
 
 # Condition on significance in ONE dataset, then describe the effect in the OTHER.
 # This is the defensible concordance measure: the shared-significant statistics below
@@ -520,7 +607,24 @@ stats_summary <- tibble(
   kruskal_p_abs_dIF_by_class = if (!is.null(kw)) kw$p.value else NA_real_,
   wilcox_paired_abs_dIF_U_vs_T_p = if (!is.null(wilcox_abs)) wilcox_abs$p.value else NA_real_,
   wilcox_delta_dIF_vs_0_p = if (!is.null(wilcox_delta)) wilcox_delta$p.value else NA_real_,
-  inputs_pre_reduced_to_switching_genes = TRUE
+  inputs_pre_reduced_to_switching_genes = TRUE,
+  # Background statistics are valid only via the unfiltered context layer.
+  unfiltered_context_available = has_context,
+  n_genes_tested_in_both = if (!is.null(background_enrichment)) {
+    background_enrichment$n_genes_tested_in_both
+  } else {
+    NA_integer_
+  },
+  background_odds_ratio = if (!is.null(background_enrichment)) {
+    background_enrichment$odds_ratio
+  } else {
+    NA_real_
+  },
+  background_p_value = if (!is.null(background_enrichment)) {
+    background_enrichment$p_value
+  } else {
+    NA_real_
+  }
 )
 write_out(stats_summary, "ut_T_vs_U_stats_summary")
 
@@ -547,6 +651,10 @@ class_colors <- c(
   "T-only" = "#3182bd",
   "U-only" = "#e6550d",
   "Shared significant" = "#756bb1",
+  "T-significant / tested in U, not switching" = "#9ecae1",
+  "T-significant / not detected in U" = "#08519c",
+  "U-significant / tested in T, not switching" = "#fdd0a2",
+  "U-significant / not detected in T" = "#a63603",
   "T-significant / retained in U, not significant" = "#9ecae1",
   "T-significant / not retained in U" = "#08519c",
   "U-significant / retained in T, not significant" = "#fdd0a2",
@@ -588,12 +696,7 @@ ggsave(file.path(fig_dir, "fig_ut_isoform_overlap_counts.png"), p_iso_bar, width
 scatter_df <- iso_overlap |>
   filter(.data$present_in_both, is.finite(.data$T_dIF), is.finite(.data$U_dIF)) |>
   mutate(
-    point_class = case_when(
-      .data$T_switching & .data$U_switching ~ "Shared significant",
-      .data$T_switching & !.data$U_switching ~ "T-significant / retained in U, not significant",
-      .data$U_switching & !.data$T_switching ~ "U-significant / retained in T, not significant",
-      TRUE ~ "Non-significant / other"
-    )
+    point_class = .data$overlap_class
   )
 p_scatter <- ggplot(scatter_df, aes(x = .data$T_dIF, y = .data$U_dIF, color = .data$point_class)) +
   geom_hline(yintercept = 0, linewidth = 0.3, color = "grey50") +
@@ -655,60 +758,182 @@ p_top <- ggplot(
   )
 ggsave(file.path(fig_dir, "fig_ut_top_genes_by_overlap_class.png"), p_top, width = 11, height = 7, dpi = 200)
 
-# ---- Gene explorer panels: side-by-side isoform dIF for T vs U ----
-plot_gene_explorer <- function(gname, out_png) {
-  t_rows <- t_iso |>
-    filter(.data$gene_name == gname) |>
-    transmute(
-      isoform_id = as.character(.data$isoform_id),
-      dataset = "T_UT",
-      dIF = .data$dIF_n,
-      q = .data$q_i,
-      switching = .data$is_switching,
-      novel = .data$is_novel
+# ---- Gene explorer panels: isoform usage in T and U, before and after LPS ----
+#
+# The primary objects are reduced to significant switching genes, so a gene switching in
+# T but not U has no U rows at all -- the old version of this panel could only draw the
+# side that was significant, and could not distinguish "the knockout has this transcript
+# but its ratio does not change" from "the transcript is not there". The unfiltered
+# context tables written by 01 carry every tested isoform, so both genotypes can be drawn
+# for any gene present in either.
+#
+# Isoform fraction is shown per condition (IF1 = LPS-, IF2 = LPS+) with an arrow between
+# them, so a ratio shift is visible directly rather than collapsed into a single dIF bar.
+# Per-replicate IF values are overlaid when available. Significance still comes from the
+# primary scored tables -- the context layer is for display and classification only.
+
+sample_condition <- function(nms) {
+  # Replicate columns are named like T1_minus_S15 / T1_plus_S16.
+  ifelse(grepl("_minus", nms, fixed = TRUE), "LPS-",
+    ifelse(grepl("_plus", nms, fixed = TRUE), "LPS+", NA_character_)
+  )
+}
+
+rep_points_for <- function(rep_tbl, isoform_ids) {
+  if (is.null(rep_tbl) || !length(isoform_ids)) return(NULL)
+  r <- rep_tbl[rep_tbl$isoform_id %in% isoform_ids, , drop = FALSE]
+  if (!nrow(r)) return(NULL)
+  value_cols <- setdiff(names(r), "isoform_id")
+  cond <- sample_condition(value_cols)
+  keep <- !is.na(cond)
+  if (!any(keep)) return(NULL)
+  value_cols <- value_cols[keep]
+  cond <- cond[keep]
+  bind_rows(lapply(seq_along(value_cols), function(i) {
+    tibble(
+      isoform_id = as.character(r$isoform_id),
+      condition = cond[[i]],
+      IF = suppressWarnings(as.numeric(r[[value_cols[[i]]]]))
     )
-  u_rows <- u_iso |>
-    filter(.data$gene_name == gname) |>
-    transmute(
-      isoform_id = as.character(.data$isoform_id),
-      dataset = "U_UT",
-      dIF = .data$dIF_n,
-      q = .data$q_i,
-      switching = .data$is_switching,
-      novel = .data$is_novel
+  }))
+}
+
+#' Pull one gene's isoforms from a context table, falling back to the scored primary
+#' table when no context is configured for that dataset.
+gene_rows_for <- function(gene_id, ctx, scored, ds_label) {
+  if (!is.null(ctx) && !is.na(gene_id)) {
+    rows <- ctx[as.character(ctx$gene_id) == as.character(gene_id), , drop = FALSE]
+    if (nrow(rows)) {
+      return(tibble(
+        isoform_id = as.character(rows$isoform_id),
+        dataset = ds_label,
+        IF1 = suppressWarnings(as.numeric(rows$IF1)),
+        IF2 = suppressWarnings(as.numeric(rows$IF2)),
+        dIF = suppressWarnings(as.numeric(rows$dIF)),
+        source = "context"
+      ))
+    }
+  }
+  rows <- scored[as.character(scored$gene_id) == as.character(gene_id), , drop = FALSE]
+  if (!nrow(rows)) return(NULL)
+  tibble(
+    isoform_id = as.character(rows$isoform_id),
+    dataset = ds_label,
+    IF1 = if ("IF1" %in% names(rows)) suppressWarnings(as.numeric(rows$IF1)) else NA_real_,
+    IF2 = if ("IF2" %in% names(rows)) suppressWarnings(as.numeric(rows$IF2)) else NA_real_,
+    dIF = suppressWarnings(as.numeric(rows$dIF_n)),
+    source = "primary"
+  )
+}
+
+plot_gene_explorer <- function(gname, gene_id_t, gene_id_u, out_png) {
+  gid <- dplyr::coalesce(as.character(gene_id_t), as.character(gene_id_u))
+  if (is.na(gid)) return(FALSE)
+  # Both datasets use the UT reference, so a gene carries the same gene_id in each.
+  df <- bind_rows(
+    gene_rows_for(gid, ctx_t, t_iso, "T_UT (WT)"),
+    gene_rows_for(gid, ctx_u, u_iso, "U_UT (UBL5 KO)")
+  )
+  if (is.null(df) || !nrow(df)) return(FALSE)
+
+  sig_map <- bind_rows(
+    t_iso |> transmute(
+      isoform_id = as.character(.data$isoform_id), dataset = "T_UT (WT)",
+      switching = .data$is_switching, novel = .data$is_novel
+    ),
+    u_iso |> transmute(
+      isoform_id = as.character(.data$isoform_id), dataset = "U_UT (UBL5 KO)",
+      switching = .data$is_switching, novel = .data$is_novel
     )
-  df <- bind_rows(t_rows, u_rows)
-  if (!nrow(df)) return(FALSE)
+  )
   df <- df |>
+    left_join(sig_map, by = c("isoform_id", "dataset")) |>
     mutate(
-      isoform_label = paste0(
-        .data$isoform_id,
-        ifelse(.data$novel %in% TRUE, " (PB)", "")
-      ),
-      status = ifelse(.data$switching %in% TRUE, "Significant", "Not significant")
+      switching = .data$switching %in% TRUE,
+      status = ifelse(.data$switching, "Switching (significant)", "Tested, not switching")
     )
-  # Keep isoforms that exist in either and order by max |dIF|
+
+  novel_ids <- unique(c(
+    as.character(t_iso$isoform_id[t_iso$is_novel %in% TRUE]),
+    as.character(u_iso$isoform_id[u_iso$is_novel %in% TRUE])
+  ))
+  # Rank isoforms by the largest usage shift seen in either genotype.
   ord <- df |>
-    group_by(.data$isoform_label) |>
+    group_by(.data$isoform_id) |>
     summarize(m = max(abs(.data$dIF), na.rm = TRUE), .groups = "drop") |>
     arrange(desc(.data$m))
-  keep <- utils::head(ord$isoform_label, explorer_max_isoforms)
+  keep <- utils::head(ord$isoform_id[is.finite(ord$m)], explorer_max_isoforms)
+  if (!length(keep)) return(FALSE)
   df <- df |>
-    filter(.data$isoform_label %in% keep) |>
-    mutate(isoform_label = factor(.data$isoform_label, levels = rev(keep)))
+    filter(.data$isoform_id %in% keep) |>
+    mutate(
+      isoform_label = paste0(
+        .data$isoform_id, ifelse(.data$isoform_id %in% novel_ids, " (PB)", "")
+      )
+    )
+  lab_levels <- unique(df$isoform_label[order(match(df$isoform_id, keep))])
+  df$isoform_label <- factor(df$isoform_label, levels = rev(lab_levels))
 
-  p <- ggplot(df, aes(x = .data$isoform_label, y = .data$dIF, fill = .data$status)) +
-    geom_col(width = 0.7, color = "grey25", linewidth = 0.15) +
-    geom_hline(yintercept = 0, linewidth = 0.3) +
-    coord_flip() +
+  long <- bind_rows(
+    df |> transmute(.data$isoform_label, .data$dataset, .data$status, condition = "LPS-", IF = .data$IF1),
+    df |> transmute(.data$isoform_label, .data$dataset, .data$status, condition = "LPS+", IF = .data$IF2)
+  ) |>
+    filter(is.finite(.data$IF))
+  if (!nrow(long)) return(FALSE)
+
+  reps <- bind_rows(
+    {
+      r <- rep_points_for(rep_t, keep)
+      if (is.null(r)) NULL else mutate(r, dataset = "T_UT (WT)")
+    },
+    {
+      r <- rep_points_for(rep_u, keep)
+      if (is.null(r)) NULL else mutate(r, dataset = "U_UT (UBL5 KO)")
+    }
+  )
+  if (!is.null(reps) && nrow(reps)) {
+    reps <- reps |>
+      left_join(
+        df |> distinct(.data$isoform_id, .data$isoform_label),
+        by = "isoform_id"
+      ) |>
+      filter(!is.na(.data$isoform_label), is.finite(.data$IF))
+  }
+
+  p <- ggplot(df, aes(y = .data$isoform_label)) +
+    geom_segment(
+      aes(x = .data$IF1, xend = .data$IF2, yend = .data$isoform_label, colour = .data$status),
+      arrow = arrow(length = unit(0.10, "in"), type = "closed"),
+      linewidth = 0.9, na.rm = TRUE
+    ) +
+    geom_point(
+      data = long, aes(x = .data$IF, shape = .data$condition),
+      size = 2.1, colour = "grey20", na.rm = TRUE
+    ) +
+    scale_shape_manual(values = c("LPS-" = 1, "LPS+" = 16), name = "Condition mean") +
+    scale_colour_manual(
+      values = c("Switching (significant)" = "#1b7837", "Tested, not switching" = "#9e9ac8"),
+      name = NULL
+    ) +
     facet_wrap(~ .data$dataset, ncol = 2) +
-    scale_fill_manual(values = c("Significant" = "#1b7837", "Not significant" = "#bdbdbd")) +
+    coord_cartesian(xlim = c(0, 1)) +
     labs(
       title = paste0("Gene explorer: ", gname),
-      subtitle = "Isoform dIF in T_UT (WT) vs U_UT (knockout); PB = novel PacBio",
-      x = NULL, y = "dIF", fill = NULL
+      subtitle = paste0(
+        "Isoform fraction before (open) and after (filled) LPS; arrow = shift. ",
+        "Both genotypes shown regardless of significance."
+      ),
+      x = "Isoform fraction (IF)", y = NULL,
+      caption = "PB = novel PacBio isoform. Small points = individual replicates where available."
     )
-  ggsave(out_png, p, width = 10, height = 5.5, units = "in", dpi = 160)
+  if (!is.null(reps) && nrow(reps)) {
+    p <- p + geom_point(
+      data = reps, aes(x = .data$IF, y = .data$isoform_label),
+      size = 0.8, alpha = 0.55, colour = "grey35",
+      position = position_nudge(y = 0.22), na.rm = TRUE
+    )
+  }
+  ggsave(out_png, p, width = 11, height = 6, units = "in", dpi = 160)
   TRUE
 }
 
@@ -727,7 +952,18 @@ for (i in seq_len(nrow(explorer_targets))) {
     gene_fig_dir,
     paste0("gene_explorer_", cls, "_", sprintf("%02d", i), "_", sanitize(gname), ".png")
   )
-  ok <- tryCatch(plot_gene_explorer(gname, out_png), error = function(e) FALSE)
+  ok <- tryCatch(
+    plot_gene_explorer(
+      gname,
+      explorer_targets$T_gene_id[[i]],
+      explorer_targets$U_gene_id[[i]],
+      out_png
+    ),
+    error = function(e) {
+      message("  gene explorer failed for ", gname, ": ", conditionMessage(e))
+      FALSE
+    }
+  )
   explorer_index[[length(explorer_index) + 1L]] <- tibble(
     gene_name = gname,
     overlap_class = explorer_targets$overlap_class[[i]],

@@ -22,6 +22,7 @@ datasets:
     label: "T_HT_anchor"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/T_minus-T_plus_2024-Dec-18/T_minus-T_plus_IsoformSwitchAnalyzeR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/H_T/H_T.gff3"
+    isa_unfiltered_path: null   # add the unfiltered H_T object here when available
     object_name: "isa_list"
     condition: "T"
     reference_transcriptome: "HT"
@@ -30,6 +31,7 @@ datasets:
     label: "H_HT_supplementary"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/H_minus-H_plus_2024-Dec-18/H_minus-H_plus_IsoformSwitchAnalyzeR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/H_T/H_T.gff3"
+    isa_unfiltered_path: null   # add the unfiltered H_T object here when available
     object_name: "isa_list"
     condition: "H"
     reference_transcriptome: "HT"
@@ -37,6 +39,7 @@ datasets:
   U_UT:
     label: "U_UT"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/U-T_Comparisons/U_minus-U_plus_2025-Feb-11/U_minus-U_plus_IsoformSwitchAnalyzeR.Rdata"
+    isa_unfiltered_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/U-T_Comparisons/U_minus-U_plus_2025-Feb-11/U_minus-U_plus_unfilteredR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/U_T/U_T.gff3"
     object_name: "isa_list"
     condition: "U"
@@ -45,6 +48,7 @@ datasets:
   T_UT:
     label: "T_UT"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/U-T_Comparisons/T_minus-T_plus_2025-Feb-11/T_minus-T_plus_IsoformSwitchAnalyzeR.Rdata"
+    isa_unfiltered_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/U-T_Comparisons/T_minus-T_plus_2025-Feb-11/T_minus-T_plus_unfilteredR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/U_T/U_T.gff3"
     object_name: "isa_list"
     condition: "T"
@@ -77,7 +81,8 @@ significance:
   # TRUE: an isoform with a missing/non-finite dIF or gene q FAILS the filter.
   # FALSE restores the original behaviour, where such rows passed on the isoform
   # q alone -- i.e. could be called switching with no measured effect size.
-  # No NAs exist in the current inputs, so this changes nothing today.
+  # The reduced objects contain no NAs, but the unfiltered ones do (186 and 142
+  # NA isoform q), so this is load-bearing for anything using the context layer.
   require_finite_dif: true
 
 # Analysis knobs that used to be hard-coded inside the scripts.

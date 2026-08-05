@@ -68,9 +68,19 @@ Every result table goes through `write_table_pair(x, dir, stem, cfg)` in `utils/
 
 ISA objects carry `XLOC_*` placeholder gene names. `01_load_data.R` joins the reference GFF3 transcript map (`build_transcript_map_from_gtf()`) and overwrites placeholder `gene_name` values with GFF-derived symbols, preserving the original in `gene_name_original`. `is_real_gene_symbol()` / `pick_gene_symbol()` in `utils/` filter out `XLOC_*` and `ENSG/ENST/...` identifiers. Cross-dataset overlaps in `03`/`04` join on **clean gene symbols**, not `gene_id`, since gene ids differ between the HT and UT references.
 
-### The inputs are pre-reduced — this constrains what can be claimed
+### The inputs are pre-reduced — and the context layer is how that's handled
 
-All four ISA objects were saved after `isoformSwitchTestDEXSeq(reduceToSwitchingGenes = TRUE)`, so every gene in them already passes the gene-level q cutoff (recorded per run in `results/tables/input_object_reduction_check.csv`). Gene counts are "genes retained", not "genes tested"; absence from the other dataset means "not retained", not "tested and non-significant"; and no enrichment test against this background is valid — one was removed from `04` for exactly this reason. Keep overlap language in retained/not-retained terms. Full detail in `docs/REVIEW_CHANGES.md`.
+All four primary ISA objects were saved after `isoformSwitchTestDEXSeq(reduceToSwitchingGenes = TRUE)`, so every gene in them already passes the gene-level q cutoff (recorded per run in `results/tables/input_object_reduction_check.csv`).
+
+`isa_unfiltered_path` in config points a dataset at an unreduced export; `01` turns it into `data/processed/isoformContext_<label>.rds` (+ `isoformContextRepIF_`). **Configured for `T_UT`/`U_UT`, null for `T_HT`/`H_HT`.** Load it with `load_context_table(processed_dir, label, "features"|"rep_if")`, which returns `NULL` when absent — always handle that branch.
+
+Rules that must hold:
+
+- **Significance never comes from the context layer.** It supplies isoform fractions, replicate values and presence/absence for display and classification only. Switching calls stay with the primary object, so `03`'s HT-vs-UT novelty denominators stay comparable.
+- **With context**, overlap classes say *tested in X, not switching* vs *not detected in X*. **Without it**, they must say *retained / not retained* — the reduced object cannot distinguish tested-and-negative from dropped.
+- Two enrichment statistics exist and mean different things: `ut_T_vs_U_background_enrichment` (valid, ~11k tested genes) and the retention accounting (descriptive, 25 already-significant genes, no test). Don't merge them.
+
+Full detail in `docs/REVIEW_CHANGES.md` §0 and §0b.
 
 ### Novel isoform flag
 

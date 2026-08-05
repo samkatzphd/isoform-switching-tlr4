@@ -46,10 +46,77 @@ dataset and writes `results/tables/input_object_reduction_check.csv`. Reports re
 callout built from that file rather than a hard-coded claim. Overlap language throughout
 was changed from *missing/present* to *not retained/retained*.
 
-**What still needs doing (upstream, cannot be fixed here):** re-export the
-`switchAnalyzeRlist`s with `reduceToSwitchingGenes = FALSE`, which requires the original
-count matrices — they are not in this repo. Until then, no statistic in this pipeline
-should be presented as an enrichment against a tested background.
+**Resolved for the UT datasets — see §0b.** The original conclusion here was that the fix
+required re-exporting the objects. It turned out unfiltered exports already existed on the
+drive for both UT datasets, which is a better outcome: no re-analysis was needed.
+
+---
+
+## 0b. The unfiltered context layer (added 2026-08-05)
+
+`*_unfilteredR.Rdata` exports exist on the drive for **both UT datasets** — the same
+analyses without the reduction step:
+
+| | isoforms | genes | genes passing gene q<0.05 |
+|---|---|---|---|
+| T_UT unfiltered | 166,394 | 11,582 | 2,879 (24.9%) |
+| U_UT unfiltered | 173,016 | 11,969 | 1,966 (16.4%) |
+| T_UT reduced (primary) | 1,769 | 248 | 248 (100%) |
+
+Verified consistent: all 1,769 isoforms of the reduced T_UT object appear in its
+unfiltered counterpart, and gene q spans 1.4e-192 to 0.9999 rather than stopping at
+0.0487. **11,126 gene_ids are shared between the two unfiltered objects, against 25
+symbols in the reduced ones.**
+
+**Design: context layer, not replacement.** Significance calls still come from the primary
+(reduced) objects — they are identical values either way. The unfiltered data is used for
+display and classification only. This matters because script `03` compares novelty rates
+between HT and UT; had UT switched to a 166k-isoform denominator while HT stayed at 1.5k,
+that figure would have quietly become meaningless.
+
+`01_load_data.R` writes, per dataset with `isa_unfiltered_path` configured:
+
+- `data/processed/isoformContext_<label>.rds` — per-isoform IF1/IF2/dIF, expression, q-values
+- `data/processed/isoformContextRepIF_<label>.rds` — per-replicate isoform fractions
+
+What it enables:
+
+1. **Gene explorer panels show both genotypes for any gene.** Of 145 genes switching in T
+   but not U, **127 (88%) now have U data to plot**; 60 of 66 in the other direction. The
+   panels were rebuilt to show isoform fraction before and after LPS with an arrow for the
+   shift and replicate points overlaid, rather than a single dIF bar — a ratio that moves
+   in one genotype and holds in the other is now directly visible.
+2. **Real overlap classification.** *Tested in the other dataset and not switching* is now
+   distinguishable from *not detected*:
+
+   | isoform class | n |
+   |---|---|
+   | T-significant / tested in U, not switching | 161 |
+   | U-significant / tested in T, not switching | 77 |
+   | Shared significant | 21 |
+   | T-significant / not detected in U | 22 |
+   | U-significant / not detected in T | 8 |
+
+   238 isoforms are present in both with a ratio change in only one; only 30 are genuinely
+   absent. Under the reduced objects all 268 were indistinguishable.
+3. **A legitimate enrichment test**, reported as `ut_T_vs_U_background_enrichment`: over
+   11,126 genes quantified in both, 18 switch in both against 1.02 expected under
+   independence — OR 25.7 (95% CI 13.9–45.7), p = 4.4e-18. This is *not* the statistic
+   removed in §1.1; that one had a 25-gene background selected on the outcome. Both are
+   kept in the outputs under clearly different names so they cannot be confused.
+
+**Note on §2.9:** the reduced objects contain no NA q-values, so the `require_finite_dif`
+fix was described there as changing nothing. The unfiltered objects contain 186 and 142 NA
+isoform q-values, so that fix is load-bearing for anything touching the context layer.
+
+**Still outstanding:** HT has no unfiltered export. `config` carries
+`isa_unfiltered_path: null` placeholders for `T_HT`/`H_HT`, and both `01` and `06` handle
+their absence explicitly — `06` reports that "not detected in H" cannot be separated from
+"dropped when reduced". Adding the HT exports would complete
+`isoform_overlap_T_significant_in_H_context`, whose whole purpose is showing T-significant
+isoforms in H context even when H is non-significant. RSEM count matrices for both
+references are on the drive under `gtf_files/*/[HU]_T_mapped/`, so a full re-analysis is
+possible but was explicitly out of scope.
 
 ---
 

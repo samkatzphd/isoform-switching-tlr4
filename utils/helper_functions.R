@@ -470,6 +470,51 @@ write_table_pair <- function(x, dir, stem, cfg = NULL, csv = NULL, quiet = FALSE
   invisible(rds)
 }
 
+# ---- Unfiltered context layer ---------------------------------------------------------
+
+#' @description
+#' Extract a slim "context" view from an UNREDUCED switchAnalyzeRlist.
+#'
+#' The saved analysis objects were reduced to significant switching genes, so a gene
+#' that switches in one dataset but not the other is simply absent from the other -- you
+#' cannot plot its isoform usage there, and you cannot tell "tested and not switching"
+#' apart from "not present". The unfiltered objects carry every tested isoform, so this
+#' pulls the columns needed for plotting and classification without disturbing the
+#' switching calls, which continue to come from the primary (reduced) object.
+#'
+#' @return list(features = per-isoform context, rep_if = per-replicate IF or NULL)
+extract_context_tables <- function(isa_obj) {
+  f <- extract_isoform_features(isa_obj)
+  f <- tibble::as_tibble(f, .name_repair = "unique")
+  want <- c(
+    "isoform_id", "gene_id", "gene_name", "condition_1", "condition_2",
+    "IF1", "IF2", "dIF", "IF_overall",
+    "iso_value_1", "iso_value_2", "iso_overall_mean",
+    "gene_value_1", "gene_value_2",
+    "isoform_switch_q_value", "gene_switch_q_value", "iso_q_value", "gene_q_value"
+  )
+  keep <- intersect(want, names(f))
+  if (!all(c("isoform_id", "gene_id") %in% keep)) {
+    stop("extract_context_tables: unfiltered object lacks isoform_id / gene_id.")
+  }
+  features <- f[, keep, drop = FALSE]
+
+  rep_if <- NULL
+  if (is.list(isa_obj) && !is.null(isa_obj[["isoformRepIF"]])) {
+    r <- tibble::as_tibble(isa_obj[["isoformRepIF"]], .name_repair = "unique")
+    if ("isoform_id" %in% names(r)) rep_if <- r
+  }
+  list(features = features, rep_if = rep_if)
+}
+
+#' Load a context table written by 01, or NULL when the dataset has no unfiltered object
+load_context_table <- function(processed_dir, label, what = c("features", "rep_if")) {
+  what <- match.arg(what)
+  stem <- if (what == "features") "isoformContext_" else "isoformContextRepIF_"
+  p <- file.path(processed_dir, paste0(stem, sanitize(label), ".rds"))
+  if (!file.exists(p)) NULL else readRDS(p)
+}
+
 # ---- Provenance -----------------------------------------------------------------------
 
 #' TRUE when every gene in the table already carries a significant gene-level q.

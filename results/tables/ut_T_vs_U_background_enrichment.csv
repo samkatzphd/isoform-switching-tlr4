@@ -1,0 +1,2 @@
+"n_genes_tested_in_both","n_switching_in_T","n_switching_in_U","n_switching_in_both","expected_in_both_if_independent","odds_ratio","conf_low","conf_high","p_value","background"
+11126,145,78,18,1.01653783929534,25.7419559832084,13.8983689175007,45.7473437089615,4.38389845703545e-18,"genes quantified in both unfiltered UT objects"
