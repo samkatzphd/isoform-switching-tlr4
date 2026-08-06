@@ -1,3 +1,9 @@
+# Raw ISA inputs live on the external drive (paths in config/config.yml).
+# Never commit copies: a truncated 130 MB partial was once swept in by `git add -A`.
+*.Rdata
+*.RData
+*_Unfiltered_*/
+
 # R
 .Rhistory
 .RData

@@ -442,27 +442,62 @@ consistent with switching tracking the LPS program rather than drifting.
 
 # Where the analysis is currently blind
 
-## Q1's cross-genotype comparison is severely limited
+## Q1's cross-genotype comparison, now with a proper denominator
+
+An unfiltered `H_HT` export became available, which changes this section from "unusable" to
+"usable, and the answer is not what the biased version suggested".
 
 ```{r}
 #| label: tbl-ht
 kable(
-  hto |> select(n_isoforms_T, n_isoforms_H, n_isoforms_shared, n_T_significant,
-                n_T_significant_present_in_H, n_T_significant_and_H_significant),
-  col.names = c("Isoforms in T", "Isoforms in H", "Shared", "Significant in T",
-                "…also present in H", "…also significant in H"),
-  caption = "T_HT versus H_HT — bounded by what survived each object's reduction"
+  hto |> select(n_T_significant, n_T_significant_present_in_H, n_T_significant_and_H_significant,
+                n_T_significant_tested_in_H, n_T_significant_not_detected_in_H,
+                pct_T_significant_also_significant_in_H, pct_T_significant_same_direction_in_H,
+                median_abs_H_dIF_for_T_significant),
+  digits = 2,
+  col.names = c("Significant in T", "In H's reduced object", "…and significant in H",
+                "Tested in H (unfiltered)", "Not detected in H",
+                "% significant in H", "% same direction", "median |dIF| in H"),
+  caption = "T_HT versus H_HT, before and after the proper denominator"
 )
 ```
 
-Only `r hto$n_T_significant_present_in_H` of `r hto$n_T_significant` isoforms significant in
-`T_HT` even **appear** in the `H_HT` object. That is not a biological statement — those
-isoforms were dropped when `H_HT` was reduced. Until unfiltered HT exports exist, this
-comparison cannot distinguish "does not switch in H" from "not retained in H", and no
-conclusion should be drawn from it.
+::: {.callout-important}
+## A replication rate that was inflated ~8-fold
+Judging only by what survived `H_HT`'s reduction,
+`r hto$n_T_significant_and_H_significant` of `r hto$n_T_significant_present_in_H` T-significant
+isoforms were also significant in H — an apparent replication of
+**`r sprintf("%.0f%%", 100*hto$n_T_significant_and_H_significant/hto$n_T_significant_present_in_H)`**.
+But an isoform only stayed in that object if its gene was already significant there.
 
-This is exactly the limitation the UT arm escaped, and it is the single highest-value
-addition remaining.
+Against the `r hto$n_T_significant_tested_in_H` isoforms **actually tested** in H, the rate is
+**`r sprintf("%.1f%%", hto$pct_T_significant_also_significant_in_H)`**.
+:::
+
+So LPS-driven switches in THP-1 are largely **not** reproduced as significant events in the H
+genotype. But they are not absent either:
+
+- **`r sprintf("%.1f%%", hto$pct_T_significant_same_direction_in_H)` move in the same direction**
+  in H (86 of 115; binomial p = 9.8e-8 against chance, 95% CI 65.8–82.4%).
+- Their **median |dIF| in H is `r sprintf("%.2f", hto$median_abs_H_dIF_for_T_significant)`** —
+  well under the 0.15 threshold, and only 18.3% clear it.
+
+This is the same signature seen in the UBL5 arm, and more extreme: **direction preserved,
+magnitude far below the calling threshold.** Whether that reflects genuine genotype-specific
+attenuation or differences in power between the two runs cannot be settled here — `H_HT`
+actually has *more* significant isoforms overall (`r hto$n_H_significant` vs
+`r hto$n_T_significant`), which argues against simple underpowering.
+
+`r hto$n_T_significant_not_detected_in_H` T-significant isoforms are not detected in H at all
+and remain genuinely uninformative.
+
+::: {.callout-note}
+## Still outstanding
+The unfiltered **`T_HT`** export is present on the drive but the file is corrupt — `gzip -t`
+reports a data stream error and it decompresses ~269 MB of an expected ~2.6 GB. Until it is
+re-copied, the reciprocal question (are H-significant switches merely sub-threshold in T?)
+cannot be asked, and `01`/`06` handle its absence explicitly rather than guessing.
+:::
 
 ## Statistics that did not survive scrutiny
 
@@ -484,8 +519,10 @@ Both are recorded in `docs/REVIEW_CHANGES.md` with evidence.
 **Q1 — Yes, and on the right genes.** LPS drives isoform switching in
 `r qc$n_switching_genes[qc$dataset == "T_HT_anchor"]` genes in wildtype THP-1, and the
 strongest events sit on canonical LPS-response genes. Novel long-read isoforms participate
-at full effect size, which justifies the PacBio-augmented reference. The `T_HT` versus
-`H_HT` comparison remains unusable pending unfiltered exports.
+at full effect size, which justifies the PacBio-augmented reference. Against the H genotype,
+only `r sprintf("%.1f%%", hto$pct_T_significant_also_significant_in_H)` of those switches
+reproduce as significant, but `r sprintf("%.0f%%", hto$pct_T_significant_same_direction_in_H)`
+share direction at sub-threshold magnitude — the same attenuation signature as the UBL5 arm.
 
 **Q2 — UBL5 loss dampens rather than redirects.** Three independent lines point the same way:
 
@@ -515,8 +552,10 @@ cannot demonstrate mechanism.
 
 ## Next steps, in priority order
 
-1. **Add unfiltered HT exports.** Unblocks Q1's cross-genotype comparison and completes the
-   T-in-H-context table. The code path already exists and falls back explicitly.
+1. **Re-copy the corrupt unfiltered `T_HT` export.** The `H_HT` one is in place and already
+   unblocked Q1's cross-genotype comparison; the `T_HT` file fails a gzip integrity check, so
+   the reciprocal direction (H-significant switches measured in T) is still unavailable. Two
+   config lines and a rerun of `01`/`06` once the file is replaced.
 2. **Pathway analysis**, once a defensible background exists for both references.
 3. **Targeted validation** of the dampening model — a handful of high-|dIF| WT switches that
    fail threshold in the knockout (CD86 is a natural first candidate) by isoform-specific

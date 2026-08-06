@@ -22,7 +22,10 @@ datasets:
     label: "T_HT_anchor"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/T_minus-T_plus_2024-Dec-18/T_minus-T_plus_IsoformSwitchAnalyzeR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/H_T/H_T.gff3"
-    isa_unfiltered_path: null   # add the unfiltered H_T object here when available
+    # The unfiltered T_HT export at .../T_minus-T_plus_Unfiltered_2025-Oct-12/ is CORRUPT:
+    # `gzip -t` reports a data stream error and it decompresses only ~269 MB of an expected
+    # ~2.6 GB. Re-copy it from the source, then set the path here and rerun 01 and 06.
+    isa_unfiltered_path: null
     object_name: "isa_list"
     condition: "T"
     reference_transcriptome: "HT"
@@ -31,7 +34,7 @@ datasets:
     label: "H_HT_supplementary"
     isa_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/H_minus-H_plus_2024-Dec-18/H_minus-H_plus_IsoformSwitchAnalyzeR.Rdata"
     annotation_path: "/Volumes/Expansion/gtf_files/GTF_to_GFF311_3_2022/H_T/H_T.gff3"
-    isa_unfiltered_path: null   # add the unfiltered H_T object here when available
+    isa_unfiltered_path: "/Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/H_minus-H_plus_Unfiltered_2025-Oct-12/H_minus-H_plus_IsoformSwitchAnalyzeR.Rdata"
     object_name: "isa_list"
     condition: "H"
     reference_transcriptome: "HT"

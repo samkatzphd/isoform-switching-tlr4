@@ -125,88 +125,10 @@
         "inputs": {}
       }
     ],
-    [
-      {
-        "script": "01_load_data.R",
-        "run_at": "2026-07-30T14:53:56-0400",
-        "git_sha": "60e11db61f10a12ca9181cec80284f86e019671e",
-        "r_version": "R version 4.4.1 (2024-06-14)",
-        "platform": "aarch64-apple-darwin20",
-        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-        "significance": {
-          "isoform_q": 0.05,
-          "gene_q": 0.05,
-          "min_abs_dif": 0.15,
-          "require_finite_dif": true
-        },
-        "analysis": {
-          "top_n_genes": 30,
-          "plot_top_n": 30,
-          "gene_panels_per_class": 12,
-          "switch_plots_per_class": 6,
-          "explorer_max_isoforms": 12,
-          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
-        },
-        "inputs": {
-          "T_HT": [
-            {
-              "dataset_key": "T_HT",
-              "dataset_label": "T_HT_anchor",
-              "n_isoforms": 1543,
-              "n_genes": 216,
-              "n_genes_gene_q_significant": 216,
-              "pct_genes_gene_q_significant": 100,
-              "looks_reduced_to_switching_genes": true,
-              "has_unfiltered_context": false
-            }
-          ],
-          "H_HT": [
-            {
-              "dataset_key": "H_HT",
-              "dataset_label": "H_HT_supplementary",
-              "n_isoforms": 3102,
-              "n_genes": 385,
-              "n_genes_gene_q_significant": 385,
-              "pct_genes_gene_q_significant": 100,
-              "looks_reduced_to_switching_genes": true,
-              "has_unfiltered_context": false
-            }
-          ],
-          "U_UT": [
-            {
-              "dataset_key": "U_UT",
-              "dataset_label": "U_UT",
-              "n_isoforms": 966,
-              "n_genes": 127,
-              "n_genes_gene_q_significant": 127,
-              "pct_genes_gene_q_significant": 100,
-              "looks_reduced_to_switching_genes": true,
-              "has_unfiltered_context": true,
-              "n_genes_unfiltered": 11969,
-              "pct_genes_significant_unfiltered": 16.43
-            }
-          ],
-          "T_UT": [
-            {
-              "dataset_key": "T_UT",
-              "dataset_label": "T_UT",
-              "n_isoforms": 1769,
-              "n_genes": 248,
-              "n_genes_gene_q_significant": 248,
-              "pct_genes_gene_q_significant": 100,
-              "looks_reduced_to_switching_genes": true,
-              "has_unfiltered_context": true,
-              "n_genes_unfiltered": 11582,
-              "pct_genes_significant_unfiltered": 24.86
-            }
-          ]
-        }
-      }
-    ],
     {
-      "script": "06_visualization.R",
-      "run_at": "2026-08-05T09:25:17+0200",
-      "git_sha": "60e11db61f10a12ca9181cec80284f86e019671e",
+      "script": "04_comparison_T_vs_U.R",
+      "run_at": "2026-08-05T10:02:13+0200",
+      "git_sha": "a602c730ce3c988f09dc251339033498aeb56dc7",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
       "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
@@ -226,9 +148,87 @@
       }
     },
     {
-      "script": "04_comparison_T_vs_U.R",
-      "run_at": "2026-08-05T10:02:13+0200",
-      "git_sha": "a602c730ce3c988f09dc251339033498aeb56dc7",
+      "script": "01_load_data.R",
+      "run_at": "2026-08-06T10:24:19+0200",
+      "git_sha": "398e521269286b976a2bdf44e71fb5da85f5ad38",
+      "r_version": "R version 4.4.1 (2024-06-14)",
+      "platform": "aarch64-apple-darwin20",
+      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+      "significance": {
+        "isoform_q": 0.05,
+        "gene_q": 0.05,
+        "min_abs_dif": 0.15,
+        "require_finite_dif": true
+      },
+      "analysis": {
+        "top_n_genes": 30,
+        "plot_top_n": 30,
+        "gene_panels_per_class": 12,
+        "switch_plots_per_class": 6,
+        "explorer_max_isoforms": 12,
+        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+      },
+      "inputs": {
+        "T_HT": [
+          {
+            "dataset_key": "T_HT",
+            "dataset_label": "T_HT_anchor",
+            "n_isoforms": 1543,
+            "n_genes": 216,
+            "n_genes_gene_q_significant": 216,
+            "pct_genes_gene_q_significant": 100,
+            "looks_reduced_to_switching_genes": true,
+            "has_unfiltered_context": false
+          }
+        ],
+        "H_HT": [
+          {
+            "dataset_key": "H_HT",
+            "dataset_label": "H_HT_supplementary",
+            "n_isoforms": 3102,
+            "n_genes": 385,
+            "n_genes_gene_q_significant": 385,
+            "pct_genes_gene_q_significant": 100,
+            "looks_reduced_to_switching_genes": true,
+            "has_unfiltered_context": true,
+            "n_genes_unfiltered": 8160,
+            "pct_genes_significant_unfiltered": 20.53
+          }
+        ],
+        "U_UT": [
+          {
+            "dataset_key": "U_UT",
+            "dataset_label": "U_UT",
+            "n_isoforms": 966,
+            "n_genes": 127,
+            "n_genes_gene_q_significant": 127,
+            "pct_genes_gene_q_significant": 100,
+            "looks_reduced_to_switching_genes": true,
+            "has_unfiltered_context": true,
+            "n_genes_unfiltered": 11969,
+            "pct_genes_significant_unfiltered": 16.43
+          }
+        ],
+        "T_UT": [
+          {
+            "dataset_key": "T_UT",
+            "dataset_label": "T_UT",
+            "n_isoforms": 1769,
+            "n_genes": 248,
+            "n_genes_gene_q_significant": 248,
+            "pct_genes_gene_q_significant": 100,
+            "looks_reduced_to_switching_genes": true,
+            "has_unfiltered_context": true,
+            "n_genes_unfiltered": 11582,
+            "pct_genes_significant_unfiltered": 24.86
+          }
+        ]
+      }
+    },
+    {
+      "script": "06_visualization.R",
+      "run_at": "2026-08-06T10:36:22+0200",
+      "git_sha": "398e521269286b976a2bdf44e71fb5da85f5ad38",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
       "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],

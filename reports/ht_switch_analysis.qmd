@@ -158,16 +158,73 @@ This panel goes beyond "top/significant only" and asks:
 knitr::kable(ov_sum, digits = 4, caption = "Isoform overlap summary: T_HT vs H_HT")
 ```
 
+### How often does a T switch reproduce in H?
+
+```{r}
+#| label: h-context
+has_h_ctx <- isTRUE(ov_sum$unfiltered_context_H %in% c(TRUE, 1))
+if (has_h_ctx) {
+  knitr::kable(
+    ov_detail |> count(overlap_note, name = "isoforms"),
+    caption = "Outcome in H for isoforms significant in T"
+  )
+  knitr::kable(
+    ov_sum |> select(n_T_significant, n_T_significant_tested_in_H,
+                     n_T_significant_not_detected_in_H,
+                     pct_T_significant_also_significant_in_H,
+                     pct_T_significant_same_direction_in_H,
+                     median_abs_H_dIF_for_T_significant),
+    digits = 2,
+    col.names = c("Significant in T", "Tested in H", "Not detected in H",
+                  "% also significant in H", "% same direction in H",
+                  "median |dIF| in H"),
+    caption = "Replication measured against isoforms actually tested in H"
+  )
+} else {
+  knitr::asis_output(
+    "_No unfiltered H context configured, so replication cannot be measured against a proper denominator._"
+  )
+}
+```
+
+```{r}
+#| output: asis
+if (has_h_ctx) {
+  cat(sprintf(
+"::: {.callout-important title=\"The apparent replication rate was an artefact of the reduced object\"}
+Using only what survived `H_HT`'s reduction, %d of %d T-significant isoforms appeared in H
+and %d of those were also significant — an apparent replication of about %.0f%%. But an
+isoform only stayed in the reduced object if its gene was already significant there, so that
+denominator is selected on the outcome.
+
+Against isoforms **actually tested** in H, the rate is **%.1f%%** (%d of %d). The earlier
+figure was inflated roughly %.0f-fold.
+:::\n",
+    ov_sum$n_T_significant_present_in_H, ov_sum$n_T_significant,
+    ov_sum$n_T_significant_and_H_significant,
+    100 * ov_sum$n_T_significant_and_H_significant / ov_sum$n_T_significant_present_in_H,
+    ov_sum$pct_T_significant_also_significant_in_H,
+    round(ov_sum$pct_T_significant_also_significant_in_H / 100 * ov_sum$n_T_significant_tested_in_H),
+    ov_sum$n_T_significant_tested_in_H,
+    (100 * ov_sum$n_T_significant_and_H_significant / ov_sum$n_T_significant_present_in_H) /
+      ov_sum$pct_T_significant_also_significant_in_H
+  ))
+}
+```
+
 ### T-significant isoforms in H context (including non-significant H)
+
+`H_ctx_dIF` is H's measured effect from the unfiltered object — available even for isoforms
+H's reduced object discarded, which is the point of the context layer.
 
 ```{r}
 ov_show <- ov_detail |>
   arrange(desc(abs(.data$T_dIF_n)), .data$T_q_i) |>
   select(
     gene_id, gene_name, isoform_id,
-    T_dIF_n, T_q_i, T_q_g, T_significant,
-    H_dIF_n, H_q_i, H_q_g, H_significant,
-    same_direction, overlap_note
+    T_dIF_n, T_q_i, T_significant,
+    H_ctx_dIF, H_ctx_q, H_significant,
+    same_direction_ctx, overlap_note
   )
 
 knitr::kable(

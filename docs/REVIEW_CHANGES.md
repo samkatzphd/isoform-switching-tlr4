@@ -109,14 +109,37 @@ What it enables:
 fix was described there as changing nothing. The unfiltered objects contain 186 and 142 NA
 isoform q-values, so that fix is load-bearing for anything touching the context layer.
 
-**Still outstanding:** HT has no unfiltered export. `config` carries
-`isa_unfiltered_path: null` placeholders for `T_HT`/`H_HT`, and both `01` and `06` handle
-their absence explicitly — `06` reports that "not detected in H" cannot be separated from
-"dropped when reduced". Adding the HT exports would complete
-`isoform_overlap_T_significant_in_H_context`, whose whole purpose is showing T-significant
-isoforms in H context even when H is non-significant. RSEM count matrices for both
-references are on the drive under `gtf_files/*/[HU]_T_mapped/`, so a full re-analysis is
-possible but was explicitly out of scope.
+### HT context (added 2026-08-06)
+
+Unfiltered HT exports were added under
+`H-T_Comparisons/*_Unfiltered_2025-Oct-12/`. Status is split:
+
+- **`H_HT` — in place and working.** 128,491 isoforms over 8,160 genes, 20.5% of genes
+  significant, gene q spanning 7.8e-45 to 1, all 3,102 reduced isoforms present.
+- **`T_HT` — corrupt, not usable.** `gzip -t` reports a data stream error; the file
+  decompresses ~269 MB of an expected ~2.6 GB (the H file, of near-identical compressed
+  size, yields 2.6 GB). The header is fine and the writing R version matches files that
+  load correctly, so this is a bad transfer, not a compatibility problem. Needs re-copying
+  from source. `config` keeps `isa_unfiltered_path: null` for `T_HT` with that noted.
+
+`06` was relaxed so it uses whichever side is available — statements about H need only the
+H context, and requiring both would have withheld the entire result over one bad file.
+
+**This changed a headline number.** Judged by what survived `H_HT`'s reduction, 7 of 15
+T-significant isoforms were also significant in H — an apparent replication rate of ~47%.
+Against the 115 isoforms **actually tested** in H, the rate is **6.1%**: the biased figure
+was inflated roughly eight-fold, for exactly the reason described in §0. The T-significant
+switches are not absent from H, though — 74.8% move in the same direction (86 of 115,
+binomial p = 9.8e-8) with a median |dIF| of 0.07, below the 0.15 calling threshold. Same
+attenuation signature as the UBL5 arm.
+
+`extract_t_h_overlap()` now also joins H's measured `dIF`/`IF1`/`IF2`/q from the context,
+so the table can say what happened in H rather than only whether it was tested there.
+
+**Still outstanding:** the corrupt `T_HT` export. Until it is replaced, the reciprocal
+question — are H-significant switches merely sub-threshold in T? — cannot be asked. RSEM
+count matrices for both references are on the drive under `gtf_files/*/[HU]_T_mapped/` if a
+re-analysis is ever wanted, but that was explicitly out of scope.
 
 ---
 

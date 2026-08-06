@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Project">
-<meta name="dcterms.date" content="2026-08-05">
+<meta name="dcterms.date" content="2026-08-06">
 
 <title>Isoform switching after LPS, and what UBL5 loss does to it</title>
 <style>
@@ -2233,7 +2233,7 @@ vertical-align: -.125em;
   </ul></li>
   <li><a href="#where-the-analysis-is-currently-blind" id="toc-where-the-analysis-is-currently-blind" class="nav-link" data-scroll-target="#where-the-analysis-is-currently-blind"><span class="header-section-number">7</span> Where the analysis is currently blind</a>
   <ul class="collapse">
-  <li><a href="#q1s-cross-genotype-comparison-is-severely-limited" id="toc-q1s-cross-genotype-comparison-is-severely-limited" class="nav-link" data-scroll-target="#q1s-cross-genotype-comparison-is-severely-limited"><span class="header-section-number">7.1</span> Q1’s cross-genotype comparison is severely limited</a></li>
+  <li><a href="#q1s-cross-genotype-comparison-now-with-a-proper-denominator" id="toc-q1s-cross-genotype-comparison-now-with-a-proper-denominator" class="nav-link" data-scroll-target="#q1s-cross-genotype-comparison-now-with-a-proper-denominator"><span class="header-section-number">7.1</span> Q1’s cross-genotype comparison, now with a proper denominator</a></li>
   <li><a href="#statistics-that-did-not-survive-scrutiny" id="toc-statistics-that-did-not-survive-scrutiny" class="nav-link" data-scroll-target="#statistics-that-did-not-survive-scrutiny"><span class="header-section-number">7.2</span> Statistics that did not survive scrutiny</a></li>
   </ul></li>
   <li><a href="#where-this-leaves-us" id="toc-where-this-leaves-us" class="nav-link" data-scroll-target="#where-this-leaves-us"><span class="header-section-number">8</span> Where this leaves us</a>
@@ -2266,7 +2266,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 5, 2026</p>
+      <p class="date">August 6, 2026</p>
     </div>
   </div>
   
@@ -2396,9 +2396,9 @@ Table 2: Primary objects are pre-selected; the UT datasets also have unfiltered
 <td style="text-align: left;">H_HT</td>
 <td style="text-align: right;">385</td>
 <td style="text-align: right;">100</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">8160</td>
+<td style="text-align: right;">20.5</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">U_UT</td>
@@ -3301,43 +3301,50 @@ Table 12: Top switching genes in each UT arm
 </section>
 <section id="where-the-analysis-is-currently-blind" class="level1" data-number="7">
 <h1 data-number="7"><span class="header-section-number">7</span> Where the analysis is currently blind</h1>
-<section id="q1s-cross-genotype-comparison-is-severely-limited" class="level2" data-number="7.1">
-<h2 data-number="7.1" class="anchored" data-anchor-id="q1s-cross-genotype-comparison-is-severely-limited"><span class="header-section-number">7.1</span> Q1’s cross-genotype comparison is severely limited</h2>
+<section id="q1s-cross-genotype-comparison-now-with-a-proper-denominator" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="q1s-cross-genotype-comparison-now-with-a-proper-denominator"><span class="header-section-number">7.1</span> Q1’s cross-genotype comparison, now with a proper denominator</h2>
+<p>An unfiltered <code>H_HT</code> export became available, which changes this section from “unusable” to “usable, and the answer is not what the biased version suggested”.</p>
 <div class="cell">
 <div id="tbl-ht" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-ht-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table 13: T_HT versus H_HT — bounded by what survived each object’s reduction
+Table 13: T_HT versus H_HT, before and after the proper denominator
 </figcaption>
 <div aria-describedby="tbl-ht-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
 <table class="cell caption-top table table-sm table-striped small">
 <colgroup>
+<col style="width: 10%">
+<col style="width: 13%">
+<col style="width: 13%">
 <col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 7%">
-<col style="width: 18%">
-<col style="width: 20%">
-<col style="width: 24%">
+<col style="width: 10%">
+<col style="width: 11%">
+<col style="width: 10%">
+<col style="width: 16%">
 </colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: right;">Isoforms in T</th>
-<th style="text-align: right;">Isoforms in H</th>
-<th style="text-align: right;">Shared</th>
 <th style="text-align: right;">Significant in T</th>
-<th style="text-align: right;">…also present in H</th>
-<th style="text-align: right;">…also significant in H</th>
+<th style="text-align: right;">In H’s reduced object</th>
+<th style="text-align: right;">…and significant in H</th>
+<th style="text-align: right;">Tested in H (unfiltered)</th>
+<th style="text-align: right;">Not detected in H</th>
+<th style="text-align: right;">% significant in H</th>
+<th style="text-align: right;">% same direction</th>
+<th style="text-align: right;">median |dIF| in H</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">1543</td>
-<td style="text-align: right;">3102</td>
-<td style="text-align: right;">127</td>
 <td style="text-align: right;">173</td>
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">7</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">6.09</td>
+<td style="text-align: right;">74.78</td>
+<td style="text-align: right;">0.07</td>
 </tr>
 </tbody>
 </table>
@@ -3346,8 +3353,40 @@ Table 13: T_HT versus H_HT — bounded by what survived each object’s reducti
 </figure>
 </div>
 </div>
-<p>Only 15 of 173 isoforms significant in <code>T_HT</code> even <strong>appear</strong> in the <code>H_HT</code> object. That is not a biological statement — those isoforms were dropped when <code>H_HT</code> was reduced. Until unfiltered HT exports exist, this comparison cannot distinguish “does not switch in H” from “not retained in H”, and no conclusion should be drawn from it.</p>
-<p>This is exactly the limitation the UT arm escaped, and it is the single highest-value addition remaining.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>A replication rate that was inflated ~8-fold
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Judging only by what survived <code>H_HT</code>’s reduction, 7 of 15 T-significant isoforms were also significant in H — an apparent replication of <strong>47%</strong>. But an isoform only stayed in that object if its gene was already significant there.</p>
+<p>Against the 115 isoforms <strong>actually tested</strong> in H, the rate is <strong>6.1%</strong>.</p>
+</div>
+</div>
+<p>So LPS-driven switches in THP-1 are largely <strong>not</strong> reproduced as significant events in the H genotype. But they are not absent either:</p>
+<ul>
+<li><strong>74.8% move in the same direction</strong> in H (86 of 115; binomial p = 9.8e-8 against chance, 95% CI 65.8–82.4%).</li>
+<li>Their <strong>median |dIF| in H is 0.07</strong> — well under the 0.15 threshold, and only 18.3% clear it.</li>
+</ul>
+<p>This is the same signature seen in the UBL5 arm, and more extreme: <strong>direction preserved, magnitude far below the calling threshold.</strong> Whether that reflects genuine genotype-specific attenuation or differences in power between the two runs cannot be settled here — <code>H_HT</code> actually has <em>more</em> significant isoforms overall (323 vs 173), which argues against simple underpowering.</p>
+<p>58 T-significant isoforms are not detected in H at all and remain genuinely uninformative.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Still outstanding
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The unfiltered <strong><code>T_HT</code></strong> export is present on the drive but the file is corrupt — <code>gzip -t</code> reports a data stream error and it decompresses ~269 MB of an expected ~2.6 GB. Until it is re-copied, the reciprocal question (are H-significant switches merely sub-threshold in T?) cannot be asked, and <code>01</code>/<code>06</code> handle its absence explicitly rather than guessing.</p>
+</div>
+</div>
 </section>
 <section id="statistics-that-did-not-survive-scrutiny" class="level2" data-number="7.2">
 <h2 data-number="7.2" class="anchored" data-anchor-id="statistics-that-did-not-survive-scrutiny"><span class="header-section-number">7.2</span> Statistics that did not survive scrutiny</h2>
@@ -3361,7 +3400,7 @@ Table 13: T_HT versus H_HT — bounded by what survived each object’s reducti
 </section>
 <section id="where-this-leaves-us" class="level1" data-number="8">
 <h1 data-number="8"><span class="header-section-number">8</span> Where this leaves us</h1>
-<p><strong>Q1 — Yes, and on the right genes.</strong> LPS drives isoform switching in 130 genes in wildtype THP-1, and the strongest events sit on canonical LPS-response genes. Novel long-read isoforms participate at full effect size, which justifies the PacBio-augmented reference. The <code>T_HT</code> versus <code>H_HT</code> comparison remains unusable pending unfiltered exports.</p>
+<p><strong>Q1 — Yes, and on the right genes.</strong> LPS drives isoform switching in 130 genes in wildtype THP-1, and the strongest events sit on canonical LPS-response genes. Novel long-read isoforms participate at full effect size, which justifies the PacBio-augmented reference. Against the H genotype, only 6.1% of those switches reproduce as significant, but 75% share direction at sub-threshold magnitude — the same attenuation signature as the UBL5 arm.</p>
 <p><strong>Q2 — UBL5 loss dampens rather than redirects.</strong> Three independent lines point the same way:</p>
 <ol type="1">
 <li>Fewer genes switch in the knockout (16.4% vs 24.9% of tested genes).</li>
@@ -3382,14 +3421,14 @@ Table 13: T_HT versus H_HT — bounded by what survived each object’s reducti
 <section id="next-steps-in-priority-order" class="level2" data-number="8.2">
 <h2 data-number="8.2" class="anchored" data-anchor-id="next-steps-in-priority-order"><span class="header-section-number">8.2</span> Next steps, in priority order</h2>
 <ol type="1">
-<li><strong>Add unfiltered HT exports.</strong> Unblocks Q1’s cross-genotype comparison and completes the T-in-H-context table. The code path already exists and falls back explicitly.</li>
+<li><strong>Re-copy the corrupt unfiltered <code>T_HT</code> export.</strong> The <code>H_HT</code> one is in place and already unblocked Q1’s cross-genotype comparison; the <code>T_HT</code> file fails a gzip integrity check, so the reciprocal direction (H-significant switches measured in T) is still unavailable. Two config lines and a rerun of <code>01</code>/<code>06</code> once the file is replaced.</li>
 <li><strong>Pathway analysis</strong>, once a defensible background exists for both references.</li>
 <li><strong>Targeted validation</strong> of the dampening model — a handful of high-|dIF| WT switches that fail threshold in the knockout (CD86 is a natural first candidate) by isoform-specific qPCR.</li>
 <li><strong>Novel-isoform follow-up</strong> on the <code>j</code>-class switching transcripts, which are the ones a short-read annotation would have missed entirely.</li>
 </ol>
 <hr>
 <div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -3398,7 +3437,7 @@ Table 13: T_HT versus H_HT — bounded by what survived each object’s reducti
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>All numbers and figures in this report are read from <code>results/</code> at render time; none are typed in. Regenerate with:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> scripts/01_load_data.R</span>

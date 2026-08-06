@@ -295,18 +295,50 @@ extract_t_h_overlap <- function(t_iso, h_iso, iso_q_cutoff, gene_q_cutoff, min_a
   # switching genes, so without an unfiltered context "not found in H" conflates
   # "quantified in H and did not switch" with "dropped when H was reduced". When an
   # unfiltered H context is configured the distinction becomes real.
-  has_ctx <- !is.null(ctx_t) && !is.null(ctx_h)
+  # This table makes statements about H, so it only needs the H-side context. Requiring
+  # both would withhold the whole result whenever one export is missing or unreadable.
+  has_ctx_h <- !is.null(ctx_h)
+  has_ctx_t <- !is.null(ctx_t)
   merged <- merged |>
     mutate(
-      tested_in_H = if (!is.null(ctx_h)) .data$isoform_id %in% ctx_h$isoform_id else NA,
-      tested_in_T = if (!is.null(ctx_t)) .data$isoform_id %in% ctx_t$isoform_id else NA
+      tested_in_H = if (has_ctx_h) .data$isoform_id %in% ctx_h$isoform_id else NA,
+      tested_in_T = if (has_ctx_t) .data$isoform_id %in% ctx_t$isoform_id else NA
+    )
+
+  # Pull H's measured effect from the unfiltered context, so an isoform significant in T
+  # can be described in H even when H's reduced object dropped it. Without this the table
+  # can say "tested in H" but not what happened there, which is the actual question.
+  if (has_ctx_h) {
+    hk <- ctx_h |>
+      transmute(
+        isoform_id = as.character(.data$isoform_id),
+        H_ctx_dIF = suppressWarnings(as.numeric(.data$dIF)),
+        H_ctx_IF1 = suppressWarnings(as.numeric(.data$IF1)),
+        H_ctx_IF2 = suppressWarnings(as.numeric(.data$IF2)),
+        H_ctx_q = suppressWarnings(as.numeric(.data$isoform_switch_q_value))
+      ) |>
+      distinct(.data$isoform_id, .keep_all = TRUE)
+    merged <- merged |> left_join(hk, by = "isoform_id")
+  } else {
+    merged <- merged |>
+      mutate(H_ctx_dIF = NA_real_, H_ctx_IF1 = NA_real_, H_ctx_IF2 = NA_real_, H_ctx_q = NA_real_)
+  }
+  # Prefer the context measurement of H where available; fall back to the reduced object.
+  merged <- merged |>
+    mutate(
+      H_dIF_used = dplyr::coalesce(.data$H_ctx_dIF, .data$H_dIF_n),
+      same_direction_ctx = dplyr::case_when(
+        is.finite(.data$T_dIF_n) & is.finite(.data$H_dIF_used) ~
+          sign(.data$T_dIF_n) == sign(.data$H_dIF_used),
+        TRUE ~ NA
+      )
     )
 
   t_sig_in_h <- merged |>
-    filter(.data$T_significant, .data$present_in_both | (has_ctx & .data$tested_in_H %in% TRUE)) |>
+    filter(.data$T_significant, .data$present_in_both | (has_ctx_h & .data$tested_in_H %in% TRUE)) |>
     mutate(
       H_passes_significance = .data$H_significant,
-      overlap_note = if (has_ctx) {
+      overlap_note = if (has_ctx_h) {
         case_when(
           .data$H_significant ~ "Significant in H",
           .data$tested_in_H %in% TRUE ~ "Tested in H, not switching",
@@ -337,11 +369,39 @@ extract_t_h_overlap <- function(t_iso, h_iso, iso_q_cutoff, gene_q_cutoff, min_a
       merged$T_significant & merged$present_in_both & (merged$same_direction %in% TRUE),
       na.rm = TRUE
     ),
-    unfiltered_context_available = has_ctx,
-    n_T_significant_tested_in_H = if (has_ctx) {
+    unfiltered_context_H = has_ctx_h,
+    unfiltered_context_T = has_ctx_t,
+    n_genes_tested_in_H = if (has_ctx_h) dplyr::n_distinct(ctx_h$gene_id) else NA_integer_,
+    n_T_significant_tested_in_H = if (has_ctx_h) {
       sum(merged$T_significant & (merged$tested_in_H %in% TRUE), na.rm = TRUE)
     } else {
       NA_integer_
+    },
+    n_T_significant_not_detected_in_H = if (has_ctx_h) {
+      sum(merged$T_significant & !(merged$tested_in_H %in% TRUE), na.rm = TRUE)
+    } else {
+      NA_integer_
+    },
+    # Replication measured over isoforms actually TESTED in H, not over the handful that
+    # survived H's reduction. The latter is biased upward: an isoform only stayed in the
+    # reduced object if its gene was already significant there.
+    pct_T_significant_also_significant_in_H = if (has_ctx_h) {
+      d <- merged[merged$T_significant & (merged$tested_in_H %in% TRUE), ]
+      if (nrow(d)) 100 * mean(d$H_significant, na.rm = TRUE) else NA_real_
+    } else {
+      NA_real_
+    },
+    pct_T_significant_same_direction_in_H = if (has_ctx_h) {
+      d <- merged[merged$T_significant & (merged$tested_in_H %in% TRUE), ]
+      if (nrow(d)) 100 * mean(d$same_direction_ctx %in% TRUE, na.rm = TRUE) else NA_real_
+    } else {
+      NA_real_
+    },
+    median_abs_H_dIF_for_T_significant = if (has_ctx_h) {
+      d <- merged[merged$T_significant & (merged$tested_in_H %in% TRUE), ]
+      suppressWarnings(stats::median(abs(d$H_dIF_used), na.rm = TRUE))
+    } else {
+      NA_real_
     }
   )
   list(all = merged, t_sig_in_h = t_sig_in_h, summary = summary)

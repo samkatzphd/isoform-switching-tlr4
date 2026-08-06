@@ -67,9 +67,11 @@ both objects, and no enrichment test is reported. See
 the same analysis. Script `01` then writes a slim per-isoform context table plus
 per-replicate isoform fractions to `data/processed/isoformContext*_<label>.rds`.
 
-Configured for `T_UT` and `U_UT` (11,582 and 11,969 genes, vs 248 and 127 in the reduced
-objects); `null` for `T_HT`/`H_HT` until those exports exist — `01` and `06` handle the
-absence explicitly.
+Configured for `T_UT`, `U_UT` and `H_HT` (11,582 / 11,969 / 8,160 genes tested, versus 248 /
+127 / 385 retained in the reduced objects). `T_HT` is still `null`: its unfiltered export
+exists on the drive but **the file is corrupt** (`gzip -t` data stream error, decompresses
+~269 MB of an expected ~2.6 GB) and needs re-copying. `01` and `06` handle a missing context
+explicitly, and `06` uses whichever side is available rather than requiring both.
 
 **Significance calls never come from the context layer** — it is used for display and
 classification only, so novelty rates in `03` stay comparable between HT and UT. What it

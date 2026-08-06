@@ -2317,13 +2317,16 @@ Table 1: Per-dataset input check: are the saved ISA objects already reduced to 
 <div class="cell-output-display">
 <table class="cell caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 8%">
-<col style="width: 13%">
-<col style="width: 7%">
 <col style="width: 5%">
-<col style="width: 19%">
-<col style="width: 20%">
-<col style="width: 23%">
+<col style="width: 8%">
+<col style="width: 5%">
+<col style="width: 3%">
+<col style="width: 12%">
+<col style="width: 13%">
+<col style="width: 15%">
+<col style="width: 10%">
+<col style="width: 8%">
+<col style="width: 15%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -2334,6 +2337,9 @@ Table 1: Per-dataset input check: are the saved ISA objects already reduced to 
 <th style="text-align: right;">n_genes_gene_q_significant</th>
 <th style="text-align: right;">pct_genes_gene_q_significant</th>
 <th style="text-align: left;">looks_reduced_to_switching_genes</th>
+<th style="text-align: left;">has_unfiltered_context</th>
+<th style="text-align: right;">n_genes_unfiltered</th>
+<th style="text-align: right;">pct_genes_significant_unfiltered</th>
 </tr>
 </thead>
 <tbody>
@@ -2345,6 +2351,9 @@ Table 1: Per-dataset input check: are the saved ISA objects already reduced to 
 <td style="text-align: right;">216</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">H_HT</td>
@@ -2354,6 +2363,9 @@ Table 1: Per-dataset input check: are the saved ISA objects already reduced to 
 <td style="text-align: right;">385</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">8160</td>
+<td style="text-align: right;">20.53</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">U_UT</td>
@@ -2363,6 +2375,9 @@ Table 1: Per-dataset input check: are the saved ISA objects already reduced to 
 <td style="text-align: right;">127</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">11969</td>
+<td style="text-align: right;">16.43</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">T_UT</td>
@@ -2372,6 +2387,9 @@ Table 1: Per-dataset input check: are the saved ISA objects already reduced to 
 <td style="text-align: right;">248</td>
 <td style="text-align: right;">100</td>
 <td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">11582</td>
+<td style="text-align: right;">24.86</td>
 </tr>
 </tbody>
 </table>
@@ -3022,7 +3040,7 @@ LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlap
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
-time zone: America/New_York
+time zone: Europe/Paris
 tzcode source: internal
 
 attached base packages:

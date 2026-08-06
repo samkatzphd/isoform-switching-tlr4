@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Project">
-<meta name="dcterms.date" content="2026-07-30">
+<meta name="dcterms.date" content="2026-08-06">
 
 <title>HT switch analysis: T_HT and H_HT</title>
 <style>
@@ -2225,7 +2225,8 @@ vertical-align: -.125em;
   <li><a href="#t-vs-h-overlap-panel" id="toc-t-vs-h-overlap-panel" class="nav-link" data-scroll-target="#t-vs-h-overlap-panel"><span class="header-section-number">4</span> T vs H overlap panel</a>
   <ul class="collapse">
   <li><a href="#overlap-summary" id="toc-overlap-summary" class="nav-link" data-scroll-target="#overlap-summary"><span class="header-section-number">4.1</span> Overlap summary</a></li>
-  <li><a href="#t-significant-isoforms-in-h-context-including-non-significant-h" id="toc-t-significant-isoforms-in-h-context-including-non-significant-h" class="nav-link" data-scroll-target="#t-significant-isoforms-in-h-context-including-non-significant-h"><span class="header-section-number">4.2</span> T-significant isoforms in H context (including non-significant H)</a></li>
+  <li><a href="#how-often-does-a-t-switch-reproduce-in-h" id="toc-how-often-does-a-t-switch-reproduce-in-h" class="nav-link" data-scroll-target="#how-often-does-a-t-switch-reproduce-in-h"><span class="header-section-number">4.2</span> How often does a T switch reproduce in H?</a></li>
+  <li><a href="#t-significant-isoforms-in-h-context-including-non-significant-h" id="toc-t-significant-isoforms-in-h-context-including-non-significant-h" class="nav-link" data-scroll-target="#t-significant-isoforms-in-h-context-including-non-significant-h"><span class="header-section-number">4.3</span> T-significant isoforms in H context (including non-significant H)</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -2251,7 +2252,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 30, 2026</p>
+      <p class="date">August 6, 2026</p>
     </div>
   </div>
   
@@ -5064,19 +5065,25 @@ vertical-align: -.125em;
 <table class="caption-top table table-sm table-striped small">
 <caption>Isoform overlap summary: T_HT vs H_HT</caption>
 <colgroup>
-<col style="width: 5%">
+<col style="width: 3%">
+<col style="width: 2%">
 <col style="width: 4%">
+<col style="width: 2%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 3%">
 <col style="width: 6%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 6%">
-<col style="width: 5%">
-<col style="width: 5%">
-<col style="width: 10%">
-<col style="width: 11%">
-<col style="width: 15%">
-<col style="width: 10%">
+<col style="width: 7%">
 <col style="width: 9%">
+<col style="width: 4%">
+<col style="width: 4%">
+<col style="width: 4%">
+<col style="width: 5%">
+<col style="width: 7%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 7%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -5091,8 +5098,14 @@ vertical-align: -.125em;
 <th style="text-align: right;">n_T_significant_present_in_H</th>
 <th style="text-align: right;">n_T_significant_and_H_significant</th>
 <th style="text-align: right;">n_T_significant_present_in_H_same_direction</th>
-<th style="text-align: left;">unfiltered_context_available</th>
-<th style="text-align: left;">n_T_significant_tested_in_H</th>
+<th style="text-align: left;">unfiltered_context_H</th>
+<th style="text-align: left;">unfiltered_context_T</th>
+<th style="text-align: right;">n_genes_tested_in_H</th>
+<th style="text-align: right;">n_T_significant_tested_in_H</th>
+<th style="text-align: right;">n_T_significant_not_detected_in_H</th>
+<th style="text-align: right;">pct_T_significant_also_significant_in_H</th>
+<th style="text-align: right;">pct_T_significant_same_direction_in_H</th>
+<th style="text-align: right;">median_abs_H_dIF_for_T_significant</th>
 </tr>
 </thead>
 <tbody>
@@ -5108,48 +5121,149 @@ vertical-align: -.125em;
 <td style="text-align: right;">15</td>
 <td style="text-align: right;">7</td>
 <td style="text-align: right;">11</td>
+<td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">NA</td>
+<td style="text-align: right;">8160</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">6.087</td>
+<td style="text-align: right;">74.7826</td>
+<td style="text-align: right;">0.0664</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </section>
-<section id="t-significant-isoforms-in-h-context-including-non-significant-h" class="level3" data-number="4.2">
-<h3 data-number="4.2" class="anchored" data-anchor-id="t-significant-isoforms-in-h-context-including-non-significant-h"><span class="header-section-number">4.2</span> T-significant isoforms in H context (including non-significant H)</h3>
+<section id="how-often-does-a-t-switch-reproduce-in-h" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="how-often-does-a-t-switch-reproduce-in-h"><span class="header-section-number">4.2</span> How often does a T switch reproduce in H?</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ov_show <span class="ot">&lt;-</span> ov_detail <span class="sc">|&gt;</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(.data<span class="sc">$</span>T_dIF_n)), .data<span class="sc">$</span>T_q_i) <span class="sc">|&gt;</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    gene_id, gene_name, isoform_id,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    T_dIF_n, T_q_i, T_q_g, T_significant,</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    H_dIF_n, H_q_i, H_q_g, H_significant,</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    same_direction, overlap_note</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">head</span>(ov_show, <span class="dv">100</span>),</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span> <span class="dv">4</span>,</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Top T-significant isoforms mapped to H context (first 100 rows)&quot;</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>has_h_ctx <span class="ot">&lt;-</span> <span class="fu">isTRUE</span>(ov_sum<span class="sc">$</span>unfiltered_context_H <span class="sc">%in%</span> <span class="fu">c</span>(<span class="cn">TRUE</span>, <span class="dv">1</span>))</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (has_h_ctx) {</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    ov_detail <span class="sc">|&gt;</span> <span class="fu">count</span>(overlap_note, <span class="at">name =</span> <span class="st">&quot;isoforms&quot;</span>),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Outcome in H for isoforms significant in T&quot;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    ov_sum <span class="sc">|&gt;</span> <span class="fu">select</span>(n_T_significant, n_T_significant_tested_in_H,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                     n_T_significant_not_detected_in_H,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>                     pct_T_significant_also_significant_in_H,</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>                     pct_T_significant_same_direction_in_H,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>                     median_abs_H_dIF_for_T_significant),</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">2</span>,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Significant in T&quot;</span>, <span class="st">&quot;Tested in H&quot;</span>, <span class="st">&quot;Not detected in H&quot;</span>,</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;% also significant in H&quot;</span>, <span class="st">&quot;% same direction in H&quot;</span>,</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;median |dIF| in H&quot;</span>),</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Replication measured against isoforms actually tested in H&quot;</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">asis_output</span>(</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;_No unfiltered H context configured, so replication cannot be measured against a proper denominator._&quot;</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Replication measured against isoforms actually tested in H</caption>
+<colgroup>
+<col style="width: 14%">
+<col style="width: 9%">
+<col style="width: 14%">
+<col style="width: 19%">
+<col style="width: 18%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Significant in T</th>
+<th style="text-align: right;">Tested in H</th>
+<th style="text-align: right;">Not detected in H</th>
+<th style="text-align: right;">% also significant in H</th>
+<th style="text-align: right;">% same direction in H</th>
+<th style="text-align: right;">median |dIF| in H</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">173</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">6.09</td>
+<td style="text-align: right;">74.78</td>
+<td style="text-align: right;">0.07</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (has_h_ctx) {</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;::: {.callout-important title=</span><span class="sc">\&quot;</span><span class="st">The apparent replication rate was an artefact of the reduced object</span><span class="sc">\&quot;</span><span class="st">}</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="st">Using only what survived `H_HT`&#39;s reduction, %d of %d T-significant isoforms appeared in H</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="st">and %d of those were also significant — an apparent replication of about %.0f%%. But an</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="st">isoform only stayed in the reduced object if its gene was already significant there, so that</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="st">denominator is selected on the outcome.</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="st">Against isoforms **actually tested** in H, the rate is **%.1f%%** (%d of %d). The earlier</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="st">figure was inflated roughly %.0f-fold.</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="st">:::</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    ov_sum<span class="sc">$</span>n_T_significant_present_in_H, ov_sum<span class="sc">$</span>n_T_significant,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    ov_sum<span class="sc">$</span>n_T_significant_and_H_significant,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span> <span class="sc">*</span> ov_sum<span class="sc">$</span>n_T_significant_and_H_significant <span class="sc">/</span> ov_sum<span class="sc">$</span>n_T_significant_present_in_H,</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    ov_sum<span class="sc">$</span>pct_T_significant_also_significant_in_H,</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(ov_sum<span class="sc">$</span>pct_T_significant_also_significant_in_H <span class="sc">/</span> <span class="dv">100</span> <span class="sc">*</span> ov_sum<span class="sc">$</span>n_T_significant_tested_in_H),</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    ov_sum<span class="sc">$</span>n_T_significant_tested_in_H,</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">100</span> <span class="sc">*</span> ov_sum<span class="sc">$</span>n_T_significant_and_H_significant <span class="sc">/</span> ov_sum<span class="sc">$</span>n_T_significant_present_in_H) <span class="sc">/</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>      ov_sum<span class="sc">$</span>pct_T_significant_also_significant_in_H</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-important callout-titled" title="The apparent replication rate was an artefact of the reduced object">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The apparent replication rate was an artefact of the reduced object
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Using only what survived <code>H_HT</code>’s reduction, 15 of 173 T-significant isoforms appeared in H and 7 of those were also significant — an apparent replication of about 47%. But an isoform only stayed in the reduced object if its gene was already significant there, so that denominator is selected on the outcome.</p>
+<p>Against isoforms <strong>actually tested</strong> in H, the rate is <strong>6.1%</strong> (7 of 115). The earlier figure was inflated roughly 8-fold.</p>
+</div>
+</div>
+</section>
+<section id="t-significant-isoforms-in-h-context-including-non-significant-h" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="t-significant-isoforms-in-h-context-including-non-significant-h"><span class="header-section-number">4.3</span> T-significant isoforms in H context (including non-significant H)</h3>
+<p><code>H_ctx_dIF</code> is H’s measured effect from the unfiltered object — available even for isoforms H’s reduced object discarded, which is the point of the context layer.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>ov_show <span class="ot">&lt;-</span> ov_detail <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(.data<span class="sc">$</span>T_dIF_n)), .data<span class="sc">$</span>T_q_i) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    gene_id, gene_name, isoform_id,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    T_dIF_n, T_q_i, T_significant,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    H_ctx_dIF, H_ctx_q, H_significant,</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    same_direction_ctx, overlap_note</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">head</span>(ov_show, <span class="dv">100</span>),</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Top T-significant isoforms mapped to H context (first 100 rows)&quot;</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Top T-significant isoforms mapped to H context (first 100 rows)</caption>
 <colgroup>
+<col style="width: 8%">
 <col style="width: 7%">
+<col style="width: 10%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 9%">
 <col style="width: 6%">
+<col style="width: 5%">
 <col style="width: 9%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 8%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 4%">
-<col style="width: 8%">
-<col style="width: 9%">
-<col style="width: 23%">
+<col style="width: 13%">
+<col style="width: 18%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -5158,13 +5272,11 @@ vertical-align: -.125em;
 <th style="text-align: left;">isoform_id</th>
 <th style="text-align: right;">T_dIF_n</th>
 <th style="text-align: right;">T_q_i</th>
-<th style="text-align: right;">T_q_g</th>
 <th style="text-align: left;">T_significant</th>
-<th style="text-align: right;">H_dIF_n</th>
-<th style="text-align: right;">H_q_i</th>
-<th style="text-align: right;">H_q_g</th>
+<th style="text-align: right;">H_ctx_dIF</th>
+<th style="text-align: right;">H_ctx_q</th>
 <th style="text-align: left;">H_significant</th>
-<th style="text-align: left;">same_direction</th>
+<th style="text-align: left;">same_direction_ctx</th>
 <th style="text-align: left;">overlap_note</th>
 </tr>
 </thead>
@@ -5175,14 +5287,12 @@ vertical-align: -.125em;
 <td style="text-align: left;">TCONS_00239734</td>
 <td style="text-align: right;">0.6522</td>
 <td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">0.5225</td>
 <td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H and significant in H</td>
+<td style="text-align: left;">Significant in H</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">XLOC_015796</td>
@@ -5190,44 +5300,90 @@ vertical-align: -.125em;
 <td style="text-align: left;">TCONS_00089410</td>
 <td style="text-align: right;">-0.5678</td>
 <td style="text-align: right;">0.0317</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">0.1598</td>
-<td style="text-align: right;">0.9913</td>
-<td style="text-align: right;">0.0009</td>
+<td style="text-align: right;">1.0000</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">Present in H but not significant in H</td>
+<td style="text-align: left;">Tested in H, not switching</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;">XLOC_030370</td>
+<td style="text-align: left;">RBKS</td>
+<td style="text-align: left;">TCONS_00161475</td>
+<td style="text-align: right;">0.4654</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0980</td>
+<td style="text-align: right;">0.9974</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_030370</td>
+<td style="text-align: left;">RBKS</td>
+<td style="text-align: left;">TCONS_00161472</td>
+<td style="text-align: right;">-0.4282</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0889</td>
+<td style="text-align: right;">0.9655</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_044540</td>
+<td style="text-align: left;">HLA-L</td>
+<td style="text-align: left;">TCONS_00236777</td>
+<td style="text-align: right;">-0.4149</td>
+<td style="text-align: right;">0.0018</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0103</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">XLOC_028123</td>
 <td style="text-align: left;">RSAD2</td>
 <td style="text-align: left;">TCONS_00151268</td>
 <td style="text-align: right;">0.3671</td>
 <td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">0.2059</td>
 <td style="text-align: right;">1.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H but not significant in H</td>
+<td style="text-align: left;">Tested in H, not switching</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">XLOC_015796</td>
 <td style="text-align: left;">WDR25</td>
 <td style="text-align: left;">TCONS_00083241</td>
 <td style="text-align: right;">0.3513</td>
 <td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">-0.1524</td>
 <td style="text-align: right;">1.0000</td>
-<td style="text-align: right;">0.0009</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">Present in H but not significant in H</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_036495</td>
+<td style="text-align: left;">CD86</td>
+<td style="text-align: left;">TCONS_00194764</td>
+<td style="text-align: right;">0.3443</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0007</td>
+<td style="text-align: right;">0.9768</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">XLOC_023855</td>
@@ -5235,44 +5391,298 @@ vertical-align: -.125em;
 <td style="text-align: left;">TCONS_00129655</td>
 <td style="text-align: right;">-0.3350</td>
 <td style="text-align: right;">0.0109</td>
-<td style="text-align: right;">0.0109</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">0.2682</td>
-<td style="text-align: right;">0.0308</td>
-<td style="text-align: right;">0.0308</td>
+<td style="text-align: right;">0.0393</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">Present in H and significant in H</td>
+<td style="text-align: left;">Significant in H</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">XLOC_043761</td>
+<td style="text-align: left;">DNAJC18</td>
+<td style="text-align: left;">TCONS_00230979</td>
+<td style="text-align: right;">-0.3267</td>
+<td style="text-align: right;">0.0283</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0258</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_021587</td>
+<td style="text-align: left;">KDM6B</td>
+<td style="text-align: left;">TCONS_00114648</td>
+<td style="text-align: right;">0.3041</td>
+<td style="text-align: right;">0.0025</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0633</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_038662</td>
+<td style="text-align: left;">RUBCN</td>
+<td style="text-align: left;">TCONS_00207289</td>
+<td style="text-align: right;">-0.2947</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0120</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_013030</td>
+<td style="text-align: left;">KITLG</td>
+<td style="text-align: left;">TCONS_00068278</td>
+<td style="text-align: right;">0.2943</td>
+<td style="text-align: right;">0.0001</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0282</td>
+<td style="text-align: right;">0.8112</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_001671</td>
+<td style="text-align: left;">TMEM79</td>
+<td style="text-align: left;">TCONS_00007370</td>
+<td style="text-align: right;">-0.2923</td>
+<td style="text-align: right;">0.0191</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0346</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">XLOC_007508</td>
 <td style="text-align: left;">IFITM2</td>
 <td style="text-align: left;">TCONS_00039729</td>
 <td style="text-align: right;">0.2890</td>
 <td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">0.3630</td>
 <td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H and significant in H</td>
+<td style="text-align: left;">Significant in H</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_026522</td>
+<td style="text-align: left;">SIGLEC9</td>
+<td style="text-align: left;">TCONS_00141514</td>
+<td style="text-align: right;">-0.2840</td>
+<td style="text-align: right;">0.0142</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0786</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;">XLOC_029618</td>
+<td style="text-align: left;">PMS1</td>
+<td style="text-align: left;">TCONS_00157687</td>
+<td style="text-align: right;">-0.2823</td>
+<td style="text-align: right;">0.0064</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0286</td>
+<td style="text-align: right;">0.9813</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_053671</td>
+<td style="text-align: left;">TOPORS</td>
+<td style="text-align: left;">TCONS_00285540</td>
+<td style="text-align: right;">-0.2820</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0853</td>
+<td style="text-align: right;">0.0042</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_019561</td>
+<td style="text-align: left;">CD2BP2-DT</td>
+<td style="text-align: left;">TCONS_00103480</td>
+<td style="text-align: right;">0.2722</td>
+<td style="text-align: right;">0.0119</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0644</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_046278</td>
+<td style="text-align: left;">PLA2G7</td>
+<td style="text-align: left;">TCONS_00247889</td>
+<td style="text-align: right;">0.2709</td>
+<td style="text-align: right;">0.0327</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0578</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_005992</td>
+<td style="text-align: left;">IFIT5</td>
+<td style="text-align: left;">TCONS_00038546</td>
+<td style="text-align: right;">0.2691</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.1323</td>
+<td style="text-align: right;">0.8965</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">XLOC_003170</td>
 <td style="text-align: left;">TMEM234</td>
 <td style="text-align: left;">TCONS_00013260</td>
 <td style="text-align: right;">-0.2684</td>
 <td style="text-align: right;">0.0010</td>
-<td style="text-align: right;">0.0010</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">-0.2981</td>
-<td style="text-align: right;">0.0043</td>
-<td style="text-align: right;">0.0043</td>
+<td style="text-align: right;">0.0432</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H and significant in H</td>
+<td style="text-align: left;">Significant in H</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_007960</td>
+<td style="text-align: left;">ALKBH3</td>
+<td style="text-align: left;">TCONS_00041705</td>
+<td style="text-align: right;">0.2671</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.5350</td>
+<td style="text-align: right;">0.5179</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_011323</td>
+<td style="text-align: left;">IL23A</td>
+<td style="text-align: left;">TCONS_00060450</td>
+<td style="text-align: right;">0.2664</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.2161</td>
+<td style="text-align: right;">0.8881</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_026522</td>
+<td style="text-align: left;">SIGLEC9</td>
+<td style="text-align: left;">TCONS_00141515</td>
+<td style="text-align: right;">0.2651</td>
+<td style="text-align: right;">0.0473</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0599</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_033510</td>
+<td style="text-align: left;">RGS19</td>
+<td style="text-align: left;">TCONS_00179445</td>
+<td style="text-align: right;">0.2625</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.1299</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_046278</td>
+<td style="text-align: left;">PLA2G7</td>
+<td style="text-align: left;">TCONS_00247239</td>
+<td style="text-align: right;">-0.2557</td>
+<td style="text-align: right;">0.0086</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0023</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_004716</td>
+<td style="text-align: left;">PHLDA3</td>
+<td style="text-align: left;">TCONS_00019593</td>
+<td style="text-align: right;">0.2511</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0581</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_015708</td>
+<td style="text-align: left;">RIN3</td>
+<td style="text-align: left;">TCONS_00082765</td>
+<td style="text-align: right;">0.2494</td>
+<td style="text-align: right;">0.0033</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0854</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_044803</td>
+<td style="text-align: left;">TMEM63B</td>
+<td style="text-align: left;">TCONS_00238059</td>
+<td style="text-align: right;">-0.2477</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1325</td>
+<td style="text-align: right;">0.7070</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_011306</td>
+<td style="text-align: left;">DGKA</td>
+<td style="text-align: left;">TCONS_00070638</td>
+<td style="text-align: right;">-0.2436</td>
+<td style="text-align: right;">0.0436</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.2042</td>
+<td style="text-align: right;">0.8469</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">XLOC_004809</td>
@@ -5280,44 +5690,766 @@ vertical-align: -.125em;
 <td style="text-align: left;">TCONS_00019954</td>
 <td style="text-align: right;">0.2430</td>
 <td style="text-align: right;">0.0286</td>
-<td style="text-align: right;">0.0286</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">0.1777</td>
-<td style="text-align: right;">0.0031</td>
-<td style="text-align: right;">0.0031</td>
+<td style="text-align: right;">0.0430</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H and significant in H</td>
+<td style="text-align: left;">Significant in H</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;">XLOC_019483</td>
+<td style="text-align: left;">LCMT1</td>
+<td style="text-align: left;">TCONS_00112926</td>
+<td style="text-align: right;">-0.2423</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0055</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_005782</td>
+<td style="text-align: left;">KIFBP</td>
+<td style="text-align: left;">TCONS_00030704</td>
+<td style="text-align: right;">-0.2374</td>
+<td style="text-align: right;">0.0266</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1178</td>
+<td style="text-align: right;">0.8902</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_029618</td>
+<td style="text-align: left;">PMS1</td>
+<td style="text-align: left;">TCONS_00170726</td>
+<td style="text-align: right;">0.2369</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0241</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_044803</td>
+<td style="text-align: left;">TMEM63B</td>
+<td style="text-align: left;">TCONS_00238057</td>
+<td style="text-align: right;">0.2368</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.1489</td>
+<td style="text-align: right;">0.6026</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_023406</td>
+<td style="text-align: left;">CCL3</td>
+<td style="text-align: left;">TCONS_00123365</td>
+<td style="text-align: right;">0.2347</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.1360</td>
+<td style="text-align: right;">0.9798</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_034711</td>
+<td style="text-align: left;">CCDC117</td>
+<td style="text-align: left;">TCONS_00189711</td>
+<td style="text-align: right;">-0.2333</td>
+<td style="text-align: right;">0.0262</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0655</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_026542</td>
+<td style="text-align: left;">ZNF175</td>
+<td style="text-align: left;">TCONS_00141566</td>
+<td style="text-align: right;">-0.2260</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1733</td>
+<td style="text-align: right;">0.9750</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_004829</td>
+<td style="text-align: left;">C1orf74</td>
+<td style="text-align: left;">TCONS_00020016</td>
+<td style="text-align: right;">-0.2257</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.3531</td>
+<td style="text-align: right;">0.2416</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_005992</td>
+<td style="text-align: left;">IFIT5</td>
+<td style="text-align: left;">TCONS_00031650</td>
+<td style="text-align: right;">-0.2257</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0694</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_021196</td>
+<td style="text-align: left;">COG4</td>
+<td style="text-align: left;">TCONS_00110973</td>
+<td style="text-align: right;">-0.2253</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0778</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_023406</td>
+<td style="text-align: left;">CCL3</td>
+<td style="text-align: left;">TCONS_00123355</td>
+<td style="text-align: right;">-0.2242</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1310</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_046969</td>
+<td style="text-align: left;">IPCEF1</td>
+<td style="text-align: left;">TCONS_00248016</td>
+<td style="text-align: right;">0.2238</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0644</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_037565</td>
+<td style="text-align: left;">RASSF1</td>
+<td style="text-align: left;">TCONS_00200674</td>
+<td style="text-align: right;">0.2230</td>
+<td style="text-align: right;">0.0066</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.2064</td>
+<td style="text-align: right;">0.8870</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_023106</td>
+<td style="text-align: left;">PLD6</td>
+<td style="text-align: left;">TCONS_00122166</td>
+<td style="text-align: right;">0.2215</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0150</td>
+<td style="text-align: right;">0.8340</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_022554</td>
+<td style="text-align: left;">PITPNC1</td>
+<td style="text-align: left;">TCONS_00128613</td>
+<td style="text-align: right;">-0.2212</td>
+<td style="text-align: right;">0.0001</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0050</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_001285</td>
+<td style="text-align: left;">CTTNBP2NL</td>
+<td style="text-align: left;">TCONS_00005874</td>
+<td style="text-align: right;">-0.2210</td>
+<td style="text-align: right;">0.0008</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1106</td>
+<td style="text-align: right;">0.6618</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_005842</td>
+<td style="text-align: left;">PPP3CB-AS1</td>
+<td style="text-align: left;">TCONS_00037724</td>
+<td style="text-align: right;">-0.2162</td>
+<td style="text-align: right;">0.0203</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0856</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">XLOC_028123</td>
 <td style="text-align: left;">RSAD2</td>
 <td style="text-align: left;">TCONS_00170352</td>
 <td style="text-align: right;">-0.2148</td>
 <td style="text-align: right;">0.0052</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">0.0305</td>
-<td style="text-align: right;">0.8599</td>
-<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">1.0000</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">Present in H but not significant in H</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_046933</td>
+<td style="text-align: left;">KATNA1</td>
+<td style="text-align: left;">TCONS_00246074</td>
+<td style="text-align: right;">0.2144</td>
+<td style="text-align: right;">0.0006</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0985</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">XLOC_033510</td>
+<td style="text-align: left;">RGS19</td>
+<td style="text-align: left;">TCONS_00179444</td>
+<td style="text-align: right;">-0.2143</td>
+<td style="text-align: right;">0.0133</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1255</td>
+<td style="text-align: right;">0.9542</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_046969</td>
+<td style="text-align: left;">IPCEF1</td>
+<td style="text-align: left;">TCONS_00246245</td>
+<td style="text-align: right;">-0.2130</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0248</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_049364</td>
+<td style="text-align: left;">TFPI2</td>
+<td style="text-align: left;">TCONS_00258488</td>
+<td style="text-align: right;">0.2123</td>
+<td style="text-align: right;">0.0021</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0229</td>
+<td style="text-align: right;">0.9732</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_015588</td>
+<td style="text-align: left;">JDP2</td>
+<td style="text-align: left;">TCONS_00089883</td>
+<td style="text-align: right;">0.2092</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.1656</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_015708</td>
+<td style="text-align: left;">RIN3</td>
+<td style="text-align: left;">TCONS_00082770</td>
+<td style="text-align: right;">-0.2067</td>
+<td style="text-align: right;">0.0008</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0664</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_051967</td>
+<td style="text-align: left;">CCNE2</td>
+<td style="text-align: left;">TCONS_00271448</td>
+<td style="text-align: right;">0.2042</td>
+<td style="text-align: right;">0.0444</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0237</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_022554</td>
+<td style="text-align: left;">PITPNC1</td>
+<td style="text-align: left;">TCONS_00128110</td>
+<td style="text-align: right;">0.2022</td>
+<td style="text-align: right;">0.0022</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0164</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">XLOC_045300</td>
 <td style="text-align: left;">NCOA7</td>
 <td style="text-align: left;">TCONS_00248414</td>
 <td style="text-align: right;">-0.2017</td>
 <td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">-0.1030</td>
 <td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H but not significant in H</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_006358</td>
+<td style="text-align: left;">INPP5A</td>
+<td style="text-align: left;">TCONS_00033224</td>
+<td style="text-align: right;">-0.2006</td>
+<td style="text-align: right;">0.0072</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0958</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_007648</td>
+<td style="text-align: left;">TRIM22</td>
+<td style="text-align: left;">TCONS_00040350</td>
+<td style="text-align: right;">-0.1938</td>
+<td style="text-align: right;">0.0313</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0467</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_015588</td>
+<td style="text-align: left;">JDP2</td>
+<td style="text-align: left;">TCONS_00082164</td>
+<td style="text-align: right;">-0.1937</td>
+<td style="text-align: right;">0.0016</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.2862</td>
+<td style="text-align: right;">0.8953</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_046091</td>
+<td style="text-align: left;">HLA-DQB1</td>
+<td style="text-align: left;">TCONS_00242558</td>
+<td style="text-align: right;">0.1935</td>
+<td style="text-align: right;">0.0126</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0086</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_021587</td>
+<td style="text-align: left;">KDM6B</td>
+<td style="text-align: left;">TCONS_00114643</td>
+<td style="text-align: right;">-0.1934</td>
+<td style="text-align: right;">0.0006</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1263</td>
+<td style="text-align: right;">0.8539</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_007417</td>
+<td style="text-align: left;">FAM53B</td>
+<td style="text-align: left;">TCONS_00037273</td>
+<td style="text-align: right;">-0.1896</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0764</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_022044</td>
+<td style="text-align: left;">CCL4</td>
+<td style="text-align: left;">TCONS_00116477</td>
+<td style="text-align: right;">0.1885</td>
+<td style="text-align: right;">0.0003</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0594</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_022044</td>
+<td style="text-align: left;">CCL4</td>
+<td style="text-align: left;">TCONS_00116460</td>
+<td style="text-align: right;">-0.1880</td>
+<td style="text-align: right;">0.0008</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0596</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_030152</td>
+<td style="text-align: left;">RNASEH1</td>
+<td style="text-align: left;">TCONS_00160497</td>
+<td style="text-align: right;">-0.1878</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0232</td>
+<td style="text-align: right;">0.8451</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_030152</td>
+<td style="text-align: left;">RNASEH1</td>
+<td style="text-align: left;">TCONS_00160504</td>
+<td style="text-align: right;">0.1876</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0441</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_028123</td>
+<td style="text-align: left;">RSAD2</td>
+<td style="text-align: left;">TCONS_00151265</td>
+<td style="text-align: right;">-0.1874</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0058</td>
+<td style="text-align: right;">0.6710</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_001033</td>
+<td style="text-align: left;">PRKACB</td>
+<td style="text-align: left;">TCONS_00004783</td>
+<td style="text-align: right;">-0.1868</td>
+<td style="text-align: right;">0.0400</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0664</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_049353</td>
+<td style="text-align: left;">CDK6</td>
+<td style="text-align: left;">TCONS_00258456</td>
+<td style="text-align: right;">-0.1833</td>
+<td style="text-align: right;">0.0229</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1096</td>
+<td style="text-align: right;">0.8141</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_049353</td>
+<td style="text-align: left;">CDK6</td>
+<td style="text-align: left;">TCONS_00258457</td>
+<td style="text-align: right;">0.1830</td>
+<td style="text-align: right;">0.0307</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0862</td>
+<td style="text-align: right;">0.8699</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_011237</td>
+<td style="text-align: left;">SP1</td>
+<td style="text-align: left;">TCONS_00059872</td>
+<td style="text-align: right;">0.1821</td>
+<td style="text-align: right;">0.0040</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0787</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_053739</td>
+<td style="text-align: left;">CD72</td>
+<td style="text-align: left;">TCONS_00281108</td>
+<td style="text-align: right;">-0.1817</td>
+<td style="text-align: right;">0.0441</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.2508</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_047343</td>
+<td style="text-align: left;">CREB5</td>
+<td style="text-align: left;">TCONS_00250692</td>
+<td style="text-align: right;">0.1795</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0502</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_023106</td>
+<td style="text-align: left;">PLD6</td>
+<td style="text-align: left;">TCONS_00122168</td>
+<td style="text-align: right;">-0.1782</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0495</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_053671</td>
+<td style="text-align: left;">TOPORS</td>
+<td style="text-align: left;">TCONS_00280759</td>
+<td style="text-align: right;">-0.1778</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0757</td>
+<td style="text-align: right;">0.0011</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_001946</td>
+<td style="text-align: left;">RASAL2</td>
+<td style="text-align: left;">TCONS_00008503</td>
+<td style="text-align: right;">-0.1772</td>
+<td style="text-align: right;">0.0045</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1025</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_012762</td>
+<td style="text-align: left;">PYM1</td>
+<td style="text-align: left;">TCONS_00067033</td>
+<td style="text-align: right;">-0.1771</td>
+<td style="text-align: right;">0.0014</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0813</td>
+<td style="text-align: right;">0.9347</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_011323</td>
+<td style="text-align: left;">IL23A</td>
+<td style="text-align: left;">TCONS_00060448</td>
+<td style="text-align: right;">-0.1768</td>
+<td style="text-align: right;">0.0124</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.1806</td>
+<td style="text-align: right;">0.5150</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_022665</td>
+<td style="text-align: left;">SPHK1</td>
+<td style="text-align: left;">TCONS_00119551</td>
+<td style="text-align: right;">0.1766</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.1292</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_005989</td>
+<td style="text-align: left;">IFIT3</td>
+<td style="text-align: left;">TCONS_00037770</td>
+<td style="text-align: right;">-0.1762</td>
+<td style="text-align: right;">0.0083</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0069</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_005989</td>
+<td style="text-align: left;">IFIT3</td>
+<td style="text-align: left;">TCONS_00038540</td>
+<td style="text-align: right;">-0.1755</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0004</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_052815</td>
+<td style="text-align: left;">CBWD3</td>
+<td style="text-align: left;">TCONS_00285217</td>
+<td style="text-align: right;">0.1751</td>
+<td style="text-align: right;">0.0015</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0160</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_053671</td>
+<td style="text-align: left;">TOPORS</td>
+<td style="text-align: left;">TCONS_00286055</td>
+<td style="text-align: right;">0.1750</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0644</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_046969</td>
+<td style="text-align: left;">IPCEF1</td>
+<td style="text-align: left;">TCONS_00249104</td>
+<td style="text-align: right;">0.1735</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0217</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_011237</td>
+<td style="text-align: left;">SP1</td>
+<td style="text-align: left;">TCONS_00059873</td>
+<td style="text-align: right;">-0.1705</td>
+<td style="text-align: right;">0.0332</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0392</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_041759</td>
+<td style="text-align: left;">SERF1A</td>
+<td style="text-align: left;">TCONS_00223113</td>
+<td style="text-align: right;">-0.1688</td>
+<td style="text-align: right;">0.0315</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0510</td>
+<td style="text-align: right;">0.9442</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_036415</td>
+<td style="text-align: left;">SLC35A5</td>
+<td style="text-align: left;">TCONS_00207645</td>
+<td style="text-align: right;">-0.1683</td>
+<td style="text-align: right;">0.0488</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0475</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">XLOC_003522</td>
@@ -5325,74 +6457,129 @@ vertical-align: -.125em;
 <td style="text-align: left;">TCONS_00028323</td>
 <td style="text-align: right;">-0.1678</td>
 <td style="text-align: right;">0.0345</td>
-<td style="text-align: right;">0.0345</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">-0.1782</td>
-<td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0007</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H and significant in H</td>
+<td style="text-align: left;">Significant in H</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">XLOC_045207</td>
+<td style="text-align: left;">GTF3C6</td>
+<td style="text-align: left;">TCONS_00247644</td>
+<td style="text-align: right;">0.1669</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0155</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_036323</td>
+<td style="text-align: left;">ST3GAL6</td>
+<td style="text-align: left;">TCONS_00205959</td>
+<td style="text-align: right;">0.1669</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0167</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_000570</td>
+<td style="text-align: left;">AGO3</td>
+<td style="text-align: left;">TCONS_00002534</td>
+<td style="text-align: right;">-0.1663</td>
+<td style="text-align: right;">0.0439</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0066</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_045554</td>
+<td style="text-align: left;">SYNJ2</td>
+<td style="text-align: left;">TCONS_00247048</td>
+<td style="text-align: right;">0.1659</td>
+<td style="text-align: right;">0.0029</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.1440</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_045207</td>
+<td style="text-align: left;">GTF3C6</td>
+<td style="text-align: left;">TCONS_00239415</td>
+<td style="text-align: right;">-0.1649</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0740</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">XLOC_041576</td>
+<td style="text-align: left;">C5orf51</td>
+<td style="text-align: left;">TCONS_00222295</td>
+<td style="text-align: right;">0.1649</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.0533</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">XLOC_055777</td>
+<td style="text-align: left;">SLC6A8</td>
+<td style="text-align: left;">TCONS_00290007</td>
+<td style="text-align: right;">-0.1646</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">-0.0073</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">Tested in H, not switching</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">XLOC_034423</td>
 <td style="text-align: left;">USP18</td>
 <td style="text-align: left;">TCONS_00184460</td>
 <td style="text-align: right;">-0.1640</td>
 <td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">-0.0387</td>
-<td style="text-align: right;">0.1892</td>
-<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.2852</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H but not significant in H</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">XLOC_045300</td>
-<td style="text-align: left;">NCOA7</td>
-<td style="text-align: left;">TCONS_00239727</td>
-<td style="text-align: right;">-0.1576</td>
-<td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: right;">-0.1864</td>
-<td style="text-align: right;">0.0000</td>
-<td style="text-align: right;">0.0000</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H and significant in H</td>
+<td style="text-align: left;">Tested in H, not switching</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">XLOC_046645</td>
-<td style="text-align: left;">SESN1</td>
-<td style="text-align: left;">TCONS_00244821</td>
-<td style="text-align: right;">-0.1523</td>
-<td style="text-align: right;">0.0005</td>
+<td style="text-align: left;">XLOC_022665</td>
+<td style="text-align: left;">SPHK1</td>
+<td style="text-align: left;">TCONS_00119548</td>
+<td style="text-align: right;">-0.1628</td>
 <td style="text-align: right;">0.0000</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: right;">-0.0293</td>
+<td style="text-align: right;">-0.0832</td>
 <td style="text-align: right;">1.0000</td>
-<td style="text-align: right;">0.0010</td>
 <td style="text-align: left;">FALSE</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H but not significant in H</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">XLOC_000432</td>
-<td style="text-align: left;">PIGV</td>
-<td style="text-align: left;">TCONS_00021581</td>
-<td style="text-align: right;">0.1512</td>
-<td style="text-align: right;">0.0028</td>
-<td style="text-align: right;">0.0028</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: right;">0.1153</td>
-<td style="text-align: right;">0.3550</td>
-<td style="text-align: right;">0.0372</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">Present in H but not significant in H</td>
+<td style="text-align: left;">Tested in H, not switching</td>
 </tr>
 </tbody>
 </table>

@@ -72,7 +72,7 @@ ISA objects carry `XLOC_*` placeholder gene names. `01_load_data.R` joins the re
 
 All four primary ISA objects were saved after `isoformSwitchTestDEXSeq(reduceToSwitchingGenes = TRUE)`, so every gene in them already passes the gene-level q cutoff (recorded per run in `results/tables/input_object_reduction_check.csv`).
 
-`isa_unfiltered_path` in config points a dataset at an unreduced export; `01` turns it into `data/processed/isoformContext_<label>.rds` (+ `isoformContextRepIF_`). **Configured for `T_UT`/`U_UT`, null for `T_HT`/`H_HT`.** Load it with `load_context_table(processed_dir, label, "features"|"rep_if")`, which returns `NULL` when absent — always handle that branch.
+`isa_unfiltered_path` in config points a dataset at an unreduced export; `01` turns it into `data/processed/isoformContext_<label>.rds` (+ `isoformContextRepIF_`). **Configured for `T_UT`, `U_UT` and `H_HT`; null for `T_HT`** because that export is corrupt (gzip data stream error — needs re-copying, see the config comment). Load it with `load_context_table(processed_dir, label, "features"|"rep_if")`, which returns `NULL` when absent — always handle that branch, and prefer using whichever side is available over requiring both.
 
 Rules that must hold:
 
