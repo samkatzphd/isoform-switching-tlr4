@@ -368,9 +368,14 @@ only; every summary table keeps its CSV twin.
 - **`DESCRIPTION` was not turned into a real package.** It remains a dependency manifest,
   not something installable; `jsonlite` was added to `Suggests`. Converting `utils/` into
   a package is a larger change than this branch should carry.
-- **`05_pathway_enrichment.R` is still a stub** that stops with "Not yet implemented".
-  Untouched deliberately — implementing enrichment on a gene set drawn from pre-reduced
-  objects would inherit the item-0 problem and needs the upstream fix first.
+- **`05_pathway_enrichment.R` was a stub** while the only available gene lists came from
+  pre-reduced objects, since enrichment against them would have inherited the §0 problem.
+  Implemented 2026-08-06 once all four datasets had a context layer to supply a real tested
+  universe. The result is largely negative: four of seven gene sets return no enriched terms,
+  and the positive ones all reduce to the same five chemokines/cytokines (CCL3, CCL4, CCL22,
+  IL23A, TNFSF4), which account for 95% of gene-term hits in the shared UT set. A
+  `pathway_enrichment_driver_summary` table is written alongside the term counts so the
+  ~150-terms-from-18-genes figure cannot be read as 150 independent findings.
 
 ---
 

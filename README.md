@@ -246,10 +246,20 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 - **Writes:** `results/tables/ut_*`, `results/figures/ut_t_vs_u/`.
 - **Report:** `reports/ut_t_vs_u_comparison.{qmd,html}`.
 
-### `05_pathway_enrichment.R` — scaffold only
+### `05_pathway_enrichment.R` — GO / Reactome / KEGG over switching gene sets
 
-- Placeholder for `clusterProfiler` (GO / KEGG / Reactome).
-- Currently stops with “Not yet implemented.”
+- **The universe is the point.** Enrichment runs against the genes *quantified and tested in
+  the same experiment* (from the context layer), never the whole genome and never the
+  pre-reduced object. A dataset without a context table is **skipped**, not silently given a
+  whole-genome background.
+- Gene sets: per-dataset switching genes, plus the UT overlap classes (shared / T-only /
+  U-only) against genes tested in both UT arms.
+- **Writes:** `results/tables/pathway_enrichment_{summary,results,top_terms,driver_genes,driver_summary}.*`,
+  dotplots under `results/figures/pathway/`.
+- The driver tables exist because a term count alone is misleading: GO and Reactome are
+  nested hierarchies, so a few genes in one module generate dozens of overlapping terms.
+  Result: ~150 terms from the 18 shared UT genes, of which **95% of gene-term hits come from
+  five chemokines/cytokines**; the two largest genotype-specific sets return nothing.
 
 ### `06_visualization.R` — HT top switches + T↔H overlap
 

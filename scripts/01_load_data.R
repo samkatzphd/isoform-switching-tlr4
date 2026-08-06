@@ -96,6 +96,7 @@ for (k in names(datasets)) {
   } else {
     NULL
   }
+  tx_map <- NULL
   if ("isoform_id" %in% names(iso) && !is.null(ann_path) && file.exists(ann_path)) {
     tx_map <- build_transcript_map_from_gtf(ann_path)
     want <- c(novel_id_col, "cmp_ref", "class_code", "gene_name_from_gtf")
@@ -187,6 +188,29 @@ for (k in names(datasets)) {
     message("  Loading unfiltered context from ", unf_path, " ...")
     unf <- load_isa_input(unf_path, object_name = obj_name)
     ctx <- extract_context_tables(unf)
+    # The unfiltered objects carry XLOC placeholders in gene_name (0% real symbols), so
+    # repair them from the same annotation map used for the primary table. Without this the
+    # context cannot serve as a gene-symbol universe for pathway enrichment.
+    if (!is.null(tx_map) && "gene_name_from_gtf" %in% names(tx_map)) {
+      ctx$features <- ctx$features |>
+        dplyr::left_join(
+          tx_map[, c("transcript_id", "gene_name_from_gtf"), drop = FALSE],
+          by = c("isoform_id" = "transcript_id")
+        )
+      isa_name <- as.character(ctx$features$gene_name)
+      gtf_name <- as.character(ctx$features$gene_name_from_gtf)
+      ctx$features$gene_name <- ifelse(
+        !is_real_gene_symbol(isa_name) & is_real_gene_symbol(gtf_name), gtf_name, isa_name
+      )
+      ctx$features$gene_name_from_gtf <- NULL
+      n_real <- length(unique(
+        ctx$features$gene_id[is_real_gene_symbol(ctx$features$gene_name)]
+      ))
+      message(
+        "    symbol repair: ", n_real, " of ",
+        dplyr::n_distinct(ctx$features$gene_id), " context genes now carry a real symbol."
+      )
+    }
     red_unf <- detect_isa_reduction(ctx$features, cfg)
     message(
       "    context: ", nrow(ctx$features), " isoforms / ", red_unf$n_genes, " genes; ",

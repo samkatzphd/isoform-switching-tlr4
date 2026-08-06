@@ -1,0 +1,4 @@
+"analysis","n_terms_total","n_distinct_driver_genes","top_drivers","top5_share_of_gene_hits"
+"T_UT_switching",4,9,"BMP4, CCL22, CCL3, CCL4, IL23A",58.8235294117647
+"UT_Shared_T_and_U_",148,11,"CCL3, IL23A, CCL4, TNFSF4, CCL22",94.8905109489051
+"U_UT_switching",10,8,"CCL22, CCL3, CCL4, IL23A, TNFSF4",84

@@ -22,7 +22,7 @@ Rscript scripts/03_novel_isoform_analysis.R
 Rscript scripts/04_comparison_T_vs_U.R
 Rscript scripts/06_visualization.R
 Rscript scripts/00_threshold_scan_abs_dif.R   # optional sensitivity scan
-# 05_pathway_enrichment.R is a scaffold that stops("Not yet implemented.")
+Rscript scripts/05_pathway_enrichment.R  # GO/Reactome/KEGG; needs context tables
 
 # Every script takes an optional alternate config as argv[1]:
 Rscript scripts/02_gene_level_summary.R config/other.yml
@@ -79,6 +79,7 @@ Rules that must hold:
 
 - **Significance never comes from the context layer.** It supplies isoform fractions, replicate values and presence/absence for display and classification only. Switching calls stay with the primary object, so `03`'s HT-vs-UT novelty denominators stay comparable.
 - **With context**, overlap classes say *tested in X, not switching* vs *not detected in X*. **Without it**, they must say *retained / not retained* — the reduced object cannot distinguish tested-and-negative from dropped.
+- **Pathway enrichment (`05`) uses the context layer as its universe.** Never substitute a whole-genome background or the pre-reduced object — the script skips a dataset without a context rather than falling back. Report term counts alongside `pathway_enrichment_driver_summary.csv`: GO/Reactome nesting means a handful of genes can produce ~150 terms.
 - Two kinds of enrichment statistic exist and mean different things: `ut_T_vs_U_background_enrichment` / `ht_T_vs_H_background_enrichment` (valid — 11,126 and 7,671 tested genes) versus the retention accounting (descriptive, 25 already-significant genes, no test). Don't merge them.
 
 Full detail in `docs/REVIEW_CHANGES.md` §0 and §0b.

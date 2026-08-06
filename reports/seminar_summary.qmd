@@ -442,6 +442,79 @@ kable(
 Both arms are headed by inflammatory genes — CCL22, IL23A, CCL4, CD86, KDM6B, RSAD2 — again
 consistent with switching tracking the LPS program rather than drifting.
 
+# Pathway enrichment: a mostly negative result
+
+With a real tested background available for all four datasets, enrichment can finally be run
+honestly. The universe is **the genes quantified and tested in that same experiment** —
+never the whole genome (which would treat unexpressed genes as failed candidates) and never
+the pre-reduced object (which would compare a significant set against a significant set).
+
+```{r}
+#| label: tbl-pw
+pw_sum <- read_tab("pathway_enrichment_summary.csv")
+pw_drv <- if (file.exists(tab("pathway_enrichment_driver_summary.csv"))) {
+  read_tab("pathway_enrichment_driver_summary.csv")
+} else {
+  NULL
+}
+kable(
+  pw_sum |>
+    dplyr::select(analysis, n_genes_in, n_universe_in, pct_genes_mapped, n_terms),
+  digits = 1,
+  col.names = c("Gene set", "Genes", "Universe (tested)", "% mapped to ENTREZ", "Enriched terms"),
+  caption = "Enrichment at q < 0.05 (GO BP/MF, Reactome, KEGG)"
+)
+```
+
+Four of the seven gene sets return **nothing at all** — including the two largest
+genotype-specific sets (120 T-only and 53 U-only genes). That is a real finding: switches
+that occur in only one genotype are not a coherent functional group.
+
+Where terms do appear, they are all the same thing:
+
+```{r}
+#| label: tbl-pwdrv
+if (!is.null(pw_drv)) {
+  kable(
+    pw_drv |> dplyr::select(analysis, n_terms_total, n_distinct_driver_genes,
+                            top_drivers, top5_share_of_gene_hits),
+    digits = 1,
+    col.names = c("Gene set", "Terms", "Distinct driver genes", "Top drivers",
+                  "% of gene-term hits from top 5"),
+    caption = "What actually drives the enriched terms"
+  )
+}
+```
+
+::: {.callout-warning}
+## 148 terms is not 148 findings
+The shared UT set returns ~150 enriched terms from 18 genes, which looks impressive until
+you ask which genes produce them. **Eleven** genes appear in any enriched term, and five —
+**CCL3, CCL4, CCL22, IL23A, TNFSF4** — account for **95%** of all gene-term hits. GO and
+Reactome are nested hierarchies, so one tight functional module generates dozens of
+overlapping terms. This is a chemokine/cytokine signal counted many times, not a broad
+functional program.
+
+`results/tables/pathway_enrichment_driver_summary.csv` reports this alongside every term
+count for exactly this reason.
+:::
+
+```{r}
+#| label: fig-pw
+#| fig-cap: "Enriched terms for the shared UT switching genes. Every branch traces back to the same handful of chemokines and cytokines."
+include_graphics(make_fig("pathway")("fig_pathway_UT_Shared_T_and_U_.png"))
+```
+
+So the honest summary is: **isoform switching after LPS is not enriched for coherent
+pathways beyond a small chemokine/cytokine core**, and that core is shared between genotypes
+rather than specific to either. This is worth stating plainly, because the opposite result
+is what you would get from a careless background — testing these gene lists against all
+human genes would return the entire inflammatory-response hierarchy, and it would be an
+artefact of comparing expressed genes to unexpressed ones.
+
+It also fits the picture from §6: the switches that reproduce across conditions are the core
+inflammatory ones; everything else is heterogeneous.
+
 # Where the analysis is currently blind
 
 ## Q1's cross-genotype comparison, now with a proper denominator
@@ -588,22 +661,21 @@ cannot demonstrate mechanism.
 - Concordance statistics rest on small matched sets (n = `r utc$n[1]` and `r utc$n[2]`),
   because only isoforms measurable in both contribute.
 - Three replicates per condition.
-- No pathway-level analysis yet. `05_pathway_enrichment.R` is a stub, originally left that
-  way because enrichment on a gene set drawn from pre-selected objects would inherit the
-  denominator problem. With unfiltered exports now available for all four datasets, that
-  objection no longer applies and it is the obvious next piece of work.
+- Pathway enrichment is now implemented (§7) and is largely negative. The one positive
+  signal rests on five genes, so it should not be over-read.
 
 ## Next steps, in priority order
 
-1. **Pathway analysis.** Now unblocked: all four datasets have a defensible tested background
-   (`03`'s enrichment stub was deliberately left unimplemented because a gene set drawn from
-   pre-selected objects would inherit the denominator problem — that objection no longer
-   applies).
-2. **Targeted validation** of the dampening model — a handful of high-|dIF| WT switches that
+1. **Targeted validation** of the dampening model — a handful of high-|dIF| WT switches that
    fail threshold in the knockout (CD86 is a natural first candidate) by isoform-specific
    qPCR.
-3. **Novel-isoform follow-up** on the `j`-class switching transcripts, which are the ones a
+2. **Novel-isoform follow-up** on the `j`-class switching transcripts, which are the ones a
    short-read annotation would have missed entirely.
+3. **Isoform-level functional consequence.** Pathway enrichment on gene lists cannot see
+   what a switch *does* — two isoforms of the same gene sit in the same GO terms. ISA's
+   domain/NMD/coding-potential annotations are the natural next question, and would say
+   whether these switches change protein output rather than merely which transcript carries
+   it.
 
 ---
 
