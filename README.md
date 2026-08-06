@@ -83,6 +83,92 @@ enables:
   isoforms) from *not detected there* (30).
 - A co-occurrence test against a genuine background of 11,126 genes quantified in both.
 
+## Getting input files onto the drive without corruption
+
+Two ISA exports have arrived damaged, and neither was visible from a file listing: one was
+truncated (130 MB of an expected 615 MB), the other was full size but corrupt mid-stream and
+only failed 20 minutes into a pipeline run. Both are caught in seconds by the steps below.
+
+> **The drive is exFAT.** `diskutil info /Volumes/Expansion` → *File System Personality:
+> ExFAT*. exFAT has **no journaling**: if a write is interrupted by an unplug, a sleep, or a
+> cable knock, the file is left partially written with no recovery and no error at the time.
+> This is the most likely cause of the mid-stream corruption. Treat every write to this drive
+> as unverified until checked, and always eject properly.
+
+### The one command that gates a run
+
+```bash
+Rscript scripts/99_verify_inputs.R && Rscript scripts/01_load_data.R
+```
+
+`99_verify_inputs.R` reads `config/config.yml`, checks every `isa_path`,
+`isa_unfiltered_path` and `annotation_path` for existence and compression integrity, writes
+`results/tables/input_file_verification.csv`, and **exits non-zero** if anything fails — so
+the `&&` stops the pipeline before it wastes time on a bad file. Add `--load` to also
+deserialise each object (slow, but catches damage that survives the integrity check).
+
+### Download and unzip checklist
+
+**1. Verify the zip before trusting it.** The zip format stores a CRC32 for every member, so
+this detects a truncated or corrupted download without extracting anything:
+
+```bash
+unzip -t archive.zip
+```
+
+Expect `No errors detected`. If it reports errors, the download is bad — re-download; do not
+extract.
+
+**2. Extract to the local disk, not directly onto the external drive.** Extracting straight
+onto exFAT doubles the exposure to interrupted writes, and a failure midway leaves files that
+look complete.
+
+```bash
+mkdir -p ~/isa_staging && cd ~/isa_staging
+unzip /path/to/archive.zip
+```
+
+Prefer `unzip` over double-clicking in Finder — Archive Utility reports errors poorly and can
+leave partial output. For very large archives, `ditto -x -k archive.zip .` is a good
+alternative.
+
+**3. Verify each extracted `.Rdata` independently.** R data files are gzip streams, so gzip
+can check them end to end. This catches a bad extraction even if the zip was fine:
+
+```bash
+for f in **/*.Rdata; do
+  printf '%s: ' "$f"; gzip -t "$f" 2>&1 && echo OK
+done
+```
+
+**4. Copy to the drive with verification.** `rsync -c` compares checksums rather than size and
+timestamp, so it catches a silently corrupted copy and re-sends only what is wrong:
+
+```bash
+rsync -avh --checksum --progress \
+  ~/isa_staging/T_minus-T_plus_Unfiltered_2025-Oct-12 \
+  /Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/
+```
+
+**5. Eject properly, then re-verify on the drive.** This is the step that matters most on
+exFAT — the copy is not necessarily flushed to disk when `rsync` returns.
+
+```bash
+diskutil eject /Volumes/Expansion     # wait for it to disappear, then reconnect
+Rscript scripts/99_verify_inputs.R    # confirms the files are intact where they now live
+```
+
+If you want belt and braces, compare hashes across the copy instead of trusting `rsync -c`:
+
+```bash
+shasum -a 256 ~/isa_staging/**/*.Rdata
+shasum -a 256 /Volumes/Expansion/IsoformSwitchAnalyzer/H-T_Comparisons/**/*.Rdata
+```
+
+**Never copy an `.Rdata` into the repository.** Raw inputs belong on the drive; `.gitignore`
+blocks `*.Rdata` and `*_Unfiltered_*/` because a truncated 130 MB partial once got swept in by
+`git add -A` and was rejected by GitHub's 100 MB limit.
+
 ## Significance definition
 
 An isoform (and its gene) is treated as *switching* when:
