@@ -149,8 +149,8 @@
     },
     {
       "script": "01_load_data.R",
-      "run_at": "2026-08-06T10:24:19+0200",
-      "git_sha": "398e521269286b976a2bdf44e71fb5da85f5ad38",
+      "run_at": "2026-08-06T11:11:23+0200",
+      "git_sha": "0ae11a3a6662be701db245b6c1be74ed523e8a5e",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
       "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
@@ -178,7 +178,9 @@
             "n_genes_gene_q_significant": 216,
             "pct_genes_gene_q_significant": 100,
             "looks_reduced_to_switching_genes": true,
-            "has_unfiltered_context": false
+            "has_unfiltered_context": true,
+            "n_genes_unfiltered": 10907,
+            "pct_genes_significant_unfiltered": 23.32
           }
         ],
         "H_HT": [
@@ -227,8 +229,8 @@
     },
     {
       "script": "06_visualization.R",
-      "run_at": "2026-08-06T10:36:22+0200",
-      "git_sha": "398e521269286b976a2bdf44e71fb5da85f5ad38",
+      "run_at": "2026-08-06T11:12:35+0200",
+      "git_sha": "0ae11a3a6662be701db245b6c1be74ed523e8a5e",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
       "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],

@@ -13,6 +13,7 @@ Four datasets across two reference transcriptomes (config keys): `T_HT`, `H_HT` 
 Run everything from the project root (or set `ISOFORM_PROJECT_ROOT`).
 
 ```bash
+Rscript scripts/99_verify_inputs.R        # gate: checks every configured input, exits non-zero if bad
 Rscript scripts/01_load_data.R            # must run first; writes data/processed/
 Rscript scripts/02_gene_level_summary.R   # must run after 01
 Rscript scripts/02b_qc_snapshot.R
@@ -28,7 +29,7 @@ Rscript scripts/02_gene_level_summary.R config/other.yml
 
 quarto render reports/isoform_switching_overview.qmd   # also: ht_switch_analysis,
                                                        # novel_isoform_analysis,
-                                                       # ut_t_vs_u_comparison
+                                                       # ut_t_vs_u_comparison, seminar_summary
 ```
 
 Rendered HTML is committed alongside each `.qmd` (self-contained via `embed-resources: true`).
@@ -72,13 +73,13 @@ ISA objects carry `XLOC_*` placeholder gene names. `01_load_data.R` joins the re
 
 All four primary ISA objects were saved after `isoformSwitchTestDEXSeq(reduceToSwitchingGenes = TRUE)`, so every gene in them already passes the gene-level q cutoff (recorded per run in `results/tables/input_object_reduction_check.csv`).
 
-`isa_unfiltered_path` in config points a dataset at an unreduced export; `01` turns it into `data/processed/isoformContext_<label>.rds` (+ `isoformContextRepIF_`). **Configured for `T_UT`, `U_UT` and `H_HT`; null for `T_HT`** because that export is corrupt (gzip data stream error — needs re-copying, see the config comment). Load it with `load_context_table(processed_dir, label, "features"|"rep_if")`, which returns `NULL` when absent — always handle that branch, and prefer using whichever side is available over requiring both.
+`isa_unfiltered_path` in config points a dataset at an unreduced export; `01` turns it into `data/processed/isoformContext_<label>.rds` (+ `isoformContextRepIF_`). **Configured for all four datasets.** Load it with `load_context_table(processed_dir, label, "features"|"rep_if")`, which returns `NULL` when absent — always handle that branch, and prefer using whichever side is available over requiring both.
 
 Rules that must hold:
 
 - **Significance never comes from the context layer.** It supplies isoform fractions, replicate values and presence/absence for display and classification only. Switching calls stay with the primary object, so `03`'s HT-vs-UT novelty denominators stay comparable.
 - **With context**, overlap classes say *tested in X, not switching* vs *not detected in X*. **Without it**, they must say *retained / not retained* — the reduced object cannot distinguish tested-and-negative from dropped.
-- Two enrichment statistics exist and mean different things: `ut_T_vs_U_background_enrichment` (valid, ~11k tested genes) and the retention accounting (descriptive, 25 already-significant genes, no test). Don't merge them.
+- Two kinds of enrichment statistic exist and mean different things: `ut_T_vs_U_background_enrichment` / `ht_T_vs_H_background_enrichment` (valid — 11,126 and 7,671 tested genes) versus the retention accounting (descriptive, 25 already-significant genes, no test). Don't merge them.
 
 Full detail in `docs/REVIEW_CHANGES.md` §0 and §0b.
 

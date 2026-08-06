@@ -2360,7 +2360,7 @@ Table 1: Four ISA objects across two reference transcriptomes
 <div id="tbl-reduction" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-reduction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table 2: Primary objects are pre-selected; the UT datasets also have unfiltered exports
+Table 2: Primary objects are pre-selected; unfiltered exports recover the real denominator
 </figcaption>
 <div aria-describedby="tbl-reduction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -2388,9 +2388,9 @@ Table 2: Primary objects are pre-selected; the UT datasets also have unfiltered
 <td style="text-align: left;">T_HT</td>
 <td style="text-align: right;">216</td>
 <td style="text-align: right;">100</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">10907</td>
+<td style="text-align: right;">23.3</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">H_HT</td>
@@ -2423,7 +2423,7 @@ Table 2: Primary objects are pre-selected; the UT datasets also have unfiltered
 </figure>
 </div>
 </div>
-<p>For the <strong>UT</strong> datasets an unfiltered export exists, so the real denominator is recoverable: ~11.6k and ~12.0k genes tested, of which 24.9% and 16.4% switch. For <strong>HT</strong> it is not, and that limits Q1 in a way documented in §6. Everything below states which denominator it uses.</p>
+<p><strong>All four datasets now have an unfiltered export</strong>, so the real denominator is recoverable throughout: 8.2k–12.0k genes tested per dataset, of which 16–25% switch. Those exports are used for display and classification only — every significance call still comes from the primary objects — but they are what makes any statement about a <em>rate</em> meaningful. Everything below states which denominator it uses.</p>
 </section>
 </section>
 <section id="defining-a-switch" class="level1" data-number="3">
@@ -3303,12 +3303,62 @@ Table 12: Top switching genes in each UT arm
 <h1 data-number="7"><span class="header-section-number">7</span> Where the analysis is currently blind</h1>
 <section id="q1s-cross-genotype-comparison-now-with-a-proper-denominator" class="level2" data-number="7.1">
 <h2 data-number="7.1" class="anchored" data-anchor-id="q1s-cross-genotype-comparison-now-with-a-proper-denominator"><span class="header-section-number">7.1</span> Q1’s cross-genotype comparison, now with a proper denominator</h2>
-<p>An unfiltered <code>H_HT</code> export became available, which changes this section from “unusable” to “usable, and the answer is not what the biased version suggested”.</p>
+<p>Unfiltered exports for <strong>both</strong> HT datasets are now in place, which changes this section from “unusable” to “usable in both directions, and the answer is not what the biased version suggested”.</p>
+<div class="cell">
+<div id="tbl-htbg" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-htbg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table 13: Switching co-occurrence over genes quantified in both unfiltered HT objects
+</figcaption>
+<div aria-describedby="tbl-htbg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 8%">
+<col style="width: 24%">
+<col style="width: 4%">
+<col style="width: 10%">
+<col style="width: 9%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Tested in both</th>
+<th style="text-align: right;">Switching in T</th>
+<th style="text-align: right;">Switching in H</th>
+<th style="text-align: right;">In both</th>
+<th style="text-align: right;">Expected if independent</th>
+<th style="text-align: right;">OR</th>
+<th style="text-align: left;">95% CI</th>
+<th style="text-align: left;">p</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">7671</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">247</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">2.67</td>
+<td style="text-align: right;">4.8</td>
+<td style="text-align: left;">2.2 – 9.2</td>
+<td style="text-align: left;">6.41e-05</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Switching genes co-occur between the two HT genotypes above chance (OR 4.8), but far less strongly than the two UT arms did (OR 25.7). That ordering makes sense: <code>T_UT</code> and <code>U_UT</code> differ only by the UBL5 knockout, whereas <code>T_HT</code> and <code>H_HT</code> are different genotypes.</p>
 <div class="cell">
 <div id="tbl-ht" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-ht-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table 13: T_HT versus H_HT, before and after the proper denominator
+Table 14: T_HT versus H_HT, before and after the proper denominator
 </figcaption>
 <div aria-describedby="tbl-ht-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -3367,26 +3417,64 @@ Table 13: T_HT versus H_HT, before and after the proper denominator
 <p>Against the 115 isoforms <strong>actually tested</strong> in H, the rate is <strong>6.1%</strong>.</p>
 </div>
 </div>
-<p>So LPS-driven switches in THP-1 are largely <strong>not</strong> reproduced as significant events in the H genotype. But they are not absent either:</p>
+<p>So LPS-driven switches in THP-1 are largely <strong>not</strong> reproduced as significant events in the H genotype — and the reciprocal is weaker still:</p>
+<div class="cell">
+<div id="tbl-htboth" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-htboth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table 15: Both directions, each conditioned on significance once
+</figcaption>
+<div aria-describedby="tbl-htboth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 14%">
+<col style="width: 13%">
+<col style="width: 12%">
+<col style="width: 20%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Direction</th>
+<th style="text-align: right;">Tested in the other</th>
+<th style="text-align: right;">% also significant</th>
+<th style="text-align: right;">% same direction</th>
+<th style="text-align: right;">median |dIF| there</th>
+<th style="text-align: right;">% clearing 0.15 there</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Significant in T → measured in H</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: right;">6.09</td>
+<td style="text-align: right;">74.78</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">18.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Significant in H → measured in T</td>
+<td style="text-align: right;">289</td>
+<td style="text-align: right;">2.42</td>
+<td style="text-align: right;">63.32</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">8.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
 <ul>
-<li><strong>74.8% move in the same direction</strong> in H (86 of 115; binomial p = 9.8e-8 against chance, 95% CI 65.8–82.4%).</li>
-<li>Their <strong>median |dIF| in H is 0.07</strong> — well under the 0.15 threshold, and only 18.3% clear it.</li>
+<li>Direction is preserved well above chance in both directions — <strong>74.8%</strong> T→H (86 of 115, binomial p = 9.8e-8) and <strong>63.3%</strong> H→T (183 of 289, p = 6.9e-6).</li>
+<li>But magnitude collapses: median |dIF| of 0.07 and 0.05 in the opposite dataset, with only 18.3% and 8.0% clearing the 0.15 threshold.</li>
 </ul>
 <p>This is the same signature seen in the UBL5 arm, and more extreme: <strong>direction preserved, magnitude far below the calling threshold.</strong> Whether that reflects genuine genotype-specific attenuation or differences in power between the two runs cannot be settled here — <code>H_HT</code> actually has <em>more</em> significant isoforms overall (323 vs 173), which argues against simple underpowering.</p>
 <p>58 T-significant isoforms are not detected in H at all and remain genuinely uninformative.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Still outstanding
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The unfiltered <strong><code>T_HT</code></strong> export is present on the drive but the file is corrupt — <code>gzip -t</code> reports a data stream error and it decompresses ~269 MB of an expected ~2.6 GB. Until it is re-copied, the reciprocal question (are H-significant switches merely sub-threshold in T?) cannot be asked, and <code>01</code>/<code>06</code> handle its absence explicitly rather than guessing.</p>
-</div>
-</div>
 </section>
 <section id="statistics-that-did-not-survive-scrutiny" class="level2" data-number="7.2">
 <h2 data-number="7.2" class="anchored" data-anchor-id="statistics-that-did-not-survive-scrutiny"><span class="header-section-number">7.2</span> Statistics that did not survive scrutiny</h2>
@@ -3415,20 +3503,19 @@ Table 13: T_HT versus H_HT, before and after the proper denominator
 <li>The WT-versus-KO significance-rate comparison spans two separate tests and is power-sensitive.</li>
 <li>Concordance statistics rest on small matched sets (n = 35 and 28), because only isoforms measurable in both contribute.</li>
 <li>Three replicates per condition.</li>
-<li>No pathway-level analysis yet — <code>05_pathway_enrichment.R</code> is a deliberate stub, since enrichment on a gene set drawn from pre-selected objects would inherit the same denominator problem.</li>
+<li>No pathway-level analysis yet. <code>05_pathway_enrichment.R</code> is a stub, originally left that way because enrichment on a gene set drawn from pre-selected objects would inherit the denominator problem. With unfiltered exports now available for all four datasets, that objection no longer applies and it is the obvious next piece of work.</li>
 </ul>
 </section>
 <section id="next-steps-in-priority-order" class="level2" data-number="8.2">
 <h2 data-number="8.2" class="anchored" data-anchor-id="next-steps-in-priority-order"><span class="header-section-number">8.2</span> Next steps, in priority order</h2>
 <ol type="1">
-<li><strong>Re-copy the corrupt unfiltered <code>T_HT</code> export.</strong> The <code>H_HT</code> one is in place and already unblocked Q1’s cross-genotype comparison; the <code>T_HT</code> file fails a gzip integrity check, so the reciprocal direction (H-significant switches measured in T) is still unavailable. Two config lines and a rerun of <code>01</code>/<code>06</code> once the file is replaced.</li>
-<li><strong>Pathway analysis</strong>, once a defensible background exists for both references.</li>
+<li><strong>Pathway analysis.</strong> Now unblocked: all four datasets have a defensible tested background (<code>03</code>’s enrichment stub was deliberately left unimplemented because a gene set drawn from pre-selected objects would inherit the denominator problem — that objection no longer applies).</li>
 <li><strong>Targeted validation</strong> of the dampening model — a handful of high-|dIF| WT switches that fail threshold in the knockout (CD86 is a natural first candidate) by isoform-specific qPCR.</li>
 <li><strong>Novel-isoform follow-up</strong> on the <code>j</code>-class switching transcripts, which are the ones a short-read annotation would have missed entirely.</li>
 </ol>
 <hr>
 <div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -3437,7 +3524,7 @@ Table 13: T_HT versus H_HT, before and after the proper denominator
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>All numbers and figures in this report are read from <code>results/</code> at render time; none are typed in. Regenerate with:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> scripts/01_load_data.R</span>

@@ -308,20 +308,28 @@ extract_t_h_overlap <- function(t_iso, h_iso, iso_q_cutoff, gene_q_cutoff, min_a
   # Pull H's measured effect from the unfiltered context, so an isoform significant in T
   # can be described in H even when H's reduced object dropped it. Without this the table
   # can say "tested in H" but not what happened there, which is the actual question.
-  if (has_ctx_h) {
-    hk <- ctx_h |>
+  ctx_cols <- function(ctx, prefix) {
+    ctx |>
       transmute(
         isoform_id = as.character(.data$isoform_id),
-        H_ctx_dIF = suppressWarnings(as.numeric(.data$dIF)),
-        H_ctx_IF1 = suppressWarnings(as.numeric(.data$IF1)),
-        H_ctx_IF2 = suppressWarnings(as.numeric(.data$IF2)),
-        H_ctx_q = suppressWarnings(as.numeric(.data$isoform_switch_q_value))
+        !!paste0(prefix, "_ctx_dIF") := suppressWarnings(as.numeric(.data$dIF)),
+        !!paste0(prefix, "_ctx_IF1") := suppressWarnings(as.numeric(.data$IF1)),
+        !!paste0(prefix, "_ctx_IF2") := suppressWarnings(as.numeric(.data$IF2)),
+        !!paste0(prefix, "_ctx_q") := suppressWarnings(as.numeric(.data$isoform_switch_q_value))
       ) |>
       distinct(.data$isoform_id, .keep_all = TRUE)
-    merged <- merged |> left_join(hk, by = "isoform_id")
+  }
+  if (has_ctx_h) {
+    merged <- merged |> left_join(ctx_cols(ctx_h, "H"), by = "isoform_id")
   } else {
     merged <- merged |>
       mutate(H_ctx_dIF = NA_real_, H_ctx_IF1 = NA_real_, H_ctx_IF2 = NA_real_, H_ctx_q = NA_real_)
+  }
+  if (has_ctx_t) {
+    merged <- merged |> left_join(ctx_cols(ctx_t, "T"), by = "isoform_id")
+  } else {
+    merged <- merged |>
+      mutate(T_ctx_dIF = NA_real_, T_ctx_IF1 = NA_real_, T_ctx_IF2 = NA_real_, T_ctx_q = NA_real_)
   }
   # Prefer the context measurement of H where available; fall back to the reduced object.
   merged <- merged |>
@@ -404,7 +412,47 @@ extract_t_h_overlap <- function(t_iso, h_iso, iso_q_cutoff, gene_q_cutoff, min_a
       NA_real_
     }
   )
-  list(all = merged, t_sig_in_h = t_sig_in_h, summary = summary)
+  # Reciprocal view: isoforms significant in H, described in T. Only possible once the
+  # unfiltered T export exists -- otherwise "not in T" conflates untested with unchanged.
+  h_sig_in_t <- merged |>
+    filter(.data$H_significant, .data$present_in_both | (has_ctx_t & .data$tested_in_T %in% TRUE)) |>
+    mutate(
+      T_dIF_used = dplyr::coalesce(.data$T_ctx_dIF, .data$T_dIF_n),
+      same_direction_ctx_T = dplyr::case_when(
+        is.finite(.data$H_dIF_n) & is.finite(.data$T_dIF_used) ~
+          sign(.data$H_dIF_n) == sign(.data$T_dIF_used),
+        TRUE ~ NA
+      ),
+      overlap_note_T = if (has_ctx_t) {
+        case_when(
+          .data$T_significant ~ "Significant in T",
+          .data$tested_in_T %in% TRUE ~ "Tested in T, not switching",
+          TRUE ~ "Not detected in T"
+        )
+      } else {
+        case_when(
+          .data$T_significant ~ "Present in T and significant in T",
+          .data$in_T ~ "Present in T but not significant in T",
+          TRUE ~ "Not retained in T (status unknown without unfiltered object)"
+        )
+      }
+    ) |>
+    arrange(desc(abs(.data$H_dIF_n)), .data$H_q_i)
+
+  if (has_ctx_t) {
+    d <- h_sig_in_t[h_sig_in_t$tested_in_T %in% TRUE, ]
+    summary$n_H_significant_tested_in_T <- nrow(d)
+    summary$pct_H_significant_also_significant_in_T <- if (nrow(d)) 100 * mean(d$T_significant, na.rm = TRUE) else NA_real_
+    summary$pct_H_significant_same_direction_in_T <- if (nrow(d)) 100 * mean(d$same_direction_ctx_T %in% TRUE, na.rm = TRUE) else NA_real_
+    summary$median_abs_T_dIF_for_H_significant <- suppressWarnings(stats::median(abs(d$T_dIF_used), na.rm = TRUE))
+  } else {
+    summary$n_H_significant_tested_in_T <- NA_integer_
+    summary$pct_H_significant_also_significant_in_T <- NA_real_
+    summary$pct_H_significant_same_direction_in_T <- NA_real_
+    summary$median_abs_T_dIF_for_H_significant <- NA_real_
+  }
+
+  list(all = merged, t_sig_in_h = t_sig_in_h, h_sig_in_t = h_sig_in_t, summary = summary)
 }
 
 all_rankings <- list()
@@ -531,8 +579,54 @@ if (all(c("T_HT", "H_HT") %in% names(all_iso))) {
     ov$t_sig_in_h, results_tables, "isoform_overlap_T_significant_in_H_context", cfg = cfg
   )
   write_table_pair(
+    ov$h_sig_in_t, results_tables, "isoform_overlap_H_significant_in_T_context", cfg = cfg
+  )
+  write_table_pair(
     ov$summary, results_tables, "isoform_overlap_T_HT_vs_H_HT_summary", cfg = cfg
   )
+
+  # With both unfiltered HT contexts there is a genuine tested background: genes quantified
+  # in both datasets, most of which do not switch. Mirrors the UT background test in 04.
+  if (!is.null(all_ctx[["T_HT"]]) && !is.null(all_ctx[["H_HT"]])) {
+    bg <- intersect(
+      unique(as.character(all_ctx[["T_HT"]]$gene_id)),
+      unique(as.character(all_ctx[["H_HT"]]$gene_id))
+    )
+    t_sw <- bg %in% as.character(all_rankings[["T_HT"]]$gene_id)
+    h_sw <- bg %in% as.character(all_rankings[["H_HT"]]$gene_id)
+    bg_tab <- matrix(
+      c(sum(!t_sw & !h_sw), sum(!t_sw & h_sw), sum(t_sw & !h_sw), sum(t_sw & h_sw)),
+      nrow = 2, byrow = TRUE,
+      dimnames = list(T_switching = c("FALSE", "TRUE"), H_switching = c("FALSE", "TRUE"))
+    )
+    ft <- tryCatch(stats::fisher.test(bg_tab), error = function(e) NULL)
+    bg_out <- tibble(
+      n_genes_tested_in_both = length(bg),
+      n_switching_in_T = sum(t_sw),
+      n_switching_in_H = sum(h_sw),
+      n_switching_in_both = sum(t_sw & h_sw),
+      expected_in_both_if_independent = length(bg) * mean(t_sw) * mean(h_sw),
+      odds_ratio = if (!is.null(ft)) unname(ft$estimate) else NA_real_,
+      conf_low = if (!is.null(ft)) ft$conf.int[[1L]] else NA_real_,
+      conf_high = if (!is.null(ft)) ft$conf.int[[2L]] else NA_real_,
+      p_value = if (!is.null(ft)) ft$p.value else NA_real_,
+      background = "genes quantified in both unfiltered HT objects"
+    )
+    write_table_pair(bg_out, results_tables, "ht_T_vs_H_background_enrichment", cfg = cfg)
+    write_table_pair(
+      data.frame(
+        T_switching = c("FALSE", "TRUE"),
+        H_switching_FALSE = bg_tab[, "FALSE"],
+        H_switching_TRUE = bg_tab[, "TRUE"],
+        stringsAsFactors = FALSE, row.names = NULL
+      ),
+      results_tables, "ht_T_vs_H_background_contingency", cfg = cfg
+    )
+    message(
+      "HT background over ", length(bg), " genes tested in both: OR = ",
+      signif(bg_out$odds_ratio, 4), ", p = ", signif(bg_out$p_value, 4)
+    )
+  }
 }
 
 write_run_manifest("06_visualization.R", cfg, root)

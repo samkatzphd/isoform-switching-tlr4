@@ -162,6 +162,7 @@ knitr::kable(ov_sum, digits = 4, caption = "Isoform overlap summary: T_HT vs H_H
 
 ```{r}
 #| label: h-context
+#| echo: false
 has_h_ctx <- isTRUE(ov_sum$unfiltered_context_H %in% c(TRUE, 1))
 if (has_h_ctx) {
   knitr::kable(
@@ -189,6 +190,7 @@ if (has_h_ctx) {
 
 ```{r}
 #| output: asis
+#| echo: false
 if (has_h_ctx) {
   cat(sprintf(
 "::: {.callout-important title=\"The apparent replication rate was an artefact of the reduced object\"}
@@ -209,6 +211,49 @@ figure was inflated roughly %.0f-fold.
     (100 * ov_sum$n_T_significant_and_H_significant / ov_sum$n_T_significant_present_in_H) /
       ov_sum$pct_T_significant_also_significant_in_H
   ))
+}
+```
+
+### Reciprocal: H-significant isoforms in T context
+
+```{r}
+#| label: h-in-t
+#| echo: false
+hit_path <- tab("isoform_overlap_H_significant_in_T_context.csv")
+if (file.exists(hit_path)) {
+  hit <- read_tab("isoform_overlap_H_significant_in_T_context.csv")
+  knitr::kable(
+    hit |> count(overlap_note_T, name = "isoforms"),
+    caption = "Outcome in T for isoforms significant in H"
+  )
+  knitr::kable(
+    ov_sum |> select(n_H_significant, n_H_significant_tested_in_T,
+                     pct_H_significant_also_significant_in_T,
+                     pct_H_significant_same_direction_in_T,
+                     median_abs_T_dIF_for_H_significant),
+    digits = 2,
+    col.names = c("Significant in H", "Tested in T", "% also significant in T",
+                  "% same direction in T", "median |dIF| in T"),
+    caption = "Replication measured against isoforms actually tested in T"
+  )
+} else {
+  knitr::asis_output("_No unfiltered T context configured._")
+}
+```
+
+### Switching co-occurrence against the tested background
+
+```{r}
+#| label: ht-bg
+#| echo: false
+bgp <- tab("ht_T_vs_H_background_enrichment.csv")
+if (file.exists(bgp)) {
+  knitr::kable(read_tab("ht_T_vs_H_background_enrichment.csv") |> select(-background),
+               digits = 4, caption = "Genes quantified in both unfiltered HT objects")
+  knitr::kable(read_tab("ht_T_vs_H_background_contingency.csv"),
+               caption = "Switching in T x switching in H, tested background")
+} else {
+  knitr::asis_output("_Requires unfiltered exports for both HT datasets._")
 }
 ```
 

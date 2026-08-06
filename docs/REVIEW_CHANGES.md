@@ -109,37 +109,49 @@ What it enables:
 fix was described there as changing nothing. The unfiltered objects contain 186 and 142 NA
 isoform q-values, so that fix is load-bearing for anything touching the context layer.
 
-### HT context (added 2026-08-06)
+### HT context (added 2026-08-06, completed 2026-08-06)
 
-Unfiltered HT exports were added under
-`H-T_Comparisons/*_Unfiltered_2025-Oct-12/`. Status is split:
+Unfiltered HT exports were added under `H-T_Comparisons/*_Unfiltered_2025-Oct-12/`. The
+first copy of `T_HT` was corrupt (`gzip -t` data stream error, ~269 MB of an expected
+~2.6 GB); it was re-copied and now passes. **All four datasets now have a working context.**
 
-- **`H_HT` — in place and working.** 128,491 isoforms over 8,160 genes, 20.5% of genes
-  significant, gene q spanning 7.8e-45 to 1, all 3,102 reduced isoforms present.
-- **`T_HT` — corrupt, not usable.** `gzip -t` reports a data stream error; the file
-  decompresses ~269 MB of an expected ~2.6 GB (the H file, of near-identical compressed
-  size, yields 2.6 GB). The header is fine and the writing R version matches files that
-  load correctly, so this is a bad transfer, not a compatibility problem. Needs re-copying
-  from source. `config` keeps `isa_unfiltered_path: null` for `T_HT` with that noted.
+| dataset | isoforms tested | genes tested | % of genes significant |
+|---|---|---|---|
+| T_HT | 148,951 | 10,907 | 23.3 |
+| H_HT | 128,491 | 8,160 | 20.5 |
+| T_UT | 166,394 | 11,582 | 24.9 |
+| U_UT | 173,016 | 11,969 | 16.4 |
 
-`06` was relaxed so it uses whichever side is available — statements about H need only the
-H context, and requiring both would have withheld the entire result over one bad file.
+`06` uses whichever context side is available rather than requiring both, and
+`extract_t_h_overlap()` joins each side's measured `dIF`/`IF1`/`IF2`/q so the tables can say
+what happened in the other dataset, not merely whether it was tested there.
 
 **This changed a headline number.** Judged by what survived `H_HT`'s reduction, 7 of 15
-T-significant isoforms were also significant in H — an apparent replication rate of ~47%.
-Against the 115 isoforms **actually tested** in H, the rate is **6.1%**: the biased figure
-was inflated roughly eight-fold, for exactly the reason described in §0. The T-significant
-switches are not absent from H, though — 74.8% move in the same direction (86 of 115,
-binomial p = 9.8e-8) with a median |dIF| of 0.07, below the 0.15 calling threshold. Same
-attenuation signature as the UBL5 arm.
+T-significant isoforms were also significant in H — an apparent replication of ~47%. Against
+the 115 isoforms **actually tested** in H, the rate is **6.1%**: inflated roughly eight-fold,
+for exactly the reason described in §0.
 
-`extract_t_h_overlap()` now also joins H's measured `dIF`/`IF1`/`IF2`/q from the context,
-so the table can say what happened in H rather than only whether it was tested there.
+Both directions are now measurable, each conditioned on significance only once:
 
-**Still outstanding:** the corrupt `T_HT` export. Until it is replaced, the reciprocal
-question — are H-significant switches merely sub-threshold in T? — cannot be asked. RSEM
-count matrices for both references are on the drive under `gtf_files/*/[HU]_T_mapped/` if a
-re-analysis is ever wanted, but that was explicitly out of scope.
+| direction | tested in the other | % also significant | % same direction | median \|dIF\| there | % clearing 0.15 |
+|---|---|---|---|---|---|
+| T-significant → measured in H | 115 | 6.1 | 74.8 (p = 9.8e-8) | 0.07 | 18.3 |
+| H-significant → measured in T | 289 | 2.4 | 63.3 (p = 6.9e-6) | 0.05 | 8.0 |
+
+Direction is preserved well above chance in both directions while magnitude collapses below
+the calling threshold — the same signature as the UBL5 arm, more extreme.
+
+`ht_T_vs_H_background_enrichment` mirrors the UT background test: over **7,671 genes
+quantified in both** HT objects, 11 switch in both against 2.3 expected — OR 4.8, p = 6.4e-5.
+Notably weaker than the UT pair (OR 25.7), which is the expected ordering: `T_UT` and `U_UT`
+differ only by the UBL5 knockout, whereas `T_HT` and `H_HT` are different genotypes.
+
+**Operational note.** Two exports arrived damaged and neither was visible from a file
+listing. `scripts/99_verify_inputs.R` now checks every configured input for existence and
+compression integrity (detected from magic bytes, not the extension) and exits non-zero on
+failure, so it can gate a run. The drive is **exFAT**, which has no journaling — an
+interrupted write leaves a partially written file with no error at the time. The README
+carries a download/unzip/copy checklist built around that.
 
 ---
 

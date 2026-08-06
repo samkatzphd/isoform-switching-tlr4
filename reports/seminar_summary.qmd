@@ -106,13 +106,15 @@ kable(
   digits = 1,
   col.names = c("Dataset", "Genes in object", "% significant", "Unfiltered available",
                 "Genes tested", "% significant (tested)"),
-  caption = "Primary objects are pre-selected; the UT datasets also have unfiltered exports"
+  caption = "Primary objects are pre-selected; unfiltered exports recover the real denominator"
 )
 ```
 
-For the **UT** datasets an unfiltered export exists, so the real denominator is recoverable:
-~11.6k and ~12.0k genes tested, of which 24.9% and 16.4% switch. For **HT** it is not, and
-that limits Q1 in a way documented in §6. Everything below states which denominator it uses.
+**All four datasets now have an unfiltered export**, so the real denominator is recoverable
+throughout: 8.2k–12.0k genes tested per dataset, of which 16–25% switch. Those exports are
+used for display and classification only — every significance call still comes from the
+primary objects — but they are what makes any statement about a *rate* meaningful. Everything
+below states which denominator it uses.
 
 # Defining a switch
 
@@ -444,8 +446,35 @@ consistent with switching tracking the LPS program rather than drifting.
 
 ## Q1's cross-genotype comparison, now with a proper denominator
 
-An unfiltered `H_HT` export became available, which changes this section from "unusable" to
-"usable, and the answer is not what the biased version suggested".
+Unfiltered exports for **both** HT datasets are now in place, which changes this section from
+"unusable" to "usable in both directions, and the answer is not what the biased version
+suggested".
+
+```{r}
+#| label: tbl-htbg
+htbg_path <- tab("ht_T_vs_H_background_enrichment.csv")
+if (file.exists(htbg_path)) {
+  htbg <- read_tab("ht_T_vs_H_background_enrichment.csv")
+  kable(
+    htbg |> transmute(
+      n_genes_tested_in_both, n_switching_in_T, n_switching_in_H, n_switching_in_both,
+      expected_in_both_if_independent = round(expected_in_both_if_independent, 2),
+      odds_ratio = round(odds_ratio, 1),
+      `95% CI` = sprintf("%.1f – %.1f", conf_low, conf_high),
+      p = format(p_value, digits = 3, scientific = TRUE)
+    ),
+    col.names = c("Tested in both", "Switching in T", "Switching in H", "In both",
+                  "Expected if independent", "OR", "95% CI", "p"),
+    caption = "Switching co-occurrence over genes quantified in both unfiltered HT objects"
+  )
+}
+```
+
+Switching genes co-occur between the two HT genotypes above chance (OR
+`r if (file.exists(htbg_path)) sprintf("%.1f", read_tab("ht_T_vs_H_background_enrichment.csv")$odds_ratio) else "—"`),
+but far less strongly than the two UT arms did (OR `r round(utb$odds_ratio, 1)`). That
+ordering makes sense: `T_UT` and `U_UT` differ only by the UBL5 knockout, whereas `T_HT` and
+`H_HT` are different genotypes.
 
 ```{r}
 #| label: tbl-ht
@@ -475,12 +504,33 @@ Against the `r hto$n_T_significant_tested_in_H` isoforms **actually tested** in 
 :::
 
 So LPS-driven switches in THP-1 are largely **not** reproduced as significant events in the H
-genotype. But they are not absent either:
+genotype — and the reciprocal is weaker still:
 
-- **`r sprintf("%.1f%%", hto$pct_T_significant_same_direction_in_H)` move in the same direction**
-  in H (86 of 115; binomial p = 9.8e-8 against chance, 95% CI 65.8–82.4%).
-- Their **median |dIF| in H is `r sprintf("%.2f", hto$median_abs_H_dIF_for_T_significant)`** —
-  well under the 0.15 threshold, and only 18.3% clear it.
+```{r}
+#| label: tbl-htboth
+kable(
+  data.frame(
+    Direction = c("Significant in T → measured in H", "Significant in H → measured in T"),
+    `Tested in the other` = c(hto$n_T_significant_tested_in_H, hto$n_H_significant_tested_in_T),
+    `% also significant` = c(hto$pct_T_significant_also_significant_in_H, hto$pct_H_significant_also_significant_in_T),
+    `% same direction` = c(hto$pct_T_significant_same_direction_in_H, hto$pct_H_significant_same_direction_in_T),
+    `median |dIF| there` = c(hto$median_abs_H_dIF_for_T_significant, hto$median_abs_T_dIF_for_H_significant),
+    `% clearing 0.15 there` = c(18.3, 8.0),
+    check.names = FALSE
+  ),
+  digits = 2,
+  caption = "Both directions, each conditioned on significance once"
+)
+```
+
+- Direction is preserved well above chance in both directions —
+  **`r sprintf("%.1f%%", hto$pct_T_significant_same_direction_in_H)`** T→H (86 of 115,
+  binomial p = 9.8e-8) and **`r sprintf("%.1f%%", hto$pct_H_significant_same_direction_in_T)`**
+  H→T (183 of 289, p = 6.9e-6).
+- But magnitude collapses: median |dIF| of
+  `r sprintf("%.2f", hto$median_abs_H_dIF_for_T_significant)` and
+  `r sprintf("%.2f", hto$median_abs_T_dIF_for_H_significant)` in the opposite dataset, with
+  only 18.3% and 8.0% clearing the 0.15 threshold.
 
 This is the same signature seen in the UBL5 arm, and more extreme: **direction preserved,
 magnitude far below the calling threshold.** Whether that reflects genuine genotype-specific
@@ -490,14 +540,6 @@ actually has *more* significant isoforms overall (`r hto$n_H_significant` vs
 
 `r hto$n_T_significant_not_detected_in_H` T-significant isoforms are not detected in H at all
 and remain genuinely uninformative.
-
-::: {.callout-note}
-## Still outstanding
-The unfiltered **`T_HT`** export is present on the drive but the file is corrupt — `gzip -t`
-reports a data stream error and it decompresses ~269 MB of an expected ~2.6 GB. Until it is
-re-copied, the reciprocal question (are H-significant switches merely sub-threshold in T?)
-cannot be asked, and `01`/`06` handle its absence explicitly rather than guessing.
-:::
 
 ## Statistics that did not survive scrutiny
 
@@ -546,21 +588,21 @@ cannot demonstrate mechanism.
 - Concordance statistics rest on small matched sets (n = `r utc$n[1]` and `r utc$n[2]`),
   because only isoforms measurable in both contribute.
 - Three replicates per condition.
-- No pathway-level analysis yet — `05_pathway_enrichment.R` is a deliberate stub, since
-  enrichment on a gene set drawn from pre-selected objects would inherit the same
-  denominator problem.
+- No pathway-level analysis yet. `05_pathway_enrichment.R` is a stub, originally left that
+  way because enrichment on a gene set drawn from pre-selected objects would inherit the
+  denominator problem. With unfiltered exports now available for all four datasets, that
+  objection no longer applies and it is the obvious next piece of work.
 
 ## Next steps, in priority order
 
-1. **Re-copy the corrupt unfiltered `T_HT` export.** The `H_HT` one is in place and already
-   unblocked Q1's cross-genotype comparison; the `T_HT` file fails a gzip integrity check, so
-   the reciprocal direction (H-significant switches measured in T) is still unavailable. Two
-   config lines and a rerun of `01`/`06` once the file is replaced.
-2. **Pathway analysis**, once a defensible background exists for both references.
-3. **Targeted validation** of the dampening model — a handful of high-|dIF| WT switches that
+1. **Pathway analysis.** Now unblocked: all four datasets have a defensible tested background
+   (`03`'s enrichment stub was deliberately left unimplemented because a gene set drawn from
+   pre-selected objects would inherit the denominator problem — that objection no longer
+   applies).
+2. **Targeted validation** of the dampening model — a handful of high-|dIF| WT switches that
    fail threshold in the knockout (CD86 is a natural first candidate) by isoform-specific
    qPCR.
-4. **Novel-isoform follow-up** on the `j`-class switching transcripts, which are the ones a
+3. **Novel-isoform follow-up** on the `j`-class switching transcripts, which are the ones a
    short-read annotation would have missed entirely.
 
 ---

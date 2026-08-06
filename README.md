@@ -56,9 +56,8 @@ run and recorded in `results/tables/input_object_reduction_check.csv`.
 This means gene counts are *genes retained*, not *genes tested*, and every
 percentage-of-genes has a denominator already selected on the outcome.
 
-**The UT datasets work around this via the context layer** (below). The HT datasets do
-not yet — for them, cross-dataset overlap remains bounded by how many symbols survive in
-both objects, and no enrichment test is reported. See
+**All four datasets now work around this via the context layer** (below), which recovers the
+real tested denominator without re-running any analysis. See
 [`docs/REVIEW_CHANGES.md`](docs/REVIEW_CHANGES.md) §0 and §0b.
 
 ## Unfiltered context layer
@@ -67,11 +66,10 @@ both objects, and no enrichment test is reported. See
 the same analysis. Script `01` then writes a slim per-isoform context table plus
 per-replicate isoform fractions to `data/processed/isoformContext*_<label>.rds`.
 
-Configured for `T_UT`, `U_UT` and `H_HT` (11,582 / 11,969 / 8,160 genes tested, versus 248 /
-127 / 385 retained in the reduced objects). `T_HT` is still `null`: its unfiltered export
-exists on the drive but **the file is corrupt** (`gzip -t` data stream error, decompresses
-~269 MB of an expected ~2.6 GB) and needs re-copying. `01` and `06` handle a missing context
-explicitly, and `06` uses whichever side is available rather than requiring both.
+Configured for **all four datasets** — 10,907 / 8,160 / 11,582 / 11,969 genes tested for
+`T_HT` / `H_HT` / `T_UT` / `U_UT`, versus 216 / 385 / 248 / 127 retained in the reduced
+objects. `01` and `06` still handle a missing context explicitly, and `06` uses whichever
+side is available rather than requiring both.
 
 **Significance calls never come from the context layer** — it is used for display and
 classification only, so novelty rates in `03` stay comparable between HT and UT. What it

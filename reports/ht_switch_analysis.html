@@ -2226,7 +2226,9 @@ vertical-align: -.125em;
   <ul class="collapse">
   <li><a href="#overlap-summary" id="toc-overlap-summary" class="nav-link" data-scroll-target="#overlap-summary"><span class="header-section-number">4.1</span> Overlap summary</a></li>
   <li><a href="#how-often-does-a-t-switch-reproduce-in-h" id="toc-how-often-does-a-t-switch-reproduce-in-h" class="nav-link" data-scroll-target="#how-often-does-a-t-switch-reproduce-in-h"><span class="header-section-number">4.2</span> How often does a T switch reproduce in H?</a></li>
-  <li><a href="#t-significant-isoforms-in-h-context-including-non-significant-h" id="toc-t-significant-isoforms-in-h-context-including-non-significant-h" class="nav-link" data-scroll-target="#t-significant-isoforms-in-h-context-including-non-significant-h"><span class="header-section-number">4.3</span> T-significant isoforms in H context (including non-significant H)</a></li>
+  <li><a href="#reciprocal-h-significant-isoforms-in-t-context" id="toc-reciprocal-h-significant-isoforms-in-t-context" class="nav-link" data-scroll-target="#reciprocal-h-significant-isoforms-in-t-context"><span class="header-section-number">4.3</span> Reciprocal: H-significant isoforms in T context</a></li>
+  <li><a href="#switching-co-occurrence-against-the-tested-background" id="toc-switching-co-occurrence-against-the-tested-background" class="nav-link" data-scroll-target="#switching-co-occurrence-against-the-tested-background"><span class="header-section-number">4.4</span> Switching co-occurrence against the tested background</a></li>
+  <li><a href="#t-significant-isoforms-in-h-context-including-non-significant-h" id="toc-t-significant-isoforms-in-h-context-including-non-significant-h" class="nav-link" data-scroll-target="#t-significant-isoforms-in-h-context-including-non-significant-h"><span class="header-section-number">4.5</span> T-significant isoforms in H context (including non-significant H)</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -5065,25 +5067,29 @@ vertical-align: -.125em;
 <table class="caption-top table table-sm table-striped small">
 <caption>Isoform overlap summary: T_HT vs H_HT</caption>
 <colgroup>
-<col style="width: 3%">
-<col style="width: 2%">
-<col style="width: 4%">
 <col style="width: 2%">
 <col style="width: 2%">
 <col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 6%">
-<col style="width: 7%">
-<col style="width: 9%">
-<col style="width: 4%">
-<col style="width: 4%">
+<col style="width: 2%">
+<col style="width: 2%">
+<col style="width: 2%">
+<col style="width: 2%">
+<col style="width: 2%">
 <col style="width: 4%">
 <col style="width: 5%">
 <col style="width: 7%">
-<col style="width: 8%">
-<col style="width: 8%">
-<col style="width: 7%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 4%">
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 5%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -5106,6 +5112,10 @@ vertical-align: -.125em;
 <th style="text-align: right;">pct_T_significant_also_significant_in_H</th>
 <th style="text-align: right;">pct_T_significant_same_direction_in_H</th>
 <th style="text-align: right;">median_abs_H_dIF_for_T_significant</th>
+<th style="text-align: right;">n_H_significant_tested_in_T</th>
+<th style="text-align: right;">pct_H_significant_also_significant_in_T</th>
+<th style="text-align: right;">pct_H_significant_same_direction_in_T</th>
+<th style="text-align: right;">median_abs_T_dIF_for_H_significant</th>
 </tr>
 </thead>
 <tbody>
@@ -5122,13 +5132,17 @@ vertical-align: -.125em;
 <td style="text-align: right;">7</td>
 <td style="text-align: right;">11</td>
 <td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">FALSE</td>
+<td style="text-align: left;">TRUE</td>
 <td style="text-align: right;">8160</td>
 <td style="text-align: right;">115</td>
 <td style="text-align: right;">58</td>
 <td style="text-align: right;">6.087</td>
 <td style="text-align: right;">74.7826</td>
 <td style="text-align: right;">0.0664</td>
+<td style="text-align: right;">289</td>
+<td style="text-align: right;">2.4221</td>
+<td style="text-align: right;">63.3218</td>
+<td style="text-align: right;">0.0475</td>
 </tr>
 </tbody>
 </table>
@@ -5138,29 +5152,6 @@ vertical-align: -.125em;
 <section id="how-often-does-a-t-switch-reproduce-in-h" class="level3" data-number="4.2">
 <h3 data-number="4.2" class="anchored" data-anchor-id="how-often-does-a-t-switch-reproduce-in-h"><span class="header-section-number">4.2</span> How often does a T switch reproduce in H?</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>has_h_ctx <span class="ot">&lt;-</span> <span class="fu">isTRUE</span>(ov_sum<span class="sc">$</span>unfiltered_context_H <span class="sc">%in%</span> <span class="fu">c</span>(<span class="cn">TRUE</span>, <span class="dv">1</span>))</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (has_h_ctx) {</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    ov_detail <span class="sc">|&gt;</span> <span class="fu">count</span>(overlap_note, <span class="at">name =</span> <span class="st">&quot;isoforms&quot;</span>),</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Outcome in H for isoforms significant in T&quot;</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    ov_sum <span class="sc">|&gt;</span> <span class="fu">select</span>(n_T_significant, n_T_significant_tested_in_H,</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                     n_T_significant_not_detected_in_H,</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>                     pct_T_significant_also_significant_in_H,</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>                     pct_T_significant_same_direction_in_H,</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>                     median_abs_H_dIF_for_T_significant),</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">2</span>,</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Significant in T&quot;</span>, <span class="st">&quot;Tested in H&quot;</span>, <span class="st">&quot;Not detected in H&quot;</span>,</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;% also significant in H&quot;</span>, <span class="st">&quot;% same direction in H&quot;</span>,</span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;median |dIF| in H&quot;</span>),</span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Replication measured against isoforms actually tested in H&quot;</span></span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">asis_output</span>(</span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;_No unfiltered H context configured, so replication cannot be measured against a proper denominator._&quot;</span></span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Replication measured against isoforms actually tested in H</caption>
@@ -5195,27 +5186,6 @@ vertical-align: -.125em;
 </table>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (has_h_ctx) {</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;::: {.callout-important title=</span><span class="sc">\&quot;</span><span class="st">The apparent replication rate was an artefact of the reduced object</span><span class="sc">\&quot;</span><span class="st">}</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="st">Using only what survived `H_HT`&#39;s reduction, %d of %d T-significant isoforms appeared in H</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="st">and %d of those were also significant — an apparent replication of about %.0f%%. But an</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="st">isoform only stayed in the reduced object if its gene was already significant there, so that</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="st">denominator is selected on the outcome.</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="st">Against isoforms **actually tested** in H, the rate is **%.1f%%** (%d of %d). The earlier</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="st">figure was inflated roughly %.0f-fold.</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="st">:::</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    ov_sum<span class="sc">$</span>n_T_significant_present_in_H, ov_sum<span class="sc">$</span>n_T_significant,</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    ov_sum<span class="sc">$</span>n_T_significant_and_H_significant,</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span> <span class="sc">*</span> ov_sum<span class="sc">$</span>n_T_significant_and_H_significant <span class="sc">/</span> ov_sum<span class="sc">$</span>n_T_significant_present_in_H,</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    ov_sum<span class="sc">$</span>pct_T_significant_also_significant_in_H,</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(ov_sum<span class="sc">$</span>pct_T_significant_also_significant_in_H <span class="sc">/</span> <span class="dv">100</span> <span class="sc">*</span> ov_sum<span class="sc">$</span>n_T_significant_tested_in_H),</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    ov_sum<span class="sc">$</span>n_T_significant_tested_in_H,</span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">100</span> <span class="sc">*</span> ov_sum<span class="sc">$</span>n_T_significant_and_H_significant <span class="sc">/</span> ov_sum<span class="sc">$</span>n_T_significant_present_in_H) <span class="sc">/</span></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>      ov_sum<span class="sc">$</span>pct_T_significant_also_significant_in_H</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  ))</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="callout callout-style-default callout-important callout-titled" title="The apparent replication rate was an artefact of the reduced object">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -5231,24 +5201,88 @@ vertical-align: -.125em;
 </div>
 </div>
 </section>
-<section id="t-significant-isoforms-in-h-context-including-non-significant-h" class="level3" data-number="4.3">
-<h3 data-number="4.3" class="anchored" data-anchor-id="t-significant-isoforms-in-h-context-including-non-significant-h"><span class="header-section-number">4.3</span> T-significant isoforms in H context (including non-significant H)</h3>
+<section id="reciprocal-h-significant-isoforms-in-t-context" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="reciprocal-h-significant-isoforms-in-t-context"><span class="header-section-number">4.3</span> Reciprocal: H-significant isoforms in T context</h3>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Replication measured against isoforms actually tested in T</caption>
+<colgroup>
+<col style="width: 16%">
+<col style="width: 11%">
+<col style="width: 23%">
+<col style="width: 21%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Significant in H</th>
+<th style="text-align: right;">Tested in T</th>
+<th style="text-align: right;">% also significant in T</th>
+<th style="text-align: right;">% same direction in T</th>
+<th style="text-align: right;">median |dIF| in T</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">323</td>
+<td style="text-align: right;">289</td>
+<td style="text-align: right;">2.42</td>
+<td style="text-align: right;">63.32</td>
+<td style="text-align: right;">0.05</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="switching-co-occurrence-against-the-tested-background" class="level3" data-number="4.4">
+<h3 data-number="4.4" class="anchored" data-anchor-id="switching-co-occurrence-against-the-tested-background"><span class="header-section-number">4.4</span> Switching co-occurrence against the tested background</h3>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Switching in T x switching in H, tested background</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">T_switching</th>
+<th style="text-align: right;">H_switching_FALSE</th>
+<th style="text-align: right;">H_switching_TRUE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">7352</td>
+<td style="text-align: right;">236</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">72</td>
+<td style="text-align: right;">11</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="t-significant-isoforms-in-h-context-including-non-significant-h" class="level3" data-number="4.5">
+<h3 data-number="4.5" class="anchored" data-anchor-id="t-significant-isoforms-in-h-context-including-non-significant-h"><span class="header-section-number">4.5</span> T-significant isoforms in H context (including non-significant H)</h3>
 <p><code>H_ctx_dIF</code> is H’s measured effect from the unfiltered object — available even for isoforms H’s reduced object discarded, which is the point of the context layer.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>ov_show <span class="ot">&lt;-</span> ov_detail <span class="sc">|&gt;</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(.data<span class="sc">$</span>T_dIF_n)), .data<span class="sc">$</span>T_q_i) <span class="sc">|&gt;</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    gene_id, gene_name, isoform_id,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    T_dIF_n, T_q_i, T_significant,</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    H_ctx_dIF, H_ctx_q, H_significant,</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    same_direction_ctx, overlap_note</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">head</span>(ov_show, <span class="dv">100</span>),</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span> <span class="dv">4</span>,</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Top T-significant isoforms mapped to H context (first 100 rows)&quot;</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ov_show <span class="ot">&lt;-</span> ov_detail <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(.data<span class="sc">$</span>T_dIF_n)), .data<span class="sc">$</span>T_q_i) <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    gene_id, gene_name, isoform_id,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    T_dIF_n, T_q_i, T_significant,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    H_ctx_dIF, H_ctx_q, H_significant,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    same_direction_ctx, overlap_note</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">head</span>(ov_show, <span class="dv">100</span>),</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Top T-significant isoforms mapped to H context (first 100 rows)&quot;</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Top T-significant isoforms mapped to H context (first 100 rows)</caption>
