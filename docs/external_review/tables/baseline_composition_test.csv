@@ -1,0 +1,3 @@
+"contrast","n_genes","median_within","median_cross","median_excess","ratio","pct_genes_excess_gt_0.05","pct_genes_excess_gt_0.10","p"
+"UBL5 KO vs WT (same background)",8595,0.1295,0.1343,0.0024,1.037,10.5,2.6,4.45e-40
+"H vs T (different genotypes)",5776,0.1087,0.1711,0.0496,1.574,49.7,25.8,0

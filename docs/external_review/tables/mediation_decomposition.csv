@@ -1,0 +1,10 @@
+"quantity","value"
+"total_effect_KO_on_splicing",-0.00809
+"indirect_via_expression",-0.002938
+"direct_not_explained",-0.005152
+"prop_indirect",0.363161
+"prop_indirect_CI_low",0.293262
+"prop_indirect_CI_high",0.445239
+"prop_direct",0.636839
+"prop_direct_CI_low",0.554761
+"prop_direct_CI_high",0.706738

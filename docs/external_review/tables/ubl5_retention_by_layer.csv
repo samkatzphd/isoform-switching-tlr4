@@ -1,0 +1,5 @@
+"transcript_set","layer","ratio","lo","hi"
+"all transcripts","Expression response",0.6395,0.6245,0.6557
+"all transcripts","Splicing response",0.3769,0.3266,0.4313
+"ENST-only (annotation-neutral)","Expression response",0.6389,0.6233,0.6546
+"ENST-only (annotation-neutral)","Splicing response",0.3497,0.2531,0.4621

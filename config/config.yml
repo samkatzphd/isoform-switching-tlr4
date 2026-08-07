@@ -107,6 +107,14 @@ analysis:
   cryptic_max_abs_lfc: 0.25  # 09: switching gene with |log2FC| below this = invisible to DE
   rescue_min_gene_drop: 0.3  # 09: gene must fall by more than this to qualify
   dominant_min_if: 0.3       # 09: baseline-dominant isoform must hold at least this IF
+  # 10: estimator calibration (simulation only)
+  calibration_n_genes: 4000
+  calibration_n_isoforms: 6
+  calibration_n_replicates: 3
+  calibration_if_noise_sd: 0.05     # matched to observed within-condition IF SD
+  calibration_expr_noise_sd: 0.35
+  calibration_seed: 42
+  calibration_ratio_grid: [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
 
 # Pathway enrichment (05). The universe is always the tested background from the context
 # layer -- never the whole genome, and never the pre-reduced object.

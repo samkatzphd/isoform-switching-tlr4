@@ -381,6 +381,93 @@ only 33-39% of isoforms.
 
 ---
 
+## 0f. Why the expression-vs-splicing asymmetry is not supported (2026-08-07)
+
+The second external review (`docs/external_review/HANDOFF.md`) makes the layer asymmetry its
+load-bearing claim: the knockout retains **64% of the expression response but only 38% of the
+splicing response**, with non-overlapping CIs, and concludes the layers are partially
+decoupled. It also survives an ENST-only annotation control, so it is not an artefact of the
+PacBio reference.
+
+That claim is **not rejected on the biology. It is rejected on the measurement**, and the
+reason is specific and testable.
+
+### The two layers are measured with estimators that are biased in opposite directions
+
+Expression response is `|log2FC|` between condition means of three replicates. Averaging
+before taking the absolute value gives high signal-to-noise, but the absolute value still
+inflates small values, so the **ratio is pulled toward 1** — deficits are understated.
+
+Splicing response is a total variation distance: a sum of absolute values over isoforms.
+Absolute values do not average out noise. For signal small relative to noise,
+`E|s + n| ~ E|n| + O(s^2)`, so any noise-subtracted TVD responds roughly **quadratically**
+to signal near zero and **compresses ratios toward 0** — deficits are overstated.
+
+Comparing an upward-biased number against a downward-biased one manufactures an asymmetry
+even when both layers are reduced by exactly the same factor.
+
+### Calibration against known ground truth
+
+`scripts/10_layer_estimator_calibration.R` simulates a known signal ratio and measures what
+each estimator reports. Estimator A is the review's (pairwise across-condition TVD minus
+within-condition TVD); B is this pipeline's (TVD of the mean per-pair dIF vector, minus a
+paired permutation null).
+
+| true ratio | expression | splicing A | splicing B |
+|---|---|---|---|
+| 1.0 | 1.00 | 1.01 | 0.99 |
+| 0.8 | 0.84 | 0.68 | 0.72 |
+| 0.6 | 0.68 | 0.42 | 0.47 |
+| 0.4 | 0.56 | 0.20 | 0.24 |
+| 0.2 | 0.46 | 0.05 | 0.07 |
+
+Both splicing estimators are compressed; the expression estimator is inflated. Inverting the
+calibration on the observed values:
+
+| source | observed expr / splicing | corrected expr / splicing | corrected gap |
+|---|---|---|---|
+| external review (estimator A) | 0.64 / 0.38 | **0.53 / 0.57** | -0.04 |
+| this pipeline (estimator B) | 0.60 / 0.65 | **0.48 / 0.75** | -0.27 |
+
+The review's observed gap of **+0.26 becomes -0.04** after correction — i.e. the two layers
+are reduced by indistinguishable amounts, and if anything splicing is retained slightly
+better. The two independent analyses, which disagree sharply on the raw numbers, **agree
+after correction**.
+
+### What this does and does not establish
+
+- It does **not** show that UBL5 has no splicing-specific role. It shows this measurement
+  cannot demonstrate one, in either direction.
+- It does **not** overturn the finding that the KO's LPS response is globally blunted; that
+  rests on expression alone and is unaffected.
+- The mediation decomposition (36% indirect / 64% direct) inherits the same compressed
+  splicing estimator on both sides and should not be quoted until recomputed on a calibrated
+  scale.
+- The simulation uses Gaussian homoscedastic noise, which real count data is not. The
+  correction is approximate. The **direction** of the two biases is not approximate — it
+  follows from the algebra of averaging before versus after an absolute value.
+
+### What survives from the review and is adopted
+
+- **Baseline composition is normal in the KO** (excess 0.0024, ratio 1.04) against a working
+  positive control (H vs T, ratio 1.57). This does not involve a cross-layer comparison and
+  reproduces here. It is genuine evidence against a constitutive splicing defect.
+- **The withdrawal of the Mantel-Haenszel over-adjustment** is correct and was already acted
+  on in section 0e: response magnitude is plausibly a mediator, and conditioning on it removes
+  the effect being measured. `02e_response_magnitude_control.R` is retained but its output
+  must be read as "cannot separate the models", not as evidence of no effect.
+- **The 16% retention figure was a ratio of medians near zero** and the review corrects it to
+  ~38%. Correct diagnosis, and the same instability is why script 08 reports means.
+- **The "35% technical ceiling" retraction** is correct: HT and UT are genuinely different
+  transcript spaces, so part of that discordance is annotation, not noise.
+- **Class `j` is not enriched among switching isoforms** relative to the expressed background
+  (OR 0.61). This corrects an impression left by the earlier class-code section, which
+  compared switching classes to each other rather than to the background.
+- **Class B reproduction: IRF3 and BCL7B do not reproduce** across annotations. Any writeup
+  naming them must say so.
+
+---
+
 ## 1. Statistics that were not interpretable as reported
 
 ### 1.1 Fisher test removed, not caveated

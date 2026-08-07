@@ -1,0 +1,6 @@
+"set","n_genes","median_n_iso","median_gene_expr","pct_switch_iso_novel","pct_switch_iso_j","pct_switch_iso_c","pct_switch_gained"
+"cryptic switchers",23,11,30.9,48.3,6.9,27.6,37.9
+"class B (all)",56,19.5,46.1,50,50,0,100
+"class B (reproducing)",11,21,51.9,NA,NA,NA,NA
+"all switching genes",117,11,37.5,49.3,12.7,17.6,45.1
+"background (all tested)",8916,13,60.3,49.3,12.7,17.6,45.1

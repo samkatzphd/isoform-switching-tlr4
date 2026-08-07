@@ -1,0 +1,5 @@
+"gene_class","mean_splicing_excess_WT","mean_splicing_excess_KO","pct_retained_in_KO"
+"LPS-responsive (|log2FC|>0.5)",0.01973,0.00949,48.1
+"Not LPS-responsive",0.00958,0.00258,26.9
+"All other genes",0.01271,0.00465,36.6
+"Interferon-response genes",0.03265,0.0205,62.8
