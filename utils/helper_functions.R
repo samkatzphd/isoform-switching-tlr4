@@ -588,9 +588,13 @@ extract_context_tables <- function(isa_obj) {
 }
 
 #' Load a context table written by 01, or NULL when the dataset has no unfiltered object
-load_context_table <- function(processed_dir, label, what = c("features", "rep_if")) {
+load_context_table <- function(processed_dir, label, what = c("features", "rep_if", "rep_expr")) {
   what <- match.arg(what)
-  stem <- if (what == "features") "isoformContext_" else "isoformContextRepIF_"
+  stem <- switch(what,
+    features = "isoformContext_",
+    rep_if = "isoformContextRepIF_",
+    rep_expr = "isoformContextRepExpr_"
+  )
   p <- file.path(processed_dir, paste0(stem, sanitize(label), ".rds"))
   if (!file.exists(p)) NULL else readRDS(p)
 }

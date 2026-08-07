@@ -1,0 +1,3 @@
+"contrast","n_genes","n_shared_isoforms","mean_tvd_across_genotype","mean_tvd_within_replicates","excess_over_replicate_noise","ratio_across_over_within"
+"KO vs WT (unstimulated only)",8641,154360,0.0952442668691264,0.141571674637184,-0.0463274077680573,0.672763581508914
+"H_HT vs T_HT (unstimulated only)",5820,114239,0.156152133933653,0.119302976455508,0.0368491574781443,1.30887039513123

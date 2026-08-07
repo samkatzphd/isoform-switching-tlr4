@@ -1,0 +1,5 @@
+"layer","statistic","retained_in_KO","ci_low","ci_high","n_genes"
+"Expression","standardised effect (z)",0.659538746205778,0.641600007690445,0.678100443318453,8581
+"Splicing","standardised effect (z)",0.669693880941516,0.644650001898376,0.695839075253161,8581
+"Expression (raw, uncorrected)","mean |log2FC|",0.640584862806602,0.625494945566182,0.656717475225066,8581
+"Splicing (raw, uncorrected)","mean TVD",0.853442110010735,0.844307447653564,0.863186191276366,8581

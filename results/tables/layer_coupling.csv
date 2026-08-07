@@ -1,0 +1,2 @@
+"slope_WT","slope_difference_KO_minus_WT","slope_KO","interaction_p","n_genes","interpretation"
+0.0609905369460142,-0.0314550260867061,0.0295355108593081,7.81970367942992e-05,8581,"A non-zero interaction means the splicing response per unit expression response differs between genotypes, which a purely downstream model cannot produce."

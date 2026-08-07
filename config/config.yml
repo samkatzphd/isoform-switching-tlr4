@@ -104,6 +104,9 @@ analysis:
   expression_floor_snr: 3    # 02d: require |dIF| >= this many replicate-noise SDs
   response_strata: [0.1, 0.25, 0.5, 1]  # 02e: |log2FC| bin edges for the response control
   near_miss_floor: 0.10      # 02f: |dIF| above this but below min_abs_dif = a near-miss
+  cryptic_max_abs_lfc: 0.25  # 09: switching gene with |log2FC| below this = invisible to DE
+  rescue_min_gene_drop: 0.3  # 09: gene must fall by more than this to qualify
+  dominant_min_if: 0.3       # 09: baseline-dominant isoform must hold at least this IF
 
 # Pathway enrichment (05). The universe is always the tested background from the context
 # layer -- never the whole genome, and never the pre-reduced object.
