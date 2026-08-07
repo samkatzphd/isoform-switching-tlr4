@@ -226,6 +226,86 @@ differences are not a depth or library-size artefact.
 
 ---
 
+## 0d. External review follow-up (2026-08-07)
+
+An external review (`REVIEW_HANDOFF.md`) raised three findings. All were independently
+reproduced from the committed context tables before anything was changed.
+
+### The Q2 conclusion did not survive its confounder
+
+`02d` ruled out a *baseline abundance* confounder, which was the wrong one. The relevant
+confounder for a post-LPS switching claim is the amplitude of the LPS response itself, and
+it is large: over 8,595 genes tested in both UT arms the knockout's response has SD ratio
+0.731, IQR ratio 0.577, regression slope **0.516** and Spearman 0.727 against wildtype. The
+top 200 wildtype responders retain 57.9% of their magnitude in the knockout. Direction is
+preserved; amplitude is roughly halved.
+
+Stratifying each gene by its own response magnitude, the crude switching odds ratio of
+**0.508** becomes a Mantel-Haenszel **0.773 (95% CI 0.565-1.058, p = 0.114)** — not
+significant, and in the two highest-response strata the knockout switches slightly more.
+
+**Changed:** `scripts/02e_response_magnitude_control.R`, run on both pairs. Reports reframed
+to the supported claim: UBL5 loss blunts the LPS response globally by about half, and
+reduced isoform switching follows from that.
+
+Two things the review did not note, both recorded in the script:
+
+- Response magnitude is plausibly a **mediator**, not a confounder. Adjusting for it removes
+  part of the effect being measured, so a non-significant adjusted OR shows the design cannot
+  separate a splicing-specific effect from a globally blunted response — not that none
+  exists.
+- Running the same control on the HT pair gives the opposite behaviour: crude OR 2.29 becomes
+  MH OR **2.49 (p = 5.8e-13)**, i.e. the contrast *strengthens* on adjustment. That is a
+  useful internal control — the stratification is not mechanically flattening everything.
+
+### T_HT and T_UT are the same libraries
+
+Replicate columns carry identical sample names including S-numbers, and gene-level expression
+correlates at **r = 0.991-0.992** for matched samples (versus 0.943 same-library /
+different-condition). Nothing in the project had noted this.
+
+A caution for anyone repeating the check: correlating the raw matrices by `isoform_id` gives
+**r ≈ 0**, which looks like different libraries but is an id-collision artefact — `TCONS_*`
+ids are assigned per reference and denote different transcripts in HT and UT. All
+cross-reference comparison must use gene symbols.
+
+This is the project's best technical control: zero biological variability, so all
+disagreement is annotation plus thresholding. Over 10,592 symbols testable in both, 95 and
+116 switching genes share 55 — Jaccard **0.353** against 1.04 expected by chance, with
+gene-level max |dIF| Spearman 0.771. Of 101 discordant genes, median |dIF| in the
+non-calling reference is 0.132 against a 0.15 cutoff and 72.3% reach at least 0.10, so this
+is threshold brittleness, not contradiction.
+
+**Changed:** `scripts/02f_reference_concordance.R`, which asserts library identity from the
+replicate column names before reporting. Reports now state that a single-dataset switching
+call has roughly a one-in-three chance of not replicating under re-annotation alone, and
+that cross-dataset replication rates should be judged against ~35% rather than 100%.
+
+### ISG replication was partly one dataset counted twice
+
+`07` corrected across all 12 dataset x set rows as if independent, and the seminar described
+`T_HT` and `T_UT` agreement as replication. They are the same libraries; their switching ISGs
+overlap 7 of 9 in the union.
+
+**Changed:** `07` derives a `library_group` from the replicate sample names and reports both
+`q_across_all_datasets` (optimistic, treats all rows as independent) and
+`q_within_library_group`. Reports describe HT/UT agreement as technical reproducibility, and
+show switching ISG counts (8, 8, 4, 3) beside every odds ratio.
+
+### Smaller items
+
+- **Switching is tail behaviour.** Above the abundance floor at mid-range fractions, the 99th
+  percentile of |dIF| is 0.147 / 0.153 / 0.134 / 0.201 across the four datasets, so the 0.15
+  cutoff sits near the 99th percentile of the whole distribution. Stated in the reports.
+- **Possible paired design.** Sample names suggest three paired replicates but no blocking
+  factor is used anywhere. Flagged in the reports as an open question with its power cost;
+  **not** changed, since inferring a design from filenames is not sound.
+- **Pathway term counts** were left in place rather than removed. The driver-gene summary is
+  reported alongside every count, which addresses the misreading risk while keeping the
+  count informative.
+
+---
+
 ## 1. Statistics that were not interpretable as reported
 
 ### 1.1 Fisher test removed, not caveated

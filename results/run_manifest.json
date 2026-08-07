@@ -106,12 +106,7 @@
           "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
           "expression_floor_snr": 3
         },
-        "inputs": {
-          "T_HT": null,
-          "H_HT": null,
-          "U_UT": null,
-          "T_UT": null
-        }
+        "inputs": {}
       }
     ],
     [
@@ -138,12 +133,7 @@
           "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
           "expression_floor_snr": 3
         },
-        "inputs": {
-          "T_HT": null,
-          "H_HT": null,
-          "U_UT": null,
-          "T_UT": null
-        }
+        "inputs": {}
       }
     ],
     [
@@ -170,12 +160,7 @@
           "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
           "expression_floor_snr": 3
         },
-        "inputs": {
-          "T_HT": null,
-          "H_HT": null,
-          "U_UT": null,
-          "T_UT": null
-        }
+        "inputs": {}
       }
     ],
     [
@@ -202,12 +187,7 @@
           "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
           "expression_floor_snr": 3
         },
-        "inputs": {
-          "T_HT": null,
-          "H_HT": null,
-          "U_UT": null,
-          "T_UT": null
-        }
+        "inputs": {}
       }
     ],
     [
@@ -234,12 +214,7 @@
           "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
           "expression_floor_snr": 3
         },
-        "inputs": {
-          "T_HT": null,
-          "H_HT": null,
-          "U_UT": null,
-          "T_UT": null
-        }
+        "inputs": {}
       }
     ],
     [
@@ -266,12 +241,7 @@
           "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
           "expression_floor_snr": 3
         },
-        "inputs": {
-          "T_HT": null,
-          "H_HT": null,
-          "U_UT": null,
-          "T_UT": null
-        }
+        "inputs": {}
       }
     ],
     [
@@ -298,12 +268,7 @@
           "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
           "expression_floor_snr": 3
         },
-        "inputs": {
-          "T_HT": null,
-          "H_HT": null,
-          "U_UT": null,
-          "T_UT": null
-        }
+        "inputs": {}
       }
     ],
     [
@@ -330,12 +295,7 @@
           "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
           "expression_floor_snr": 3
         },
-        "inputs": {
-          "T_HT": null,
-          "H_HT": null,
-          "U_UT": null,
-          "T_UT": null
-        }
+        "inputs": {}
       }
     ],
     [
@@ -362,18 +322,64 @@
           "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
           "expression_floor_snr": 3
         },
-        "inputs": {
-          "T_HT": null,
-          "H_HT": null,
-          "U_UT": null,
-          "T_UT": null
-        }
+        "inputs": {}
       }
     ],
     {
+      "script": "02e_response_magnitude_control.R",
+      "run_at": "2026-08-07T17:59:29+0200",
+      "git_sha": "2dfe26809a7c5c7c2de60e8f31213a6bf7575659",
+      "r_version": "R version 4.4.1 (2024-06-14)",
+      "platform": "aarch64-apple-darwin20",
+      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+      "significance": {
+        "isoform_q": 0.05,
+        "gene_q": 0.05,
+        "min_abs_dif": 0.15,
+        "require_finite_dif": true,
+        "min_gene_expression": 12
+      },
+      "analysis": {
+        "top_n_genes": 30,
+        "plot_top_n": 30,
+        "gene_panels_per_class": 12,
+        "switch_plots_per_class": 6,
+        "explorer_max_isoforms": 12,
+        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+        "expression_floor_snr": 3,
+        "response_strata": [0.1, 0.25, 0.5, 1]
+      }
+    },
+    {
+      "script": "02f_reference_concordance.R",
+      "run_at": "2026-08-07T18:01:24+0200",
+      "git_sha": "2dfe26809a7c5c7c2de60e8f31213a6bf7575659",
+      "r_version": "R version 4.4.1 (2024-06-14)",
+      "platform": "aarch64-apple-darwin20",
+      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+      "significance": {
+        "isoform_q": 0.05,
+        "gene_q": 0.05,
+        "min_abs_dif": 0.15,
+        "require_finite_dif": true,
+        "min_gene_expression": 12
+      },
+      "analysis": {
+        "top_n_genes": 30,
+        "plot_top_n": 30,
+        "gene_panels_per_class": 12,
+        "switch_plots_per_class": 6,
+        "explorer_max_isoforms": 12,
+        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+        "expression_floor_snr": 3,
+        "response_strata": [0.1, 0.25, 0.5, 1],
+        "near_miss_floor": 0.1
+      }
+    },
+    {
       "script": "07_isg_analysis.R",
-      "run_at": "2026-08-07T16:54:59+0200",
-      "git_sha": "39c6e7268a658744d187ba7905c809e0e0ec9c7b",
+      "run_at": "2026-08-07T18:02:08+0200",
+      "git_sha": "2dfe26809a7c5c7c2de60e8f31213a6bf7575659",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
       "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
@@ -399,7 +405,14 @@
           0.25,
           0.3
         ],
-        "expression_floor_snr": 3
+        "expression_floor_snr": 3,
+        "response_strata": [
+          0.1,
+          0.25,
+          0.5,
+          1
+        ],
+        "near_miss_floor": 0.1
       },
       "isg_set_source": "GO (org.Hs.eg.db, GOALL): GO:0034340 + GO:0060337; GO:0034341"
     }

@@ -149,18 +149,53 @@ for (k in names(gt)) {
     )
   }
 }
+# Datasets are NOT independent: T_HT and T_UT are the same six libraries quantified against
+# two references (identical replicate sample names, gene-level r ~ 0.99). Correcting across
+# all dataset x set rows as if independent counts one biological result twice. The library
+# group is derived from the replicate sample names rather than hardcoded, so it stays right
+# if datasets are added.
+lib_group <- function(k) {
+  r <- load_context_table(processed_dir, sanitize(as.character(
+    (cfg$datasets[[k]] %||% list())$label %||% k)[1L]), "rep_if")
+  if (is.null(r)) return(k)
+  paste(sort(setdiff(names(r), "isoform_id")), collapse = "|")
+}
+groups <- vapply(names(cfg$datasets %||% list()), lib_group, character(1))
+group_id <- setNames(match(groups, unique(groups)), names(groups))
+
 enrich <- bind_rows(enrich_rows) |>
+  mutate(library_group = paste0("libs_", group_id[.data$dataset])) |>
   group_by(.data$isg_set) |>
-  mutate(p_adj_across_datasets = stats::p.adjust(.data$p_value, "BH")) |>
+  mutate(q_across_all_datasets = stats::p.adjust(.data$p_value, "BH")) |>
+  group_by(.data$isg_set, .data$library_group) |>
+  mutate(q_within_library_group = stats::p.adjust(.data$p_value, "BH")) |>
   ungroup() |>
-  mutate(isg_set_source = set_source)
+  mutate(
+    isg_set_source = set_source,
+    note = paste(
+      "Datasets sharing a library_group are the same sequencing libraries under different",
+      "references; agreement between them is technical reproducibility, not biological",
+      "replication. q_across_all_datasets treats all rows as independent and is optimistic."
+    )
+  )
+dup <- names(which(table(group_id) > 1))
+if (length(dup)) {
+  for (d in dup) {
+    message(
+      "NOTE: ", paste(names(group_id)[group_id == d], collapse = " and "),
+      " share sequencing libraries -- treat their agreement as technical, not biological."
+    )
+  }
+}
 write_table_pair(enrich, results_tables, "isg_enrichment", cfg = cfg)
 print(as.data.frame(
   enrich |> filter(.data$isg_set == "Any IFN" | length(isg_sets) == 1L) |>
     transmute(.data$dataset, .data$isg_set, .data$n_isg_tested, .data$n_isg_switching,
               pct_isg = round(.data$pct_isg_switching, 2),
               pct_other = round(.data$pct_nonisg_switching, 2),
-              OR = round(.data$odds_ratio, 2), p = signif(.data$p_value, 3))
+              OR = round(.data$odds_ratio, 2), p = signif(.data$p_value, 3),
+              q_all = signif(.data$q_across_all_datasets, 3),
+              .data$library_group)
 ))
 
 # ---- Which ISGs switch, and where -------------------------------------------------------

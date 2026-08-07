@@ -35,6 +35,9 @@ topT_HT <- read_tab("top_switching_genes_T_HT_anchor.csv")
 topT_UT <- read_tab("top_switching_genes_T_UT.csv")
 topU_UT <- read_tab("top_switching_genes_U_UT.csv")
 iso_ov <- readRDS(tab("ut_isoform_overlap_T_vs_U_all.rds"))
+rmc <- read_tab("ut_response_magnitude_control.csv")
+rms <- read_tab("ut_response_magnitude_strata.csv")
+refc <- read_tab("reference_concordance_T_HT_vs_T_UT.csv")
 fq  <- make_fig(NULL)
 fnov <- make_fig("novel")
 fscan <- make_fig("threshold_scan")
@@ -259,14 +262,72 @@ kable(
 knockout.** Under the pre-selected objects this comparison was impossible — the denominators
 were 248 and 127 genes, both 100% significant by construction.
 
-::: {.callout-warning}
-## Read this with the power caveat
-These are two separate DEXSeq analyses. A difference in significance *rate* is sensitive to
-differences in library depth, dispersion, and replicate variability, not only to biology.
-The gene counts tested are comparable (`r format(NT, big.mark=",")` vs
-`r format(NU, big.mark=",")`), which is mildly reassuring, but this result should be
-supported by the effect-size evidence below rather than standing alone.
+### But the knockout's whole LPS response runs at about half amplitude
+
+```{r}
+#| label: tbl-respamp
+ut_r <- rmc |> filter(grepl("^UT", pair))
+kable(
+  ut_r |> transmute(
+    `SD of log2FC (WT)` = sd_lfc_ref, `SD (KO)` = sd_lfc_alt, `ratio` = sd_ratio,
+    `mean |log2FC| (WT)` = mean_abs_lfc_ref, `mean |log2FC| (KO)` = mean_abs_lfc_alt,
+    `slope KO~WT` = regression_slope_alt_on_ref,
+    `Spearman` = spearman_ref_vs_alt,
+    `top-200 retained` = pct_magnitude_retained_top200
+  ),
+  digits = 3,
+  caption = paste0("Gene-level LPS response over ", format(ut_r$n_genes_tested_in_both, big.mark=","),
+                   " genes tested in both UT arms")
+)
+```
+
+Direction is preserved (Spearman `r sprintf("%.2f", ut_r$spearman_ref_vs_alt)`) but amplitude
+is roughly halved (regression slope `r sprintf("%.3f", ut_r$regression_slope_alt_on_ref)`; the
+top 200 wildtype responders retain
+`r sprintf("%.0f%%", ut_r$pct_magnitude_retained_top200)` of their response). **This is a
+global transcriptional phenotype, not a splicing one.**
+
+It matters because a switch needs a condition-driven shift in isoform fraction to clear a
+fixed `|dIF| ≥ 0.15`. If the whole perturbation runs at half amplitude, fewer shifts clear
+the bar regardless of any splicing-specific role. Stratifying each gene by its own response
+magnitude:
+
+```{r}
+#| label: tbl-respstrata
+kable(
+  rms |> filter(grepl("^UT", pair)) |>
+    transmute(stratum, `n WT` = n_ref, `n KO` = n_alt,
+              `switching WT` = sw_ref, `switching KO` = sw_alt,
+              `% WT` = pct_ref, `% KO` = pct_alt),
+  digits = 2,
+  caption = "Switching rate within strata of each gene's own LPS response magnitude"
+)
+```
+
+::: {.callout-important}
+## The Q2 deficit does not survive its confounder
+Crude odds ratio for switching, KO vs WT: **`r sprintf("%.3f", ut_r$crude_odds_ratio)`**.
+Adjusted for response magnitude (Mantel–Haenszel):
+**`r sprintf("%.3f", ut_r$mh_odds_ratio)`, 95% CI `r sprintf("%.3f–%.3f", ut_r$mh_conf_low, ut_r$mh_conf_high)`,
+p = `r sprintf("%.3f", ut_r$mh_p)`** — not significant. In the two highest-response strata the
+knockout switches slightly *more*.
+
+The supported claim is therefore: **UBL5 loss blunts the LPS response globally by roughly
+half, and reduced isoform switching follows from that.** That is still a real and
+interesting phenotype, but it is a different claim from "UBL5 shapes isoform selection".
+
+**One caveat in the other direction.** Response magnitude is plausibly a *mediator* rather
+than a confounder — if UBL5 loss causes the blunting, adjusting for it removes part of the
+effect being measured. A non-significant adjusted OR shows this design cannot separate the
+two, not that no splicing-specific effect exists.
 :::
+
+The same control run on the HT pair behaves differently, which is reassuring about the
+method: there the difference *strengthens* on adjustment
+(crude OR `r sprintf("%.2f", rmc$crude_odds_ratio[grepl("^HT", rmc$pair)])`,
+MH OR `r sprintf("%.2f", rmc$mh_odds_ratio[grepl("^HT", rmc$pair)])`,
+p = `r sprintf("%.2g", rmc$mh_p[grepl("^HT", rmc$pair)])`). Stratification is not
+mechanically flattening every contrast.
 
 ## Switching genes strongly co-occur between genotypes
 
@@ -563,7 +624,7 @@ kable(
               pct_isg = pct_isg_switching, pct_other = pct_nonisg_switching,
               OR = odds_ratio,
               `95% CI` = sprintf("%.1f – %.1f", conf_low, conf_high),
-              q = signif(p_adj_across_datasets, 3)),
+              q = signif(q_across_all_datasets, 3)),
   digits = 2,
   col.names = c("Dataset", "ISGs tested", "ISGs switching", "% ISGs switching",
                 "% other genes", "OR", "95% CI", "q (BH)"),
@@ -572,9 +633,20 @@ kable(
 ```
 
 **Isoform switching is ~6–7× over-represented among interferon-response genes** in the
-wildtype THP-1 datasets on both references and in the knockout — all surviving BH correction
-across datasets. This is the one clear positive signal in the project, and it is exactly
-where a cursory look suggested it would be.
+wildtype THP-1 datasets and in the knockout. This is the one clear positive signal in the
+project, and it is exactly where a cursory look suggested it would be.
+
+::: {.callout-warning}
+## `T_HT` and `T_UT` agreeing is technical reproducibility, not biological replication
+They are the same libraries (see §6.1), so their two odds ratios are **one biological result
+observed twice** — their switching ISGs overlap 7 of 9 in the union. The independent
+observations are `U_UT` (OR `r sprintf("%.1f", isg$odds_ratio[isg$dataset=="U_UT" & isg$isg_set=="Any IFN"])`)
+and `H_HT`. The `q` column corrects across all rows as if independent and is therefore
+optimistic; `q_within_library_group` is also written to `isg_enrichment.csv`.
+
+Counts are small throughout — 8, 8, 4 and 3 switching ISGs — which is why they are shown
+beside every odds ratio.
+:::
 
 Splitting by interferon type, the **type II (IFN-γ) set carries it**:
 
@@ -583,7 +655,7 @@ Splitting by interferon type, the **type II (IFN-γ) set carries it**:
 kable(
   isg |> filter(isg_set != "Any IFN") |>
     transmute(dataset, isg_set, n_isg_tested, n_isg_switching,
-              OR = odds_ratio, q = signif(p_adj_across_datasets, 3)) |>
+              OR = odds_ratio, q = signif(q_across_all_datasets, 3)) |>
     arrange(isg_set, dataset),
   digits = 2,
   col.names = c("Dataset", "Set", "Tested", "Switching", "OR", "q (BH)"),
@@ -665,6 +737,58 @@ or Interferome — is a tighter definition of an ISG and would likely raise the 
 `isg.custom_set_path` in config takes a CSV of symbols, and nothing else in `07` changes.
 
 # Where the analysis is currently blind
+
+## What replication can possibly look like: the same-sample ceiling
+
+`T_HT` and `T_UT` are **the same six sequencing libraries** quantified against two different
+reference transcriptomes — identical replicate sample names including S-numbers, and
+gene-level expression correlating at r ≈ 0.99 for matched samples. Biological variability
+between them is zero, so every disagreement is annotation plus thresholding. Nothing in the
+project had noted this; it is the best technical control available.
+
+```{r}
+#| label: tbl-refconc
+kable(
+  refc |> transmute(
+    `Symbols testable in both` = n_symbols_testable_in_both,
+    `Switching in T_HT` = n_switching_A, `Switching in T_UT` = n_switching_B,
+    `In both` = n_switching_both, Jaccard = jaccard,
+    `Expected if independent` = expected_overlap_if_independent,
+    `Spearman of max |dIF|` = spearman_max_abs_dif
+  ),
+  digits = 3,
+  caption = "Same libraries, two references"
+)
+```
+
+Agreement is far above chance (`r refc$n_switching_both` shared against
+`r sprintf("%.2f", refc$expected_overlap_if_independent)` expected) and gene-level effect
+sizes track closely (Spearman `r sprintf("%.2f", refc$spearman_max_abs_dif)`). But the
+Jaccard is only **`r sprintf("%.2f", refc$jaccard)`**.
+
+```{r}
+#| label: tbl-refdisc
+kable(
+  read_tab("reference_discordance_reasons_T_HT_vs_T_UT.csv"),
+  col.names = c("Status in the reference that did NOT call it", "Genes"),
+  caption = "Why the same libraries disagree"
+)
+```
+
+Median |dIF| in the non-calling reference is
+`r sprintf("%.3f", refc$median_abs_dif_in_non_calling_reference)` against a 0.15 cutoff, and
+`r sprintf("%.0f%%", refc$pct_discordant_reaching_near_miss)` of discordant genes reach at
+least 0.10. So this is threshold brittleness rather than contradiction — but it means
+**a single-dataset switching call carries roughly a one-in-three chance of not replicating
+under re-annotation alone.**
+
+::: {.callout-important}
+## Judge every replication rate against ~35%, not against 100%
+This reframes numbers reported elsewhere in this document. The 6.1% T→H replication below is
+low against a ceiling of 100%; against a same-sample ceiling of
+`r sprintf("%.0f%%", 100*refc$jaccard)` it is still low, but the gap is far smaller than it
+first appears.
+:::
 
 ## Q1's cross-genotype comparison, now with a proper denominator
 
@@ -825,7 +949,17 @@ cannot demonstrate mechanism.
   power-sensitive.
 - Concordance statistics rest on small matched sets (n = `r utc$n[1]` and `r utc$n[2]`),
   because only isoforms measurable in both contribute.
-- Three replicates per condition.
+- Three replicates per condition. Sample names (`T1_minus`/`T1_plus`) suggest a **paired**
+  design, but nothing in the pipeline passes a blocking factor and `02d`'s noise model pools
+  within-condition SD without using pairing. If the design is genuinely paired, a paired
+  analysis would gain real power at n = 3 — which matters given the abundance floor removes
+  a third to a half of calls. This needs confirming with whoever ran the experiment; it is
+  not safe to infer from filenames, so nothing has been changed.
+- **Switching is tail behaviour, not typical.** Among isoforms above the abundance floor with
+  mid-range fractions, the 99th percentile of |dIF| is 0.147 (T_HT), 0.153 (T_UT), 0.134
+  (U_UT) and 0.201 (H_HT). The 0.15 cutoff sits at roughly the 99th percentile of the whole
+  distribution, so calls come from the extreme tail where estimator error dominates —
+  consistent with the ~35% same-sample agreement above.
 - Pathway enrichment is now implemented (§7) and is largely negative. The one positive
   signal rests on five genes, so it should not be over-read.
 

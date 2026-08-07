@@ -19,6 +19,8 @@ Rscript scripts/02_gene_level_summary.R   # must run after 01
 Rscript scripts/02b_qc_snapshot.R
 Rscript scripts/02c_qc_figures.R
 Rscript scripts/02d_expression_diagnostics.R   # abundance floor + between-group expression
+Rscript scripts/02e_response_magnitude_control.R  # LPS-response confounder for switching rates
+Rscript scripts/02f_reference_concordance.R       # same-sample ceiling across references
 Rscript scripts/03_novel_isoform_analysis.R
 Rscript scripts/04_comparison_T_vs_U.R
 Rscript scripts/06_visualization.R
@@ -80,6 +82,8 @@ All four primary ISA objects were saved after `isoformSwitchTestDEXSeq(reduceToS
 Rules that must hold:
 
 - **Significance comes FROM the context layer** via `load_scoring_table()`, which prefers the context and falls back to the reduced object with a warning. Never take q-values from one object and presence from the other — they are different FDR universes (dIF matched across 966 U_UT isoforms but only 132 q-values did), and that mismatch misclassified genes.
+- **`T_HT` and `T_UT` are the SAME six libraries** under two references (verified from replicate sample names; gene-level r ≈ 0.99). Their agreement is technical reproducibility, never biological replication, and statistics must not treat them as independent. `TCONS_*` ids are assigned per reference and are NOT comparable across them — compare on gene symbols. Same-sample switching Jaccard is 0.35, the ceiling any replication rate should be judged against.
+- **A switching-rate difference between arms needs the response-magnitude control** (`02e`) before it is called a splicing phenotype. The UT deficit does not survive it (crude OR 0.51 → MH 0.77, p = 0.11); the HT one does (2.29 → 2.49).
 - **An abundance floor applies**: `significance.min_gene_expression` (12), derived in `02d` from replicate IF noise versus gene expression. `score_isoforms()` applies it, flags `low_expression`, and keeps `is_switching_before_expr_floor` so the cost is auditable. The floor is on GENE expression — IF is isoform/gene, so gene abundance sets the precision.
 - **With context**, overlap classes say *tested in X, not switching* vs *not detected in X*. **Without it**, they must say *retained / not retained* — the reduced object cannot distinguish tested-and-negative from dropped.
 - **Pathway enrichment (`05`) uses the context layer as its universe.** Never substitute a whole-genome background or the pre-reduced object — the script skips a dataset without a context rather than falling back. Report term counts alongside `pathway_enrichment_driver_summary.csv`: GO/Reactome nesting means a handful of genes can produce ~150 terms.

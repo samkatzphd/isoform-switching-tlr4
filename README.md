@@ -251,6 +251,24 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 - **Writes:** `expression_if_stability`, `expression_floor_recommendation`,
   `expression_between_groups`, figures under `results/figures/expression/`.
 
+### `02e_response_magnitude_control.R` — is a switching deficit just a smaller LPS response?
+
+- Stratifies each gene by its own |log2FC| and asks whether a switching-rate difference
+  survives. **Changes the Q2 conclusion:** the KO's LPS response runs at ~half amplitude
+  (slope 0.52), and the crude switching OR of 0.51 becomes MH OR 0.77 (p = 0.11).
+- Run on both pairs. The HT pair *strengthens* on adjustment (OR 2.29 → 2.49), which is the
+  control showing stratification is not flattening everything.
+- **Writes:** `ut_response_magnitude_{strata,control}.*`, figures under `results/figures/response/`.
+
+### `02f_reference_concordance.R` — the same-sample technical ceiling
+
+- `T_HT` and `T_UT` are **the same six libraries** under two references (verified from
+  replicate sample names; gene-level r ≈ 0.99). All disagreement is annotation + thresholding.
+- Switching-gene Jaccard **0.35** — so a single-dataset call has roughly a one-in-three chance
+  of not replicating under re-annotation. Judge replication rates against this, not 100%.
+- Note `TCONS_*` ids are **not** comparable across references; compare on gene symbols.
+- **Writes:** `reference_{concordance,discordance_reasons,discordant_genes}_*.*`.
+
 ### `03_novel_isoform_analysis.R` — PacBio novelty + HT vs UT contrast
 
 - Contrast novel vs known isoforms (effect sizes, SQANTI-like `class_code`, top novel switching genes/isoforms).

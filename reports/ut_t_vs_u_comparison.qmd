@@ -81,6 +81,18 @@ Read this before the numbers.
 - **Effect sizes are the interpretable quantities.** With thousands of matched isoforms,
   the Wilcoxon p-values below are driven by sample size; the median ΔdIF is what says
   whether knockout shifts isoform usage, and by how much.
+- **The switching deficit in the knockout does not survive its confounder.** The KO's whole
+  LPS response runs at roughly half amplitude (regression slope 0.52, Spearman 0.73 on 8,595
+  genes tested in both). Stratified on each gene's own response magnitude, the crude odds
+  ratio of 0.51 becomes a Mantel–Haenszel OR of 0.77 (95% CI 0.57–1.06, p = 0.11). The
+  supported claim is that **UBL5 loss blunts the LPS response globally and reduced switching
+  follows**, not that UBL5 shapes isoform selection directly. See
+  `results/tables/ut_response_magnitude_control.csv` and the seminar summary. Note the
+  reverse caveat: response magnitude may be a mediator, so this cannot exclude an additional
+  splicing-specific effect.
+- **Replication has a technical ceiling of ~35%.** `T_HT` and `T_UT` are the same libraries
+  under two references; their switching-gene Jaccard is 0.35. Judge the concordance numbers
+  below against that, not against 100%.
 - **Enrichment is now tested against a real background.** The unfiltered UT objects
   supply every quantified isoform, so the co-occurrence test below runs over the ~11k
   genes measured in both datasets rather than the 25 already-significant ones available

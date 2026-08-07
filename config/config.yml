@@ -102,6 +102,8 @@ analysis:
   explorer_max_isoforms: 12  # isoforms shown per gene explorer panel (04)
   threshold_scan: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]  # grid for 00
   expression_floor_snr: 3    # 02d: require |dIF| >= this many replicate-noise SDs
+  response_strata: [0.1, 0.25, 0.5, 1]  # 02e: |log2FC| bin edges for the response control
+  near_miss_floor: 0.10      # 02f: |dIF| above this but below min_abs_dif = a near-miss
 
 # Pathway enrichment (05). The universe is always the tested background from the context
 # layer -- never the whole genome, and never the pre-reduced object.
