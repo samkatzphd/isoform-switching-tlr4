@@ -43,6 +43,7 @@ Configured analysis questions (`config/config.yml` → `analysis_questions`):
 | `reports/_setup.R` | Shared report setup (root discovery, path helpers, caveat callout) |
 | `reports/*.qmd` | Quarto sources; HTML companions committed where rendered |
 | `docs/REVIEW_CHANGES.md` | Review of the original code and every correction made |
+| `docs/AGENT_CONTEXT.md` | Source for the Agent Context system-prompt field |
 | `_quarto.yml` | Shared Quarto defaults (`embed-resources: true`) |
 | `environment.yml` | Optional Conda stack |
 
