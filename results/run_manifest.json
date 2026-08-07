@@ -1,281 +1,379 @@
 {
   "runs": [
-    {
-      "script": "01_load_data.R",
-      "run_at": "2026-08-07T13:50:37+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
-      "r_version": "R version 4.4.1 (2024-06-14)",
-      "platform": "aarch64-apple-darwin20",
-      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-      "significance": {
-        "isoform_q": 0.05,
-        "gene_q": 0.05,
-        "min_abs_dif": 0.15,
-        "require_finite_dif": true
-      },
-      "analysis": {
-        "top_n_genes": 30,
-        "plot_top_n": 30,
-        "gene_panels_per_class": 12,
-        "switch_plots_per_class": 6,
-        "explorer_max_isoforms": 12,
-        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
-      },
-      "inputs": {
-        "T_HT": [
-          {
-            "dataset_key": "T_HT",
-            "dataset_label": "T_HT_anchor",
-            "n_isoforms": 1543,
-            "n_genes": 216,
-            "n_genes_gene_q_significant": 216,
-            "pct_genes_gene_q_significant": 100,
-            "looks_reduced_to_switching_genes": true,
-            "has_unfiltered_context": true,
-            "n_genes_unfiltered": 10907,
-            "pct_genes_significant_unfiltered": 23.32
-          }
-        ],
-        "H_HT": [
-          {
-            "dataset_key": "H_HT",
-            "dataset_label": "H_HT_supplementary",
-            "n_isoforms": 3102,
-            "n_genes": 385,
-            "n_genes_gene_q_significant": 385,
-            "pct_genes_gene_q_significant": 100,
-            "looks_reduced_to_switching_genes": true,
-            "has_unfiltered_context": true,
-            "n_genes_unfiltered": 8160,
-            "pct_genes_significant_unfiltered": 20.53
-          }
-        ],
-        "U_UT": [
-          {
-            "dataset_key": "U_UT",
-            "dataset_label": "U_UT",
-            "n_isoforms": 966,
-            "n_genes": 127,
-            "n_genes_gene_q_significant": 127,
-            "pct_genes_gene_q_significant": 100,
-            "looks_reduced_to_switching_genes": true,
-            "has_unfiltered_context": true,
-            "n_genes_unfiltered": 11969,
-            "pct_genes_significant_unfiltered": 16.43
-          }
-        ],
-        "T_UT": [
-          {
-            "dataset_key": "T_UT",
-            "dataset_label": "T_UT",
-            "n_isoforms": 1769,
-            "n_genes": 248,
-            "n_genes_gene_q_significant": 248,
-            "pct_genes_gene_q_significant": 100,
-            "looks_reduced_to_switching_genes": true,
-            "has_unfiltered_context": true,
-            "n_genes_unfiltered": 11582,
-            "pct_genes_significant_unfiltered": 24.86
-          }
-        ]
+    [
+      {
+        "script": "01_load_data.R",
+        "run_at": "2026-08-07T13:50:37+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+        },
+        "inputs": {
+          "T_HT": [
+            {
+              "dataset_key": "T_HT",
+              "dataset_label": "T_HT_anchor",
+              "n_isoforms": 1543,
+              "n_genes": 216,
+              "n_genes_gene_q_significant": 216,
+              "pct_genes_gene_q_significant": 100,
+              "looks_reduced_to_switching_genes": true,
+              "has_unfiltered_context": true,
+              "n_genes_unfiltered": 10907,
+              "pct_genes_significant_unfiltered": 23.32
+            }
+          ],
+          "H_HT": [
+            {
+              "dataset_key": "H_HT",
+              "dataset_label": "H_HT_supplementary",
+              "n_isoforms": 3102,
+              "n_genes": 385,
+              "n_genes_gene_q_significant": 385,
+              "pct_genes_gene_q_significant": 100,
+              "looks_reduced_to_switching_genes": true,
+              "has_unfiltered_context": true,
+              "n_genes_unfiltered": 8160,
+              "pct_genes_significant_unfiltered": 20.53
+            }
+          ],
+          "U_UT": [
+            {
+              "dataset_key": "U_UT",
+              "dataset_label": "U_UT",
+              "n_isoforms": 966,
+              "n_genes": 127,
+              "n_genes_gene_q_significant": 127,
+              "pct_genes_gene_q_significant": 100,
+              "looks_reduced_to_switching_genes": true,
+              "has_unfiltered_context": true,
+              "n_genes_unfiltered": 11969,
+              "pct_genes_significant_unfiltered": 16.43
+            }
+          ],
+          "T_UT": [
+            {
+              "dataset_key": "T_UT",
+              "dataset_label": "T_UT",
+              "n_isoforms": 1769,
+              "n_genes": 248,
+              "n_genes_gene_q_significant": 248,
+              "pct_genes_gene_q_significant": 100,
+              "looks_reduced_to_switching_genes": true,
+              "has_unfiltered_context": true,
+              "n_genes_unfiltered": 11582,
+              "pct_genes_significant_unfiltered": 24.86
+            }
+          ]
+        }
       }
-    },
-    {
-      "script": "02_gene_level_summary.R",
-      "run_at": "2026-08-07T14:22:46+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
-      "r_version": "R version 4.4.1 (2024-06-14)",
-      "platform": "aarch64-apple-darwin20",
-      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-      "significance": {
-        "isoform_q": 0.05,
-        "gene_q": 0.05,
-        "min_abs_dif": 0.15,
-        "require_finite_dif": true,
-        "min_gene_expression": 12
-      },
-      "analysis": {
-        "top_n_genes": 30,
-        "plot_top_n": 30,
-        "gene_panels_per_class": 12,
-        "switch_plots_per_class": 6,
-        "explorer_max_isoforms": 12,
-        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
-        "expression_floor_snr": 3
+    ],
+    [
+      {
+        "script": "02_gene_level_summary.R",
+        "run_at": "2026-08-07T14:22:46+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true,
+          "min_gene_expression": 12
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+          "expression_floor_snr": 3
+        },
+        "inputs": {
+          "T_HT": null,
+          "H_HT": null,
+          "U_UT": null,
+          "T_UT": null
+        }
       }
-    },
-    {
-      "script": "02c_qc_figures.R",
-      "run_at": "2026-08-07T14:22:48+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
-      "r_version": "R version 4.4.1 (2024-06-14)",
-      "platform": "aarch64-apple-darwin20",
-      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-      "significance": {
-        "isoform_q": 0.05,
-        "gene_q": 0.05,
-        "min_abs_dif": 0.15,
-        "require_finite_dif": true,
-        "min_gene_expression": 12
-      },
-      "analysis": {
-        "top_n_genes": 30,
-        "plot_top_n": 30,
-        "gene_panels_per_class": 12,
-        "switch_plots_per_class": 6,
-        "explorer_max_isoforms": 12,
-        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
-        "expression_floor_snr": 3
+    ],
+    [
+      {
+        "script": "02c_qc_figures.R",
+        "run_at": "2026-08-07T14:22:48+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true,
+          "min_gene_expression": 12
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+          "expression_floor_snr": 3
+        },
+        "inputs": {
+          "T_HT": null,
+          "H_HT": null,
+          "U_UT": null,
+          "T_UT": null
+        }
       }
-    },
-    {
-      "script": "02d_expression_diagnostics.R",
-      "run_at": "2026-08-07T14:22:59+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
-      "r_version": "R version 4.4.1 (2024-06-14)",
-      "platform": "aarch64-apple-darwin20",
-      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-      "significance": {
-        "isoform_q": 0.05,
-        "gene_q": 0.05,
-        "min_abs_dif": 0.15,
-        "require_finite_dif": true,
-        "min_gene_expression": 12
-      },
-      "analysis": {
-        "top_n_genes": 30,
-        "plot_top_n": 30,
-        "gene_panels_per_class": 12,
-        "switch_plots_per_class": 6,
-        "explorer_max_isoforms": 12,
-        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
-        "expression_floor_snr": 3
+    ],
+    [
+      {
+        "script": "02d_expression_diagnostics.R",
+        "run_at": "2026-08-07T14:22:59+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true,
+          "min_gene_expression": 12
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+          "expression_floor_snr": 3
+        },
+        "inputs": {
+          "T_HT": null,
+          "H_HT": null,
+          "U_UT": null,
+          "T_UT": null
+        }
       }
-    },
-    {
-      "script": "03_novel_isoform_analysis.R",
-      "run_at": "2026-08-07T14:23:13+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
-      "r_version": "R version 4.4.1 (2024-06-14)",
-      "platform": "aarch64-apple-darwin20",
-      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-      "significance": {
-        "isoform_q": 0.05,
-        "gene_q": 0.05,
-        "min_abs_dif": 0.15,
-        "require_finite_dif": true,
-        "min_gene_expression": 12
-      },
-      "analysis": {
-        "top_n_genes": 30,
-        "plot_top_n": 30,
-        "gene_panels_per_class": 12,
-        "switch_plots_per_class": 6,
-        "explorer_max_isoforms": 12,
-        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
-        "expression_floor_snr": 3
+    ],
+    [
+      {
+        "script": "03_novel_isoform_analysis.R",
+        "run_at": "2026-08-07T14:23:13+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true,
+          "min_gene_expression": 12
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+          "expression_floor_snr": 3
+        },
+        "inputs": {
+          "T_HT": null,
+          "H_HT": null,
+          "U_UT": null,
+          "T_UT": null
+        }
       }
-    },
-    {
-      "script": "02b_qc_snapshot.R",
-      "run_at": "2026-08-07T14:23:34+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
-      "r_version": "R version 4.4.1 (2024-06-14)",
-      "platform": "aarch64-apple-darwin20",
-      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-      "significance": {
-        "isoform_q": 0.05,
-        "gene_q": 0.05,
-        "min_abs_dif": 0.15,
-        "require_finite_dif": true,
-        "min_gene_expression": 12
-      },
-      "analysis": {
-        "top_n_genes": 30,
-        "plot_top_n": 30,
-        "gene_panels_per_class": 12,
-        "switch_plots_per_class": 6,
-        "explorer_max_isoforms": 12,
-        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
-        "expression_floor_snr": 3
+    ],
+    [
+      {
+        "script": "02b_qc_snapshot.R",
+        "run_at": "2026-08-07T14:23:34+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true,
+          "min_gene_expression": 12
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+          "expression_floor_snr": 3
+        },
+        "inputs": {
+          "T_HT": null,
+          "H_HT": null,
+          "U_UT": null,
+          "T_UT": null
+        }
       }
-    },
-    {
-      "script": "04_comparison_T_vs_U.R",
-      "run_at": "2026-08-07T14:24:49+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
-      "r_version": "R version 4.4.1 (2024-06-14)",
-      "platform": "aarch64-apple-darwin20",
-      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-      "significance": {
-        "isoform_q": 0.05,
-        "gene_q": 0.05,
-        "min_abs_dif": 0.15,
-        "require_finite_dif": true,
-        "min_gene_expression": 12
-      },
-      "analysis": {
-        "top_n_genes": 30,
-        "plot_top_n": 30,
-        "gene_panels_per_class": 12,
-        "switch_plots_per_class": 6,
-        "explorer_max_isoforms": 12,
-        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
-        "expression_floor_snr": 3
+    ],
+    [
+      {
+        "script": "04_comparison_T_vs_U.R",
+        "run_at": "2026-08-07T14:24:49+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true,
+          "min_gene_expression": 12
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+          "expression_floor_snr": 3
+        },
+        "inputs": {
+          "T_HT": null,
+          "H_HT": null,
+          "U_UT": null,
+          "T_UT": null
+        }
       }
-    },
-    {
-      "script": "06_visualization.R",
-      "run_at": "2026-08-07T14:26:07+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
-      "r_version": "R version 4.4.1 (2024-06-14)",
-      "platform": "aarch64-apple-darwin20",
-      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-      "significance": {
-        "isoform_q": 0.05,
-        "gene_q": 0.05,
-        "min_abs_dif": 0.15,
-        "require_finite_dif": true,
-        "min_gene_expression": 12
-      },
-      "analysis": {
-        "top_n_genes": 30,
-        "plot_top_n": 30,
-        "gene_panels_per_class": 12,
-        "switch_plots_per_class": 6,
-        "explorer_max_isoforms": 12,
-        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
-        "expression_floor_snr": 3
+    ],
+    [
+      {
+        "script": "06_visualization.R",
+        "run_at": "2026-08-07T14:26:07+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true,
+          "min_gene_expression": 12
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+          "expression_floor_snr": 3
+        },
+        "inputs": {
+          "T_HT": null,
+          "H_HT": null,
+          "U_UT": null,
+          "T_UT": null
+        }
       }
-    },
-    {
-      "script": "05_pathway_enrichment.R",
-      "run_at": "2026-08-07T14:30:01+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
-      "r_version": "R version 4.4.1 (2024-06-14)",
-      "platform": "aarch64-apple-darwin20",
-      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
-      "significance": {
-        "isoform_q": 0.05,
-        "gene_q": 0.05,
-        "min_abs_dif": 0.15,
-        "require_finite_dif": true,
-        "min_gene_expression": 12
-      },
-      "analysis": {
-        "top_n_genes": 30,
-        "plot_top_n": 30,
-        "gene_panels_per_class": 12,
-        "switch_plots_per_class": 6,
-        "explorer_max_isoforms": 12,
-        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
-        "expression_floor_snr": 3
+    ],
+    [
+      {
+        "script": "05_pathway_enrichment.R",
+        "run_at": "2026-08-07T14:30:01+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true,
+          "min_gene_expression": 12
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+          "expression_floor_snr": 3
+        },
+        "inputs": {
+          "T_HT": null,
+          "H_HT": null,
+          "U_UT": null,
+          "T_UT": null
+        }
       }
-    },
+    ],
+    [
+      {
+        "script": "00_threshold_scan_abs_dif.R",
+        "run_at": "2026-08-07T14:30:03+0200",
+        "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+        "r_version": "R version 4.4.1 (2024-06-14)",
+        "platform": "aarch64-apple-darwin20",
+        "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+        "significance": {
+          "isoform_q": 0.05,
+          "gene_q": 0.05,
+          "min_abs_dif": 0.15,
+          "require_finite_dif": true,
+          "min_gene_expression": 12
+        },
+        "analysis": {
+          "top_n_genes": 30,
+          "plot_top_n": 30,
+          "gene_panels_per_class": 12,
+          "switch_plots_per_class": 6,
+          "explorer_max_isoforms": 12,
+          "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+          "expression_floor_snr": 3
+        },
+        "inputs": {
+          "T_HT": null,
+          "H_HT": null,
+          "U_UT": null,
+          "T_UT": null
+        }
+      }
+    ],
     {
-      "script": "00_threshold_scan_abs_dif.R",
-      "run_at": "2026-08-07T14:30:03+0200",
-      "git_sha": "2fba501fdffcbf4cf9339399401835cc70d7615e",
+      "script": "07_isg_analysis.R",
+      "run_at": "2026-08-07T16:54:59+0200",
+      "git_sha": "39c6e7268a658744d187ba7905c809e0e0ec9c7b",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
       "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
@@ -302,7 +400,8 @@
           0.3
         ],
         "expression_floor_snr": 3
-      }
+      },
+      "isg_set_source": "GO (org.Hs.eg.db, GOALL): GO:0034340 + GO:0060337; GO:0034341"
     }
   ]
 }

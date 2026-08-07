@@ -22,6 +22,7 @@ Rscript scripts/02d_expression_diagnostics.R   # abundance floor + between-group
 Rscript scripts/03_novel_isoform_analysis.R
 Rscript scripts/04_comparison_T_vs_U.R
 Rscript scripts/06_visualization.R
+Rscript scripts/07_isg_analysis.R         # curated interferon gene-set test
 Rscript scripts/00_threshold_scan_abs_dif.R   # optional sensitivity scan
 Rscript scripts/05_pathway_enrichment.R  # GO/Reactome/KEGG; needs context tables
 

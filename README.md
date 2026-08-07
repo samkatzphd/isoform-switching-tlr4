@@ -285,6 +285,19 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
   Result: 82 terms from the 15 shared UT genes, of which **95% of gene-term hits come from
   five chemokines/cytokines**; the two largest genotype-specific sets return nothing.
 
+### `07_isg_analysis.R` — interferon-response gene profile
+
+- Tests a **curated** interferon gene set once per dataset against the same tested
+  background, rather than relying on open GO enrichment (which scatters interferon biology
+  across dozens of nested terms).
+- Default sets from GO via `org.Hs.eg.db` (offline): type I = GO:0034340 + GO:0060337,
+  type II = GO:0034341. Swap in Schoggins/Interferome via `isg.custom_set_path`.
+- **Result:** switching is ~6–7× over-represented among interferon-response genes in `T_HT`,
+  `T_UT` and `U_UT` (all q < 0.01), driven by the type II set. `H_HT` shows no enrichment,
+  though the difference from `T_HT` is not itself significant.
+- **Writes:** `results/tables/isg_{enrichment,gene_profile,switching_genes,pair_profile,pair_summary,effect_size}.*`,
+  figures under `results/figures/isg/`.
+
 ### `06_visualization.R` — HT top switches + T↔H overlap
 
 - Focus on `T_HT` and `H_HT`.

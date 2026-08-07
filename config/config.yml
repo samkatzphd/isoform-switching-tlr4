@@ -116,6 +116,15 @@ pathway:
   run_kegg: true             # needs network access; skipped gracefully if unavailable
   run_reactome: true
 
+# Interferon-stimulated gene analysis (07).
+isg:
+  # NULL = derive sets from GO via org.Hs.eg.db (offline, reproducible):
+  #   Type I  = GO:0034340 + GO:0060337, Type II = GO:0034341
+  # Note these are "response to interferon" terms, which include upstream signalling
+  # components as well as induced effectors. To use a tighter functional list (Schoggins,
+  # Interferome), point this at a CSV with a `gene_name` column and optional `set` column.
+  custom_set_path: null
+
 # Output policy. Every table is written as .rds; the .csv twin is for spreadsheets.
 output:
   csv_twin: true

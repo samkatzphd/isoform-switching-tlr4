@@ -1,0 +1,8 @@
+"pair","dataset_A","dataset_B","status","n_isgs","pct"
+"HT: T vs H","T_HT","H_HT","Switching in H_HT only",1,0.862068965517241
+"HT: T vs H","T_HT","H_HT","Switching in T_HT only",6,5.17241379310345
+"HT: T vs H","T_HT","H_HT","Switching in both",2,1.72413793103448
+"HT: T vs H","T_HT","H_HT","Switching in neither",107,92.2413793103448
+"UT: WT vs UBL5 KO","T_UT","U_UT","Switching in T_UT only",5,3.67647058823529
+"UT: WT vs UBL5 KO","T_UT","U_UT","Switching in both",3,2.20588235294118
+"UT: WT vs UBL5 KO","T_UT","U_UT","Switching in neither",128,94.1176470588235

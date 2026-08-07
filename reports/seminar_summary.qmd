@@ -547,6 +547,123 @@ artefact of comparing expressed genes to unexpressed ones.
 It also fits the picture from §6: the switches that reproduce across conditions are the core
 inflammatory ones; everything else is heterogeneous.
 
+# Interferon-response genes are where this concentrates
+
+Section 7 asked an open question and got a mostly negative answer. This asks a closed one:
+take a curated interferon gene set and test it once per dataset against the same tested
+background. GO's hierarchy scatters interferon biology across dozens of overlapping terms,
+so an open enrichment scan both dilutes and double-counts it.
+
+```{r}
+#| label: tbl-isg
+isg <- read_tab("isg_enrichment.csv")
+kable(
+  isg |> filter(isg_set == "Any IFN") |>
+    transmute(dataset, n_isg_tested, n_isg_switching,
+              pct_isg = pct_isg_switching, pct_other = pct_nonisg_switching,
+              OR = odds_ratio,
+              `95% CI` = sprintf("%.1f – %.1f", conf_low, conf_high),
+              q = signif(p_adj_across_datasets, 3)),
+  digits = 2,
+  col.names = c("Dataset", "ISGs tested", "ISGs switching", "% ISGs switching",
+                "% other genes", "OR", "95% CI", "q (BH)"),
+  caption = "Isoform switching among interferon-response genes vs the tested background"
+)
+```
+
+**Isoform switching is ~6–7× over-represented among interferon-response genes** in the
+wildtype THP-1 datasets on both references and in the knockout — all surviving BH correction
+across datasets. This is the one clear positive signal in the project, and it is exactly
+where a cursory look suggested it would be.
+
+Splitting by interferon type, the **type II (IFN-γ) set carries it**:
+
+```{r}
+#| label: tbl-isgtype
+kable(
+  isg |> filter(isg_set != "Any IFN") |>
+    transmute(dataset, isg_set, n_isg_tested, n_isg_switching,
+              OR = odds_ratio, q = signif(p_adj_across_datasets, 3)) |>
+    arrange(isg_set, dataset),
+  digits = 2,
+  col.names = c("Dataset", "Set", "Tested", "Switching", "OR", "q (BH)"),
+  caption = "Type I versus type II interferon sets"
+)
+```
+
+Type II is significant in all three enriched datasets (OR 8.1, 8.0, 9.8). Type I is
+significant only in `T_HT`.
+
+## Which genes, and how consistent
+
+```{r}
+#| label: tbl-isggenes
+isgsw <- read_tab("isg_switching_genes.csv")
+kable(
+  isgsw |> transmute(dataset, gene_name, isg_class,
+                     max_abs_dif = round(max_abs_dif, 3),
+                     gene_expression = round(gene_expression, 0),
+                     novel_involved),
+  col.names = c("Dataset", "Gene", "Class", "max |dIF|", "Gene expression", "Novel isoform"),
+  caption = "Every interferon-response gene with a qualifying isoform switch"
+)
+```
+
+Two things stand out. The gene identities are highly consistent across datasets — CCL3,
+CCL4, CCL22, IFITM2, GBP1, USP18, RAB7B, SHFL, IFIT1 recur. And **almost every switching ISG
+involves a novel PacBio isoform**; SHFL is the sole exception. Whatever is happening to
+interferon-response genes here is happening on transcript models that a short-read
+annotation would not contain.
+
+## T versus H, and WT versus knockout
+
+```{r}
+#| label: tbl-isgpair
+kable(
+  read_tab("isg_pair_summary.csv") |>
+    filter(status != "Switching in neither") |>
+    transmute(pair, status, n_isgs, pct = round(pct, 1)),
+  col.names = c("Pair", "Status", "ISGs", "% of ISGs tested in both"),
+  caption = "Interferon-response genes with switches, restricted to ISGs tested in both members"
+)
+```
+
+```{r}
+#| label: fig-isgpair
+#| fig-cap: "ISG switching by pair. In the UT arm every knockout ISG switch is shared with wildtype; none is knockout-specific."
+include_graphics(make_fig("isg")("fig_isg_pair_overlap.png"))
+```
+
+In the UT pair the three ISGs switching in the knockout — **CCL22, CCL3, CCL4**, all
+chemokines — are all shared with wildtype, and each is *larger* in the knockout (CCL22
+0.36→0.88, CCL4 0.19→0.32). The five wildtype-only ISGs (GBP1, IFITM2, RAB7B, SHFL, USP18)
+are the non-chemokine arm. Consistent with that, ISG switches in the knockout are markedly
+larger than non-ISG switches there (median |dIF| 0.39 vs 0.19, Wilcoxon p = 0.004) — the
+only dataset where that holds.
+
+::: {.callout-warning}
+## Two tempting patterns that do not survive testing
+Both of these look compelling in the tables and should **not** be claimed:
+
+- **"The knockout loses type I but keeps type II."** Zero type I ISGs switch in `U_UT`, but
+  at that dataset's background rate only 0.28 were expected anyway. Against `T_UT` (3 of 63)
+  the difference gives Fisher p = 0.24 — not distinguishable.
+- **"H doesn't show the ISG signal."** `H_HT` gives OR 1.17 (q = 0.75), but the difference
+  from `T_HT`'s OR 7.0 is p = 0.23. Part of the null is that H has a higher *overall*
+  switching rate (2.08% vs 0.83%), so the same ISG count is less exceptional against its own
+  background.
+
+Counts per cell are single digits. The enrichment itself is solid; the between-dataset
+contrasts are not powered.
+:::
+
+## What would sharpen this
+
+The gene sets here are GO "response to interferon" terms, which include upstream signalling
+components (CDC37, FADD, HDAC4) as well as induced effectors. A functional list — Schoggins
+or Interferome — is a tighter definition of an ISG and would likely raise the odds ratios.
+`isg.custom_set_path` in config takes a CSV of symbols, and nothing else in `07` changes.
+
 # Where the analysis is currently blind
 
 ## Q1's cross-genotype comparison, now with a proper denominator
