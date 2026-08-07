@@ -139,15 +139,25 @@ not be presented as one.
 ```{r}
 #| label: tbl-qc
 kable(
-  qc |> select(dataset, n_genes, n_switching_genes, n_novel_involved, pct_novel_involved),
-  digits = 1,
-  col.names = c("Dataset", "Genes retained", "Switching genes", "Novel-involved", "% novel-involved"),
-  caption = "Genes passing the full switching definition (denominator = genes retained in each object)"
+  qc |> dplyr::select(dataset, n_genes, n_switching_genes, pct_switching_genes,
+                      n_novel_involved, pct_of_switching_genes_novel_involved),
+  digits = 2,
+  col.names = c("Dataset", "Genes tested", "Switching genes", "% of tested",
+                "Novel-involved", "% of switching genes"),
+  caption = "Genes passing the full switching definition, including the abundance floor. Denominator is the TESTED gene set."
 )
 ```
 
-In the wildtype anchor `T_HT`, **`r qc$n_switching_genes[qc$dataset == "T_HT_anchor"]` genes**
-show at least one qualifying isoform switch.
+In the wildtype anchor `T_HT`, **`r qc$n_switching_genes[qc$dataset == "T_HT_anchor"]` of
+`r format(qc$n_genes[qc$dataset == "T_HT_anchor"], big.mark = ",")` tested genes**
+(`r sprintf("%.1f%%", qc$pct_switching_genes[qc$dataset == "T_HT_anchor"])`) show at least
+one qualifying isoform switch.
+
+These counts are lower than earlier versions of this report for two deliberate reasons,
+both documented in `docs/REVIEW_CHANGES.md` §0c: significance now comes from the unfiltered
+objects rather than being mixed across two FDR universes, and an abundance floor
+(gene expression ≥ 12) removes calls where isoform fraction is within replicate noise. About
+half the raw calls came from genes too lowly expressed to estimate a fraction reliably.
 
 ## The top switching genes are bona fide LPS-response genes
 

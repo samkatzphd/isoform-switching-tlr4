@@ -84,6 +84,14 @@ significance:
   # The reduced objects contain no NAs, but the unfiltered ones do (186 and 142
   # NA isoform q), so this is load-bearing for anything using the context layer.
   require_finite_dif: true
+  # Minimum GENE expression for a switching call to be trusted. dIF is a ratio, so at low
+  # gene abundance the isoform fraction is estimated from few reads and swings between
+  # replicates. 02d measures this directly: within-condition IF noise falls with gene
+  # expression, and 12 is where |dIF| = 0.15 reaches ~3x replicate-noise SD in all four
+  # datasets. Below it, a threshold-sized "switch" is within ~2 SD of noise.
+  # Calls below the floor are excluded AND flagged (`low_expression`), so they remain
+  # inspectable in the isoform tables without polluting downstream sets.
+  min_gene_expression: 12
 
 # Analysis knobs that used to be hard-coded inside the scripts.
 analysis:
@@ -93,6 +101,7 @@ analysis:
   switch_plots_per_class: 6  # ISA switchPlots per overlap class (04)
   explorer_max_isoforms: 12  # isoforms shown per gene explorer panel (04)
   threshold_scan: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]  # grid for 00
+  expression_floor_snr: 3    # 02d: require |dIF| >= this many replicate-noise SDs
 
 # Pathway enrichment (05). The universe is always the tested background from the context
 # layer -- never the whole genome, and never the pre-reduced object.

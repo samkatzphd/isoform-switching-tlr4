@@ -2,36 +2,36 @@
 "CCL22","Shared (T and U)","gene_explorer_Shared_T_and_U__01_CCL22.png",0.356333333333333,0.882166666666667
 "NCOA7","Shared (T and U)","gene_explorer_Shared_T_and_U__02_NCOA7.png",0.6734,0.3771
 "IL23A","Shared (T and U)","gene_explorer_Shared_T_and_U__03_IL23A.png",0.313633333333333,0.584466666666667
-"TNFSF4","Shared (T and U)","gene_explorer_Shared_T_and_U__04_TNFSF4.png",0.419966666666667,0.343966666666667
-"KDM6B","Shared (T and U)","gene_explorer_Shared_T_and_U__05_KDM6B.png",0.303933333333333,0.349433333333333
-"MREG","Shared (T and U)","gene_explorer_Shared_T_and_U__06_MREG.png",0.332966666666667,0.308733333333333
-"TMEM52B","Shared (T and U)","gene_explorer_Shared_T_and_U__07_TMEM52B.png",0.248333333333333,0.3242
-"CCL4","Shared (T and U)","gene_explorer_Shared_T_and_U__08_CCL4.png",0.188233333333333,0.317466666666667
-"CCL3","Shared (T and U)","gene_explorer_Shared_T_and_U__09_CCL3.png",0.235966666666667,0.292766666666667
-"RGS19","Shared (T and U)","gene_explorer_Shared_T_and_U__10_RGS19.png",0.2572,0.288566666666667
-"TPMT","Shared (T and U)","gene_explorer_Shared_T_and_U__11_TPMT.png",0.154666666666667,0.2813
-"IPCEF1","Shared (T and U)","gene_explorer_Shared_T_and_U__12_IPCEF1.png",0.275,0.238733333333333
-"PGM5","T-only","gene_explorer_T_only_13_PGM5.png",0.688766666666667,
-"ZNF18","T-only","gene_explorer_T_only_14_ZNF18.png",0.6077,
-"SYTL4","T-only","gene_explorer_T_only_15_SYTL4.png",0.551133333333333,
-"PRKAG2-AS1","T-only","gene_explorer_T_only_16_PRKAG2_AS1.png",0.4897,
-"RBKS","T-only","gene_explorer_T_only_17_RBKS.png",0.4408,
-"LINGO1","T-only","gene_explorer_T_only_18_LINGO1.png",0.4362,
-"CD86","T-only","gene_explorer_T_only_19_CD86.png",0.435666666666667,
-"THAP2","T-only","gene_explorer_T_only_20_THAP2.png",0.4244,
-"HLA-L","T-only","gene_explorer_T_only_21_HLA_L.png",0.424166666666667,
-"TLCD5","T-only","gene_explorer_T_only_22_TLCD5.png",0.403066666666667,
-"NDUFA4L2","T-only","gene_explorer_T_only_23_NDUFA4L2.png",0.383833333333333,
-"KLK1","T-only","gene_explorer_T_only_24_KLK1.png",0.369333333333333,
-"CCDC153","U-only","gene_explorer_U_only_25_CCDC153.png",,0.527466666666667
+"MREG","Shared (T and U)","gene_explorer_Shared_T_and_U__04_MREG.png",0.332966666666667,0.308733333333333
+"CCL4","Shared (T and U)","gene_explorer_Shared_T_and_U__05_CCL4.png",0.188233333333333,0.317466666666667
+"KDM6B","Shared (T and U)","gene_explorer_Shared_T_and_U__06_KDM6B.png",0.303933333333333,0.216866666666667
+"CCL3","Shared (T and U)","gene_explorer_Shared_T_and_U__07_CCL3.png",0.235966666666667,0.292766666666667
+"RGS19","Shared (T and U)","gene_explorer_Shared_T_and_U__08_RGS19.png",0.2572,0.288566666666667
+"TPMT","Shared (T and U)","gene_explorer_Shared_T_and_U__09_TPMT.png",0.154666666666667,0.2813
+"IPCEF1","Shared (T and U)","gene_explorer_Shared_T_and_U__10_IPCEF1.png",0.275,0.238733333333333
+"TMEM63B","Shared (T and U)","gene_explorer_Shared_T_and_U__11_TMEM63B.png",0.2444,0.228933333333333
+"UTS2","Shared (T and U)","gene_explorer_Shared_T_and_U__12_UTS2.png",0.176833333333333,0.2337
+"RBKS","T-only","gene_explorer_T_only_13_RBKS.png",0.4408,
+"CD86","T-only","gene_explorer_T_only_14_CD86.png",0.435666666666667,
+"THAP2","T-only","gene_explorer_T_only_15_THAP2.png",0.4244,
+"LINC02611","T-only","gene_explorer_T_only_16_LINC02611.png",0.4042,
+"RSAD2","T-only","gene_explorer_T_only_17_RSAD2.png",0.3374,
+"KITLG","T-only","gene_explorer_T_only_18_KITLG.png",0.2996,
+"IFITM2","T-only","gene_explorer_T_only_19_IFITM2.png",0.289466666666667,
+"DDX58","T-only","gene_explorer_T_only_20_DDX58.png",0.2854,
+"GFPT2","T-only","gene_explorer_T_only_21_GFPT2.png",0.279833333333333,
+"TFPI2","T-only","gene_explorer_T_only_22_TFPI2.png",0.2711,
+"TIMP3","T-only","gene_explorer_T_only_23_TIMP3.png",0.269066666666667,
+"MRPL39","T-only","gene_explorer_T_only_24_MRPL39.png",0.2652,
+"CCL1","U-only","gene_explorer_U_only_25_CCL1.png",,0.470433333333333
 "FSTL3","U-only","gene_explorer_U_only_26_FSTL3.png",,0.437166666666667
-"TAF12-DT","U-only","gene_explorer_U_only_27_TAF12_DT.png",,0.395266666666667
-"SBNO1-AS1","U-only","gene_explorer_U_only_28_SBNO1_AS1.png",,0.374366666666667
-"LINC00115","U-only","gene_explorer_U_only_29_LINC00115.png",,0.360066666666667
-"CASP6","U-only","gene_explorer_U_only_30_CASP6.png",,0.3327
-"PALS2","U-only","gene_explorer_U_only_31_PALS2.png",,0.3279
-"AQP9","U-only","gene_explorer_U_only_32_AQP9.png",,0.324266666666667
-"IQCN","U-only","gene_explorer_U_only_33_IQCN.png",,0.3154
-"PBX3","U-only","gene_explorer_U_only_34_PBX3.png",,0.309466666666667
-"SPECC1L","U-only","gene_explorer_U_only_35_SPECC1L.png",,0.307266666666667
-"FOLR2","U-only","gene_explorer_U_only_36_FOLR2.png",,0.285033333333333
+"TNFSF4","U-only","gene_explorer_U_only_27_TNFSF4.png",,0.343966666666667
+"AQP9","U-only","gene_explorer_U_only_28_AQP9.png",,0.324266666666667
+"SPECC1L","U-only","gene_explorer_U_only_29_SPECC1L.png",,0.307266666666667
+"ERO1B","U-only","gene_explorer_U_only_30_ERO1B.png",,0.278433333333333
+"CEP104","U-only","gene_explorer_U_only_31_CEP104.png",,0.274566666666667
+"CHST10","U-only","gene_explorer_U_only_32_CHST10.png",,0.267866666666667
+"CD72","U-only","gene_explorer_U_only_33_CD72.png",,0.267066666666667
+"RHOF","U-only","gene_explorer_U_only_34_RHOF.png",,0.266533333333333
+"PELO","U-only","gene_explorer_U_only_35_PELO.png",,0.265833333333333
+"MTUS1","U-only","gene_explorer_U_only_36_MTUS1.png",,0.227866666666667

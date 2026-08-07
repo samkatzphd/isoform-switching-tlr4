@@ -1,8 +1,8 @@
 "analysis","source","n_genes_in","n_genes_mapped","pct_genes_mapped","n_universe_in","n_universe_mapped","pct_universe_mapped","n_terms"
-"T_HT_switching","switching genes in T_HT",127,125,98.4251968503937,10688,10588,99.064371257485,0
-"H_HT_switching","switching genes in H_HT",270,267,98.8888888888889,8063,7984,99.0202158005705,0
-"U_UT_switching","switching genes in U_UT",77,76,98.7012987012987,11560,11451,99.0570934256055,10
-"T_UT_switching","switching genes in T_UT",154,154,100,11213,11109,99.0725051279765,4
-"UT_Shared_T_and_U_","Shared (T and U) (universe = genes tested in both UT arms)",18,18,100,10817,10716,99.0662845520939,148
-"UT_T_only","T-only (universe = genes tested in both UT arms)",120,120,100,10817,10716,99.0662845520939,0
-"UT_U_only","U-only (universe = genes tested in both UT arms)",53,52,98.1132075471698,10817,10716,99.0662845520939,0
+"T_HT_switching","switching genes in T_HT",73,71,97.2602739726027,10688,10588,99.064371257485,3
+"H_HT_switching","switching genes in H_HT",177,174,98.3050847457627,8063,7984,99.0202158005705,0
+"U_UT_switching","switching genes in U_UT",43,43,100,11560,11451,99.0570934256055,27
+"T_UT_switching","switching genes in T_UT",88,88,100,11213,11109,99.0725051279765,7
+"UT_Shared_T_and_U_","Shared (T and U) (universe = genes tested in both UT arms)",15,15,100,10817,10716,99.0662845520939,82
+"UT_T_only","T-only (universe = genes tested in both UT arms)",101,100,99.009900990099,10817,10716,99.0662845520939,0
+"UT_U_only","U-only (universe = genes tested in both UT arms)",41,40,97.5609756097561,10817,10716,99.0662845520939,0

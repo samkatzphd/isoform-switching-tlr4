@@ -1,5 +1,5 @@
-"dataset","n_genes","n_switching_genes","n_novel_involved","pct_novel_involved","genes_are_pre_selected"
-"H_HT_supplementary",385,272,150,38.96,TRUE
-"T_HT_anchor",216,130,54,25,TRUE
-"T_UT",248,163,73,29.44,TRUE
-"U_UT",127,84,42,33.07,TRUE
+"dataset","n_genes","n_switching_genes","n_novel_involved","pct_of_tested_genes_novel_involved","pct_of_switching_genes_novel_involved","pct_switching_genes"
+"H_HT_supplementary",8160,169,101,1.24,59.76,2.07
+"T_HT_anchor",10907,95,47,0.43,49.47,0.87
+"T_UT",11582,118,60,0.52,50.85,1.02
+"U_UT",11969,62,33,0.28,53.23,0.52

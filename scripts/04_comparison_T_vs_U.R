@@ -105,11 +105,11 @@ load_processed <- function(dataset_key) {
   ds <- cfg$datasets[[dataset_key]] %||% NULL
   if (is.null(ds)) stop("Dataset missing from config: ", dataset_key)
   label <- sanitize(as.character(ds$label %||% dataset_key)[1L])
-  rds <- file.path(processed_dir, paste0("isoformFeatures_", label, ".rds"))
-  if (!file.exists(rds)) {
-    stop("Missing processed isoform table: ", rds, " (run scripts/01_load_data.R)")
+  iso <- load_scoring_table(processed_dir, label)
+  if (is.null(iso)) {
+    stop("No scoring table for ", dataset_key, " (run scripts/01_load_data.R)")
   }
-  list(ds = ds, label = label, iso = readRDS(rds))
+  list(ds = ds, label = label, iso = iso)
 }
 
 annotate_isa_for_plotting <- function(isa_obj, processed_iso) {

@@ -78,7 +78,9 @@ top_gene_rows <- list()
 for (rds in iso_files) {
   label <- sub("^isoformFeatures_(.+)\\.rds$", "\\1", basename(rds), perl = TRUE, ignore.case = TRUE)
   message("[", label, "] Scoring isoforms ...")
-  iso <- score_isoforms(readRDS(rds), cfg, dataset_key = label, dataset_label = label)
+  src <- load_scoring_table(processed_dir, label)
+  if (is.null(src)) next
+  iso <- score_isoforms(src, cfg, dataset_key = label, dataset_label = label)
   scored_list[[label]] <- iso
 
   n_iso <- nrow(iso)

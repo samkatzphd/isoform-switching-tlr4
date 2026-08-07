@@ -71,15 +71,30 @@ Configured for **all four datasets** — 10,907 / 8,160 / 11,582 / 11,969 genes 
 objects. `01` and `06` still handle a missing context explicitly, and `06` uses whichever
 side is available rather than requiring both.
 
-**Significance calls never come from the context layer** — it is used for display and
-classification only, so novelty rates in `03` stay comparable between HT and UT. What it
-enables:
+**Significance calls now come FROM the context layer**, via `load_scoring_table()`. They
+previously came from the reduced objects while presence came from the context — two
+different FDR universes, which misclassified genes (see `docs/REVIEW_CHANGES.md` §0c). What
+the context enables:
 
 - Gene explorer panels show **both genotypes for any gene**, whether or not it reached
   significance in each (127 of 145 T-only genes gained a plottable U side).
 - Overlap classes distinguish *tested in the other dataset and not switching* (238
   isoforms) from *not detected there* (30).
 - A co-occurrence test against a genuine background of 11,126 genes quantified in both.
+- A real denominator for every rate, and the abundance floor below.
+
+## Abundance floor for switching calls
+
+`significance.min_gene_expression: 12`. dIF is a ratio, so at low gene abundance the isoform
+fraction is estimated from few reads and swings between replicates.
+`02d_expression_diagnostics.R` measures this: within-condition IF noise (condition fixed, so
+pure noise) against gene expression. Below ~12 a threshold-sized shift sits within ~2 SD of
+replicate noise, and switching calls are ~6x enriched there — a pattern that holds within
+every isoform-count stratum, so it is abundance rather than transcript complexity.
+
+The floor removes roughly a third to a half of prior calls, which is the intent. Excluded
+isoforms are flagged (`low_expression`, `is_switching_before_expr_floor`) rather than
+discarded from the tables, so the cost stays auditable.
 
 ## Getting input files onto the drive without corruption
 
@@ -225,6 +240,14 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 
 - Gene- and isoform-level QC graphics.
 - **Writes:** PNGs under `results/figures/`.
+
+### `02d_expression_diagnostics.R` — abundance floor and between-group expression
+
+- Relates within-condition IF noise to gene expression to derive the floor (see above).
+- Compares baseline expression between the genotypes sharing a reference, to rule out a
+  global power difference behind any "genotype X switches less" claim.
+- **Writes:** `expression_if_stability`, `expression_floor_recommendation`,
+  `expression_between_groups`, figures under `results/figures/expression/`.
 
 ### `03_novel_isoform_analysis.R` — PacBio novelty + HT vs UT contrast
 

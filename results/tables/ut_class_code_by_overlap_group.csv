@@ -1,11 +1,11 @@
 "grp","cc","n","pct_within_group","n_in_group"
-"KO-only","= (matches reference)",53,62.3529411764706,85
-"KO-only","c (contained in reference)",19,22.3529411764706,85
-"KO-only","j (novel junction combination)",7,8.23529411764706,85
-"KO-only","other",6,7.05882352941176,85
-"Shared (both genotypes)","= (matches reference)",18,85.7142857142857,21
-"Shared (both genotypes)","j (novel junction combination)",3,14.2857142857143,21
-"WT-only","= (matches reference)",126,68.8524590163934,183
-"WT-only","c (contained in reference)",34,18.5792349726776,183
-"WT-only","j (novel junction combination)",21,11.4754098360656,183
-"WT-only","other",2,1.09289617486339,183
+"KO-only","= (matches reference)",38,62.2950819672131,61
+"KO-only","c (contained in reference)",17,27.8688524590164,61
+"KO-only","j (novel junction combination)",4,6.55737704918033,61
+"KO-only","other",2,3.27868852459016,61
+"Shared (both genotypes)","= (matches reference)",14,77.7777777777778,18
+"Shared (both genotypes)","j (novel junction combination)",4,22.2222222222222,18
+"WT-only","= (matches reference)",85,68,125
+"WT-only","c (contained in reference)",25,20,125
+"WT-only","j (novel junction combination)",14,11.2,125
+"WT-only","other",1,0.8,125

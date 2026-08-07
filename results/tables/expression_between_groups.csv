@@ -1,0 +1,3 @@
+"reference","dataset_A","dataset_B","n_genes_in_both","median_expr_A","median_expr_B","median_log2_B_over_A","pct_genes_lower_in_B","paired_wilcox_p","note"
+"HT","T_HT","H_HT",7671,40.6150721677121,44.0438196803493,0.0638042621674235,47.4775127102073,2.677049699868e-33,"Large n makes p uninformative; read the median log2 ratio."
+"UT","U_UT","T_UT",11126,42.7767865436102,41.7354777203557,-0.00307219732205821,50.3145784648571,7.03583705164161e-09,"Large n makes p uninformative; read the median log2 ratio."

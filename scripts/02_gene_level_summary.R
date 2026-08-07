@@ -46,8 +46,10 @@ for (rds in fl) {
   } else {
     "unknown"
   }
-  message("Summarizing genes: ", rds, "  [", key, "] ...")
-  iso <- readRDS(rds)
+  message("Summarizing genes: [", key, "] ...")
+  # Prefer the unfiltered context so significance and presence share one FDR universe.
+  iso <- load_scoring_table(in_dir, key)
+  if (is.null(iso)) next
   gtab <- summarize_genes_from_isoform_table(iso, cfg)
   # summarize_genes_from_isoform_table() collapses gene symbols first, so this must
   # hold. It did not before: disagreeing gene_name values split a gene across rows.

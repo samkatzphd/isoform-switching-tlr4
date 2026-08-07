@@ -155,6 +155,72 @@ carries a download/unzip/copy checklist built around that.
 
 ---
 
+## 0c. Significance source and the abundance floor (2026-08-07)
+
+Two corrections that change every switching count, both surfaced by following up a single
+gene (CD86) that looked misclassified.
+
+### The pipeline was mixing two multiple-testing universes
+
+Significance was taken from the reduced objects while presence and effect were taken from
+the unfiltered context. Across the 966 shared U_UT isoforms:
+
+- **dIF identical in all 966** — same model fit
+- **isoform q identical in only 132**; 13 isoforms significant in the reduced object only,
+  16 in the context only
+
+CD86 was the visible symptom: in U it passes every criterion (isoform q 3.6e-3, gene q
+3.6e-3, |dIF| 0.26) yet was called **T-only**, because U's reduced object never retained it.
+
+**Fixed:** `load_scoring_table()` prefers the unfiltered context, and `02`/`03`/`04`/`06`
+all use it, so significance and presence share one FDR universe. The source is reported per
+dataset at run time and falls back to the reduced object with a loud warning.
+
+### Switching calls were concentrated where the estimator is unreliable
+
+dIF is a ratio, so at low gene abundance the isoform fraction is estimated from few reads.
+`02d_expression_diagnostics.R` measures this directly: the within-condition SD of IF across
+replicates (condition fixed, so pure noise) against gene expression.
+
+| gene expression | median within-condition IF SD | 0.15 / SD | % isoforms called switching |
+|---|---|---|---|
+| 2–6 | 0.086 | 1.7 | 1.51 |
+| 6–12 | 0.062 | 2.4 | 1.14 |
+| **12–20** | **0.050** | **3.0** | 0.74 |
+| 31–44 | 0.038 | 3.9 | 0.26 |
+| >274 | 0.017 | 8.6 | 0.24 |
+
+Below gene expression ~12 a threshold-sized "switch" sits within ~2 SD of replicate noise,
+and calls are ~6x enriched there. The pattern holds within every isoform-count stratum, so
+it is abundance and not transcript complexity.
+
+**Floor applied: `significance.min_gene_expression: 12`**, the point where |dIF| = 0.15
+reaches 3x replicate noise in all four datasets. Excluded calls are also flagged
+(`low_expression`, plus `is_switching_before_expr_floor`) so the cost stays visible.
+
+Cost — roughly a third to a half of prior calls, which is the intent:
+
+| dataset | switching isoforms / genes before | after |
+|---|---|---|
+| T_HT | 213 / 169 | 125 / 95 |
+| H_HT | 288 / 258 | 192 / 169 |
+| T_UT | 264 / 219 | 143 / 118 |
+| U_UT | 153 / 128 | 79 / 62 |
+
+CD86 illustrates both fixes: gene expression 15.2 in T but **3.0 in U**, so its U call is now
+excluded as unreliable rather than silently absent. It is still T-only, but for a measured
+reason instead of an artefact of object retention.
+
+### Global power is not the confounder
+
+Worth ruling out, since it is the obvious alternative explanation for "the knockout switches
+less". On the 11,126 genes tested in both UT arms the median log2 expression ratio is
+**0.003** and 50.3% of genes are lower in U — a coin flip. (Paired Wilcoxon p = 7e-9 is
+sample size, not effect.) The HT pair is similar at 0.064. So the between-genotype
+differences are not a depth or library-size artefact.
+
+---
+
 ## 1. Statistics that were not interpretable as reported
 
 ### 1.1 Fisher test removed, not caveated

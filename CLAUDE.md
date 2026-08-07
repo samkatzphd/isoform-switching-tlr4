@@ -18,6 +18,7 @@ Rscript scripts/01_load_data.R            # must run first; writes data/processe
 Rscript scripts/02_gene_level_summary.R   # must run after 01
 Rscript scripts/02b_qc_snapshot.R
 Rscript scripts/02c_qc_figures.R
+Rscript scripts/02d_expression_diagnostics.R   # abundance floor + between-group expression
 Rscript scripts/03_novel_isoform_analysis.R
 Rscript scripts/04_comparison_T_vs_U.R
 Rscript scripts/06_visualization.R
@@ -77,7 +78,8 @@ All four primary ISA objects were saved after `isoformSwitchTestDEXSeq(reduceToS
 
 Rules that must hold:
 
-- **Significance never comes from the context layer.** It supplies isoform fractions, replicate values and presence/absence for display and classification only. Switching calls stay with the primary object, so `03`'s HT-vs-UT novelty denominators stay comparable.
+- **Significance comes FROM the context layer** via `load_scoring_table()`, which prefers the context and falls back to the reduced object with a warning. Never take q-values from one object and presence from the other — they are different FDR universes (dIF matched across 966 U_UT isoforms but only 132 q-values did), and that mismatch misclassified genes.
+- **An abundance floor applies**: `significance.min_gene_expression` (12), derived in `02d` from replicate IF noise versus gene expression. `score_isoforms()` applies it, flags `low_expression`, and keeps `is_switching_before_expr_floor` so the cost is auditable. The floor is on GENE expression — IF is isoform/gene, so gene abundance sets the precision.
 - **With context**, overlap classes say *tested in X, not switching* vs *not detected in X*. **Without it**, they must say *retained / not retained* — the reduced object cannot distinguish tested-and-negative from dropped.
 - **Pathway enrichment (`05`) uses the context layer as its universe.** Never substitute a whole-genome background or the pre-reduced object — the script skips a dataset without a context rather than falling back. Report term counts alongside `pathway_enrichment_driver_summary.csv`: GO/Reactome nesting means a handful of genes can produce ~150 terms.
 - Two kinds of enrichment statistic exist and mean different things: `ut_T_vs_U_background_enrichment` / `ht_T_vs_H_background_enrichment` (valid — 11,126 and 7,671 tested genes) versus the retention accounting (descriptive, 25 already-significant genes, no test). Don't merge them.

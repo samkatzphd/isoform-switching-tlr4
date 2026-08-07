@@ -467,14 +467,11 @@ for (ds_key in target_datasets) {
   }
   ds_label <- as.character(ds$label %||% ds_key)[1L]
   label_clean <- sanitize(ds_label)
-  iso_rds <- file.path(processed_dir, paste0("isoformFeatures_", label_clean, ".rds"))
-  if (!file.exists(iso_rds)) {
-    warning("Processed isoform table missing for ", ds_key, ": ", iso_rds, " (run scripts/01_load_data.R)")
+  iso_tbl <- load_scoring_table(processed_dir, label_clean)
+  if (is.null(iso_tbl)) {
+    warning("No scoring table for ", ds_key, " (run scripts/01_load_data.R)")
     next
   }
-
-  message("[", ds_key, "] Reading ", iso_rds)
-  iso_tbl <- readRDS(iso_rds)
   out <- compute_switching_gene_rank(iso_tbl, ds_key, ds_label)
   ranks <- out$ranks
   iso_scored <- out$iso

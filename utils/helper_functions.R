@@ -385,6 +385,8 @@ score_isoforms <- function(iso, cfg, dataset_key = NA_character_,
   g_q <- as.numeric(sig$gene_q %||% 0.05)
   m_dif <- as.numeric(sig$min_abs_dif %||% 0.0)
   strict_na <- isTRUE(sig$require_finite_dif %||% TRUE)
+  min_gexpr <- suppressWarnings(as.numeric(sig$min_gene_expression %||% 0))
+  if (is.na(min_gexpr)) min_gexpr <- 0
 
   z$q_i <- if (has_iso_q) as.numeric(z$isoform_switch_q_value) else as.numeric(z$gene_switch_q_value)
   z$q_g <- if (has_gene_q) as.numeric(z$gene_switch_q_value) else NA_real_
@@ -406,11 +408,79 @@ score_isoforms <- function(iso, cfg, dataset_key = NA_character_,
     !is.finite(z$dIF_n) | abs(z$dIF_n) >= m_dif
   }
 
-  z$is_switching <- ok_i & ok_g & ok_d
+  # Gene-level abundance floor. dIF is isoform/gene, so it is the GENE's total expression
+  # that sets how precisely the fraction can be estimated -- not the isoform's. Isoforms of
+  # a gene below the floor are excluded from switching calls and flagged, so they stay
+  # inspectable without entering downstream gene sets. See 02d for how the floor is derived.
+  if (all(c("iso_value_1", "iso_value_2") %in% names(z))) {
+    ge <- z |>
+      dplyr::group_by(.data$gene_id) |>
+      dplyr::mutate(
+        gene_expression = sum(as.numeric(.data$iso_value_1), na.rm = TRUE) +
+          sum(as.numeric(.data$iso_value_2), na.rm = TRUE)
+      ) |>
+      dplyr::ungroup()
+    z$gene_expression <- ge$gene_expression
+  } else if (all(c("gene_value_1", "gene_value_2") %in% names(z))) {
+    z$gene_expression <- as.numeric(z$gene_value_1) + as.numeric(z$gene_value_2)
+  } else {
+    z$gene_expression <- NA_real_
+  }
+  z$low_expression <- if (min_gexpr > 0 && any(is.finite(z$gene_expression))) {
+    is.finite(z$gene_expression) & z$gene_expression < min_gexpr
+  } else {
+    FALSE
+  }
+  ok_e <- if (min_gexpr > 0 && any(is.finite(z$gene_expression))) {
+    !(z$low_expression %in% TRUE)
+  } else {
+    rep(TRUE, nrow(z))
+  }
+
+  z$is_switching <- ok_i & ok_g & ok_d & ok_e
   z$is_switching <- replace(z$is_switching, is.na(z$is_switching), FALSE)
+  # Retained so the cost of the floor is always visible, not silently absorbed.
+  z$is_switching_before_expr_floor <- replace(ok_i & ok_g & ok_d, is.na(ok_i & ok_g & ok_d), FALSE)
   z$dataset_key <- dataset_key
   z$dataset_label <- dataset_label
   z
+}
+
+#' @description
+#' Return the table a script should score, preferring the unfiltered context.
+#'
+#' Significance and presence must come from the SAME object. Taking q-values from the
+#' reduced object while taking presence/effect from the unfiltered one mixes two
+#' multiple-testing universes: across 966 shared U_UT isoforms the dIF values are identical
+#' but only 132 isoform q-values match, and 29 isoforms flip across q < 0.05 in one
+#' direction or the other. That mismatch misclassified genes (CD86 was called T-only despite
+#' passing every criterion in U). The context is preferred because its FDR correction spans
+#' the genes actually tested.
+#'
+#' @return the context table when available, else the primary table; the source is recorded
+#'   in the "scoring_source" attribute and should be reported by callers.
+load_scoring_table <- function(processed_dir, label, quiet = FALSE) {
+  ctx <- load_context_table(processed_dir, label, "features")
+  if (!is.null(ctx)) {
+    attr(ctx, "scoring_source") <- "unfiltered context"
+    if (!quiet) {
+      message("  [", label, "] scoring from unfiltered context (", nrow(ctx), " isoforms)")
+    }
+    return(ctx)
+  }
+  p <- file.path(processed_dir, paste0("isoformFeatures_", sanitize(label), ".rds"))
+  if (!file.exists(p)) {
+    return(NULL)
+  }
+  prim <- readRDS(p)
+  attr(prim, "scoring_source") <- "reduced primary object"
+  if (!quiet) {
+    message(
+      "  [", label, "] no context; scoring from the REDUCED object (", nrow(prim),
+      " isoforms). Counts are not comparable with context-scored datasets."
+    )
+  }
+  prim
 }
 
 # ---- Gene-level summary from isoform tibble ------------------------------------------------
@@ -499,12 +569,22 @@ extract_context_tables <- function(isa_obj) {
   }
   features <- f[, keep, drop = FALSE]
 
-  rep_if <- NULL
-  if (is.list(isa_obj) && !is.null(isa_obj[["isoformRepIF"]])) {
-    r <- tibble::as_tibble(isa_obj[["isoformRepIF"]], .name_repair = "unique")
-    if ("isoform_id" %in% names(r)) rep_if <- r
+  grab_rep <- function(slot) {
+    if (!is.list(isa_obj) || is.null(isa_obj[[slot]])) {
+      return(NULL)
+    }
+    r <- tibble::as_tibble(isa_obj[[slot]], .name_repair = "unique")
+    if ("isoform_id" %in% names(r)) r else NULL
   }
-  list(features = features, rep_if = rep_if)
+  # Per-replicate IF and expression. Expression is needed to relate isoform-fraction
+  # instability to abundance -- IF is a ratio, so at low expression it swings wildly and a
+  # large dIF can be pure noise. Without the replicate expression there is no principled
+  # way to set an abundance floor.
+  list(
+    features = features,
+    rep_if = grab_rep("isoformRepIF"),
+    rep_expr = grab_rep("isoformRepExpression")
+  )
 }
 
 #' Load a context table written by 01, or NULL when the dataset has no unfiltered object

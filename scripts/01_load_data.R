@@ -192,9 +192,16 @@ for (k in names(datasets)) {
     # repair them from the same annotation map used for the primary table. Without this the
     # context cannot serve as a gene-symbol universe for pathway enrichment.
     if (!is.null(tx_map) && "gene_name_from_gtf" %in% names(tx_map)) {
+      # Carry the same annotation columns as the primary table. Without oId / class_code the
+      # context cannot support the novelty or structural-class analyses, which matters now
+      # that switching calls are made from the context: ~26% of context-based switching
+      # isoforms are absent from the reduced object and would otherwise have no annotation.
+      ann_cols <- intersect(
+        c("gene_name_from_gtf", novel_id_col, "cmp_ref", "class_code"), names(tx_map)
+      )
       ctx$features <- ctx$features |>
         dplyr::left_join(
-          tx_map[, c("transcript_id", "gene_name_from_gtf"), drop = FALSE],
+          tx_map[, c("transcript_id", ann_cols), drop = FALSE],
           by = c("isoform_id" = "transcript_id")
         )
       isa_name <- as.character(ctx$features$gene_name)
@@ -211,6 +218,9 @@ for (k in names(datasets)) {
         dplyr::n_distinct(ctx$features$gene_id), " context genes now carry a real symbol."
       )
     }
+    ctx$features <- tag_novel_isoforms(
+      ctx$features, col = novel_id_col, prefix = novel_pre, out_name = "is_novel_pacbio"
+    )
     red_unf <- detect_isa_reduction(ctx$features, cfg)
     message(
       "    context: ", nrow(ctx$features), " isoforms / ", red_unf$n_genes, " genes; ",
@@ -225,6 +235,13 @@ for (k in names(datasets)) {
       saveRDS(
         ctx$rep_if,
         file.path(proc, paste0("isoformContextRepIF_", sanitize(key_label), ".rds")),
+        compress = "xz"
+      )
+    }
+    if (!is.null(ctx$rep_expr)) {
+      saveRDS(
+        ctx$rep_expr,
+        file.path(proc, paste0("isoformContextRepExpr_", sanitize(key_label), ".rds")),
         compress = "xz"
       )
     }

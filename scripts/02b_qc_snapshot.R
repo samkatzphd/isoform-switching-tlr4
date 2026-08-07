@@ -69,10 +69,15 @@ for (csv in fl) {
     n_genes = n_genes,
     n_switching_genes = n_switching,
     n_novel_involved = n_novel,
-    pct_novel_involved = round(pct_novel, 2),
-    # Denominator caveat: the input objects are already reduced to significant
-    # switching genes, so n_genes is "genes retained", not "genes tested".
-    genes_are_pre_selected = TRUE,
+    # Denominator is now the TESTED gene set (from the unfiltered context), not the
+    # pre-selected object, so this is a real rate. The old flag said otherwise.
+    pct_of_tested_genes_novel_involved = round(pct_novel, 2),
+    pct_of_switching_genes_novel_involved = if (n_switching > 0L) {
+      round(100 * sum(d$novel_involved & d$n_switching_isoforms > 0, na.rm = TRUE) / n_switching, 2)
+    } else {
+      NA_real_
+    },
+    pct_switching_genes = if (n_genes > 0L) round(100 * n_switching / n_genes, 2) else NA_real_,
     stringsAsFactors = FALSE
   )
 
