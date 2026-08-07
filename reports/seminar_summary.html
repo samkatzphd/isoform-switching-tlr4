@@ -3129,9 +3129,9 @@ Table 11: Composition tests. Exploratory; BH adjustment across the five compari
 </div>
 <p>Three things come out of this, and the second is the one worth remembering:</p>
 <ol type="1">
-<li><p><strong>Composition does differ overall</strong> (omnibus p = 0.045), and the Shared-versus-KO-only contrast is nominally significant (p = 0.010). Neither survives Bonferroni correction across the five tests, and under BH both sit at 0.099. Treat as suggestive.</p></li>
-<li><p><strong>It is not about novel splicing.</strong> The novel-junction (<code>j</code>) fraction is statistically indistinguishable across groups — 14.3% shared, 11.5% WT-only, 8.2% KO-only, with Fisher p = 0.25 and 0.07 for the focused 2×2 tests. Whatever separates a reproducible switch from a genotype-specific one, it is <strong>not</strong> how novel the splicing is.</p></li>
-<li><p><strong>What actually differs is transcript-model completeness.</strong> Contained (<code>c</code>) models — shorter fragments nested inside a reference transcript — make up 18.6% of WT-only and 22.4% of KO-only switches, but <strong>0 of 21</strong> shared switches. With n = 21 the 95% CI on that zero is 0–16.1%, so the difference is real but not tightly bounded.</p></li>
+<li><p><strong>Composition does differ overall</strong> (omnibus p = 0.045), and the Shared-versus-KO-only contrast is p = 0.010. Neither survives Bonferroni correction across the five tests, and under BH both sit at 0.099. Treat as suggestive.</p></li>
+<li><p><strong>It is not about novel splicing.</strong> The novel-junction (<code>j</code>) fraction is statistically indistinguishable across groups — 22.2% shared, 11.2% WT-only, 6.6% KO-only, with Fisher p = 0.25 and 0.07 for the focused 2×2 tests. Whatever separates a reproducible switch from a genotype-specific one, it is <strong>not</strong> how novel the splicing is.</p></li>
+<li><p><strong>What actually differs is transcript-model completeness.</strong> Contained (<code>c</code>) models — shorter fragments nested inside a reference transcript — make up 20.0% of WT-only and 27.9% of KO-only switches, but <strong>0 of 18</strong> shared switches. With n = 18 the 95% CI on that zero is 0–18.5%, so the difference is real but not tightly bounded.</p></li>
 </ol>
 <p>The cautious reading: a fraction of single-genotype switches involve structurally lower-confidence transcript models, and those are exactly the calls that do not reproduce in the other genotype. That is as much a <strong>quality-control observation as a biological one</strong> — it suggests treating <code>c</code>-class genotype-specific switches as the lowest-priority tier for follow-up, and it makes the shared set (all <code>=</code> or <code>j</code>, no fragments) look like the more trustworthy core.</p>
 </section>
@@ -3461,11 +3461,11 @@ Table 14: What actually drives the enriched terms
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>148 terms is not 148 findings
+<span class="screen-reader-only">Warning</span>A big term count is not a big finding
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The shared UT set returns ~150 enriched terms from 18 genes, which looks impressive until you ask which genes produce them. <strong>Eleven</strong> genes appear in any enriched term, and five — <strong>CCL3, CCL4, CCL22, IL23A, TNFSF4</strong> — account for <strong>95%</strong> of all gene-term hits. GO and Reactome are nested hierarchies, so one tight functional module generates dozens of overlapping terms. This is a chemokine/cytokine signal counted many times, not a broad functional program.</p>
+<p>The shared UT set returns 82 enriched terms from 15 genes, which looks impressive until you ask which genes produce them. Only <strong>10</strong> genes appear in any enriched term, and five — <strong>CCL3, CCL4, CCL22, IL23A, UTS2</strong> — account for <strong>95%</strong> of all gene-term hits. GO and Reactome are nested hierarchies, so one tight functional module generates dozens of overlapping terms. This is a chemokine/cytokine signal counted many times, not a broad functional program.</p>
 <p><code>results/tables/pathway_enrichment_driver_summary.csv</code> reports this alongside every term count for exactly this reason.</p>
 </div>
 </div>
@@ -3657,8 +3657,8 @@ Table 17: Both directions, each conditioned on significance once
 </div>
 </div>
 <ul>
-<li>Direction is preserved well above chance in both directions — <strong>81.9%</strong> T→H (86 of 115, binomial p = 9.8e-8) and <strong>64.2%</strong> H→T (183 of 289, p = 6.9e-6).</li>
-<li>But magnitude collapses: median |dIF| of 0.07 and 0.04 in the opposite dataset, with only 18.3% and 8.0% clearing the 0.15 threshold.</li>
+<li>Direction is preserved well above chance in both directions — <strong>81.9%</strong> T→H (86 of 105, binomial p = 2.3e-11) and <strong>64.2%</strong> H→T (115 of 179, p = 0.00017).</li>
+<li>But magnitude collapses: median |dIF| of 0.07 and 0.04 in the opposite dataset, with only 16.2% and 6.7% clearing the 0.15 threshold.</li>
 </ul>
 <p>This is the same signature seen in the UBL5 arm, and more extreme: <strong>direction preserved, magnitude far below the calling threshold.</strong> Whether that reflects genuine genotype-specific attenuation or differences in power between the two runs cannot be settled here — <code>H_HT</code> actually has <em>more</em> significant isoforms overall (192 vs 125), which argues against simple underpowering.</p>
 <p>20 T-significant isoforms are not detected in H at all and remain genuinely uninformative.</p>
@@ -3667,7 +3667,7 @@ Table 17: Both directions, each conditioned on significance once
 <h2 data-number="8.2" class="anchored" data-anchor-id="statistics-that-did-not-survive-scrutiny"><span class="header-section-number">8.2</span> Statistics that did not survive scrutiny</h2>
 <p>Two results reported earlier in the project’s history do not hold up and have been removed or corrected:</p>
 <ul>
-<li>A <strong>Fisher test</strong> of switching co-occurrence with OR 15.0, p = 0.031. Its background was 25 genes, all already significant by construction. Removed; the OR 25.7 result in §6.2 is its legitimate replacement on an 11,126-gene denominator.</li>
+<li>A <strong>Fisher test</strong> of switching co-occurrence with OR 15.0, p = 0.031. Its background was 25 genes, all already significant by construction. Removed; the OR 36.1 result in §6.2 is its legitimate replacement on a 11,126-gene denominator.</li>
 <li>An apparent finding that <strong>shared switches have larger effect sizes</strong> (Kruskal p = 9.3e-5) was an artefact: the shared group was summarised with <code>pmax(WT, KO)</code> while the genotype-specific groups used a single value. With each isoform measured in one genotype, the effect is no longer significant (p = 0.013).</li>
 </ul>
 <p>Both are recorded in <code>docs/REVIEW_CHANGES.md</code> with evidence.</p>

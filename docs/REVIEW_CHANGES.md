@@ -54,6 +54,11 @@ drive for both UT datasets, which is a better outcome: no re-analysis was needed
 
 ## 0b. The unfiltered context layer (added 2026-08-05)
 
+> **Superseded in part by §0c.** The counts in this section were produced while significance
+> still came from the reduced objects and before the abundance floor existed. They are kept
+> as the record of what changed at the time; for current numbers see §0c and the generated
+> tables, which every report reads live.
+
 `*_unfilteredR.Rdata` exports exist on the drive for **both UT datasets** — the same
 analyses without the reduction step:
 

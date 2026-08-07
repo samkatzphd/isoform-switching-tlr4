@@ -77,10 +77,11 @@ different FDR universes, which misclassified genes (see `docs/REVIEW_CHANGES.md`
 the context enables:
 
 - Gene explorer panels show **both genotypes for any gene**, whether or not it reached
-  significance in each (127 of 145 T-only genes gained a plottable U side).
-- Overlap classes distinguish *tested in the other dataset and not switching* (238
-  isoforms) from *not detected there* (30).
-- A co-occurrence test against a genuine background of 11,126 genes quantified in both.
+  significance in each (101 of 102 T-only genes have a plottable U side; 42 of 44 the other way).
+- Overlap classes distinguish *tested in the other dataset and not switching* (180
+  isoforms) from *not detected there* (6).
+- A co-occurrence test against a genuine background of 11,126 genes quantified in both
+  (OR 36.1; the HT pair gives OR 5.4 over 7,671 genes).
 - A real denominator for every rate, and the abundance floor below.
 
 ## Abundance floor for switching calls
@@ -281,7 +282,7 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
   dotplots under `results/figures/pathway/`.
 - The driver tables exist because a term count alone is misleading: GO and Reactome are
   nested hierarchies, so a few genes in one module generate dozens of overlapping terms.
-  Result: ~150 terms from the 18 shared UT genes, of which **95% of gene-term hits come from
+  Result: 82 terms from the 15 shared UT genes, of which **95% of gene-term hits come from
   five chemokines/cytokines**; the two largest genotype-specific sets return nothing.
 
 ### `06_visualization.R` — HT top switches + T↔H overlap

@@ -396,24 +396,39 @@ kable(
 )
 ```
 
+```{r}
+#| label: cc-inline
+pct_of <- function(g, code) {
+  v <- ccg$pct_within_group[ccg$grp == g & grepl(code, ccg$cc, fixed = TRUE)]
+  if (length(v)) v[1] else 0
+}
+n_of <- function(g) ns$n_in_group[ns$grp == g][1]
+n_shared <- n_of("Shared (both genotypes)")
+ci_c <- binom.test(0, n_shared)$conf.int[2] * 100
+```
+
 Three things come out of this, and the second is the one worth remembering:
 
 1. **Composition does differ overall** (omnibus p = `r sprintf("%.3f", cct$p_value[1])`), and
-   the Shared-versus-KO-only contrast is nominally significant
-   (p = `r sprintf("%.3f", cct$p_value[3])`). Neither survives Bonferroni correction across
+   the Shared-versus-KO-only contrast is
+   p = `r sprintf("%.3f", cct$p_value[3])`. Neither survives Bonferroni correction across
    the five tests, and under BH both sit at `r sprintf("%.3f", p.adjust(cct$p_value, "BH")[1])`.
    Treat as suggestive.
 
 2. **It is not about novel splicing.** The novel-junction (`j`) fraction is statistically
-   indistinguishable across groups — 14.3% shared, 11.5% WT-only, 8.2% KO-only, with
+   indistinguishable across groups — `r sprintf("%.1f%%", pct_of("Shared (both genotypes)", "j ("))` shared,
+   `r sprintf("%.1f%%", pct_of("WT-only", "j ("))` WT-only,
+   `r sprintf("%.1f%%", pct_of("KO-only", "j ("))` KO-only, with
    Fisher p = `r sprintf("%.2f", cct$p_value[4])` and `r sprintf("%.2f", cct$p_value[5])`
    for the focused 2×2 tests. Whatever separates a reproducible switch from a
    genotype-specific one, it is **not** how novel the splicing is.
 
 3. **What actually differs is transcript-model completeness.** Contained (`c`) models —
-   shorter fragments nested inside a reference transcript — make up 18.6% of WT-only and
-   22.4% of KO-only switches, but **0 of 21** shared switches. With n = 21 the 95% CI on
-   that zero is 0–16.1%, so the difference is real but not tightly bounded.
+   shorter fragments nested inside a reference transcript — make up
+   `r sprintf("%.1f%%", pct_of("WT-only", "c ("))` of WT-only and
+   `r sprintf("%.1f%%", pct_of("KO-only", "c ("))` of KO-only switches, but
+   **0 of `r n_shared`** shared switches. With n = `r n_shared` the 95% CI on that zero is
+   0–`r sprintf("%.1f%%", ci_c)`, so the difference is real but not tightly bounded.
 
 The cautious reading: a fraction of single-genotype switches involve structurally
 lower-confidence transcript models, and those are exactly the calls that do not reproduce
@@ -497,10 +512,17 @@ if (!is.null(pw_drv)) {
 ```
 
 ::: {.callout-warning}
-## 148 terms is not 148 findings
-The shared UT set returns ~150 enriched terms from 18 genes, which looks impressive until
-you ask which genes produce them. **Eleven** genes appear in any enriched term, and five —
-**CCL3, CCL4, CCL22, IL23A, TNFSF4** — account for **95%** of all gene-term hits. GO and
+## A big term count is not a big finding
+```{r}
+#| label: pw-inline
+shd <- pw_drv[pw_drv$analysis == "UT_Shared_T_and_U_", ]
+shn <- pw_sum$n_genes_in[pw_sum$analysis == "UT_Shared_T_and_U_"]
+```
+
+The shared UT set returns `r shd$n_terms_total` enriched terms from `r shn` genes, which
+looks impressive until you ask which genes produce them. Only **`r shd$n_distinct_driver_genes`**
+genes appear in any enriched term, and five — **`r shd$top_drivers`** — account for
+**`r sprintf("%.0f%%", shd$top5_share_of_gene_hits)`** of all gene-term hits. GO and
 Reactome are nested hierarchies, so one tight functional module generates dozens of
 overlapping terms. This is a chemokine/cytokine signal counted many times, not a broad
 functional program.
@@ -606,14 +628,29 @@ kable(
 )
 ```
 
+```{r}
+#| label: ht-dir
+dirstat <- function(path, a, b, tested) {
+  d <- read_tab(path); d <- d[d[[tested]] %in% c(TRUE, "TRUE"), ]
+  ok <- is.finite(d[[a]]) & is.finite(d[[b]])
+  s <- sum(sign(d[[a]][ok]) == sign(d[[b]][ok])); n <- sum(ok)
+  list(s = s, n = n, p = binom.test(s, n, 0.5)$p.value,
+       pct_pass = 100 * mean(abs(d[[b]][ok]) >= 0.15))
+}
+th_s <- dirstat("isoform_overlap_T_significant_in_H_context.csv", "T_dIF_n", "H_dIF_used", "tested_in_H")
+ht_s <- dirstat("isoform_overlap_H_significant_in_T_context.csv", "H_dIF_n", "T_dIF_used", "tested_in_T")
+```
+
 - Direction is preserved well above chance in both directions —
-  **`r sprintf("%.1f%%", hto$pct_T_significant_same_direction_in_H)`** T→H (86 of 115,
-  binomial p = 9.8e-8) and **`r sprintf("%.1f%%", hto$pct_H_significant_same_direction_in_T)`**
-  H→T (183 of 289, p = 6.9e-6).
+  **`r sprintf("%.1f%%", 100*th_s$s/th_s$n)`** T→H (`r th_s$s` of `r th_s$n`,
+  binomial p = `r sprintf("%.2g", th_s$p)`) and
+  **`r sprintf("%.1f%%", 100*ht_s$s/ht_s$n)`** H→T (`r ht_s$s` of `r ht_s$n`,
+  p = `r sprintf("%.2g", ht_s$p)`).
 - But magnitude collapses: median |dIF| of
   `r sprintf("%.2f", hto$median_abs_H_dIF_for_T_significant)` and
   `r sprintf("%.2f", hto$median_abs_T_dIF_for_H_significant)` in the opposite dataset, with
-  only 18.3% and 8.0% clearing the 0.15 threshold.
+  only `r sprintf("%.1f%%", th_s$pct_pass)` and `r sprintf("%.1f%%", ht_s$pct_pass)`
+  clearing the 0.15 threshold.
 
 This is the same signature seen in the UBL5 arm, and more extreme: **direction preserved,
 magnitude far below the calling threshold.** Whether that reflects genuine genotype-specific
@@ -630,8 +667,9 @@ Two results reported earlier in the project's history do not hold up and have be
 or corrected:
 
 - A **Fisher test** of switching co-occurrence with OR 15.0, p = 0.031. Its background was
-  25 genes, all already significant by construction. Removed; the OR 25.7 result in §6.2 is
-  its legitimate replacement on an 11,126-gene denominator.
+  25 genes, all already significant by construction. Removed; the
+  OR `r sprintf("%.1f", utb$odds_ratio)` result in §6.2 is its legitimate replacement on a
+  `r format(utb$n_genes_tested_in_both, big.mark = ",")`-gene denominator.
 - An apparent finding that **shared switches have larger effect sizes** (Kruskal p = 9.3e-5)
   was an artefact: the shared group was summarised with `pmax(WT, KO)` while the
   genotype-specific groups used a single value. With each isoform measured in one genotype,
