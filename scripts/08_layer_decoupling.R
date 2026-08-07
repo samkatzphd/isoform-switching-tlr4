@@ -33,15 +33,27 @@
 #
 # WHAT THIS SCRIPT DOES INSTEAD
 #
-# A permutation null with the SAME averaging structure as the observed statistic. Each
-# genotype has 6 libraries, 3 per condition. There are choose(6,3)/2 = 10 distinct splits
-# into two groups of three; exactly one is the true condition split, leaving 9 null splits.
-# That is small enough to enumerate exhaustively -- no sampling, no seed.
+# The design is PAIRED: T1_minus and T1_plus are the same biological sample before and after
+# LPS, and likewise for T2/T3, U1-U3, H1-H3. The correct null therefore permutes the
+# condition label WITHIN each pair, not across all six libraries. That removes between-sample
+# variance from the comparison, which is the whole point of having paired samples.
 #
-# For every gene and BOTH layers we compute the observed statistic, the mean and SD of the 9
-# null splits, and a standardised effect (observed - null_mean) / null_sd. The standardised
-# effect is unitless and identically constructed for both layers, so a retention ratio
-# computed from it is a fair comparison. That is the number the two models disagree about.
+# Consequences, both of which shape the implementation:
+#
+# 1. There are 2^3 = 8 sign patterns, collapsing to 4 distinct once a global flip is quotiented
+#    out (a magnitude statistic is unchanged by negating every pair). One is the truth, so
+#    only 3 null patterns exist. That is far too few to estimate a per-gene SD, so the
+#    z-score standardisation used for the unpaired null is not available. This script uses
+#    EXCESS OVER THE NULL MEAN instead -- observed minus the mean of the 3 nulls -- which is
+#    identically constructed for both layers and needs no variance estimate.
+#
+# 2. Per-pair TVD is invariant to swapping that pair, because it is already an absolute
+#    value; using it would produce a null identical to the observed statistic. The splicing
+#    statistic must therefore be the TVD of the MEAN per-pair dIF vector, i.e.
+#    0.5 * sum_j |mean_i (s_i * dIF_ij)|, which does respond to the sign pattern.
+#
+# The unpaired result is reported alongside so the cost of having ignored the pairing is
+# visible rather than asserted.
 
 bt <- c("utils/bootstrap.R", file.path("..", "utils", "bootstrap.R"))
 b_file <- if (any(f <- vapply(bt, file.exists, NA))) { bt[which(f)[1L]] } else { NA_character_ }
@@ -93,81 +105,109 @@ sample_level <- function(k) {
   list(iso = m, samples = samples, cond = cond, gene_ids = unique(m$gene_id))
 }
 
-#' Observed and permutation-null statistics for both layers.
-layer_stats <- function(sl, k) {
+#' Observed and paired-permutation-null statistics for both layers.
+#'
+#' @param paired TRUE for sign-flips within pairs (correct for this design); FALSE for the
+#'   unpaired 3-vs-3 split null, retained only for comparison.
+layer_stats <- function(sl, k, paired = TRUE) {
   m <- sl$iso
   samples <- sl$samples
-  a_true <- samples[sl$cond == "A"]
-  # gene-level expression per sample
   gexp <- m |>
     group_by(.data$gene_id) |>
     summarize(across(all_of(samples), ~ sum(.x, na.rm = TRUE)), .groups = "drop")
   gmat <- as.matrix(gexp[, samples, drop = FALSE])
   rownames(gmat) <- gexp$gene_id
-  # isoform fraction per sample
   gidx <- match(m$gene_id, gexp$gene_id)
-  imat <- as.matrix(m[, samples, drop = FALSE])
-  denom <- gmat[gidx, , drop = FALSE]
-  ifmat <- ifelse(denom > 0, imat / denom, 0)
+  ifmat <- ifelse(gmat[gidx, , drop = FALSE] > 0,
+                  as.matrix(m[, samples, drop = FALSE]) / gmat[gidx, , drop = FALSE], 0)
 
-  splits <- utils::combn(samples, 3, simplify = FALSE)
-  # keep one representative per complementary pair
-  seen <- character()
-  keep <- list()
-  for (s in splits) {
-    key <- paste(sort(s), collapse = "|")
-    ckey <- paste(sort(setdiff(samples, s)), collapse = "|")
-    if (!(ckey %in% seen)) {
-      keep[[length(keep) + 1L]] <- s
-      seen <- c(seen, key)
+  if (paired) {
+    pair <- sub("_(minus|plus)_S[0-9]+$", "", samples)
+    pair <- sub("_(minus|plus)$", "", pair)
+    is_plus <- grepl("_plus", samples, fixed = TRUE)
+    upair <- unique(pair)
+    if (length(upair) < 2L || !all(table(pair) == 2L)) {
+      stop("[", k, "] could not resolve a paired design from sample names: ",
+           paste(samples, collapse = ", "))
     }
-  }
-  is_true <- vapply(keep, function(s) setequal(s, a_true), NA)
+    # per-pair difference (plus - minus)
+    lfc_p <- vapply(upair, function(u) {
+      a <- samples[pair == u & !is_plus]; b <- samples[pair == u & is_plus]
+      log2((gmat[, b] + 1) / (gmat[, a] + 1))
+    }, numeric(nrow(gmat)))
+    dif_p <- vapply(upair, function(u) {
+      a <- samples[pair == u & !is_plus]; b <- samples[pair == u & is_plus]
+      ifmat[, b] - ifmat[, a]
+    }, numeric(nrow(ifmat)))
 
-  stat_for <- function(grpA) {
-    grpB <- setdiff(samples, grpA)
-    lfc <- log2((rowMeans(gmat[, grpB, drop = FALSE]) + 1) /
-                  (rowMeans(gmat[, grpA, drop = FALSE]) + 1))
-    d <- rowMeans(ifmat[, grpB, drop = FALSE]) - rowMeans(ifmat[, grpA, drop = FALSE])
-    tv <- tapply(abs(d), m$gene_id, function(x) 0.5 * sum(x, na.rm = TRUE))
-    list(lfc = abs(lfc), tvd = tv[rownames(gmat)])
+    # sign patterns, quotienting out the global flip by fixing the first pair to +1
+    n_p <- length(upair)
+    grid <- as.matrix(expand.grid(rep(list(c(1, -1)), n_p - 1L)))
+    signs <- cbind(1, grid)
+    stat_for <- function(sv) {
+      e <- abs(as.vector(lfc_p %*% sv) / n_p)
+      d <- as.vector(dif_p %*% sv) / n_p
+      list(lfc = e, tvd = tapply(abs(d), m$gene_id, function(x) 0.5 * sum(x, na.rm = TRUE))[rownames(gmat)])
+    }
+    is_true <- apply(signs, 1, function(sv) all(sv == 1))
+    obs <- stat_for(signs[which(is_true), ])
+    nulls <- lapply(which(!is_true), function(i) stat_for(signs[i, ]))
+  } else {
+    a_true <- samples[sl$cond == "A"]
+    splits <- utils::combn(samples, 3, simplify = FALSE)
+    seen <- character(); keep <- list()
+    for (sp in splits) {
+      ckey <- paste(sort(setdiff(samples, sp)), collapse = "|")
+      if (!(ckey %in% seen)) {
+        keep[[length(keep) + 1L]] <- sp
+        seen <- c(seen, paste(sort(sp), collapse = "|"))
+      }
+    }
+    is_true <- vapply(keep, function(sp) setequal(sp, a_true), NA)
+    stat_for <- function(grpA) {
+      grpB <- setdiff(samples, grpA)
+      lfc <- abs(log2((rowMeans(gmat[, grpB, drop = FALSE]) + 1) /
+                        (rowMeans(gmat[, grpA, drop = FALSE]) + 1)))
+      d <- rowMeans(ifmat[, grpB, drop = FALSE]) - rowMeans(ifmat[, grpA, drop = FALSE])
+      list(lfc = lfc, tvd = tapply(abs(d), m$gene_id, function(x) 0.5 * sum(x, na.rm = TRUE))[rownames(gmat)])
+    }
+    obs <- stat_for(keep[[which(is_true)]])
+    nulls <- lapply(keep[!is_true], stat_for)
   }
 
-  obs <- stat_for(keep[[which(is_true)]])
-  nulls <- lapply(keep[!is_true], stat_for)
   null_lfc <- do.call(cbind, lapply(nulls, `[[`, "lfc"))
   null_tvd <- do.call(cbind, lapply(nulls, `[[`, "tvd"))
-
-  z <- function(o, nm) {
-    mu <- rowMeans(nm, na.rm = TRUE)
-    sdv <- apply(nm, 1, stats::sd, na.rm = TRUE)
-    sdv[!is.finite(sdv) | sdv <= 0] <- NA_real_
-    (o - mu) / sdv
-  }
   tibble(
     dataset = k,
     gene_id = rownames(gmat),
     gene_expression = rowMeans(gmat) * 2,
     obs_lfc = obs$lfc, null_lfc_mean = rowMeans(null_lfc, na.rm = TRUE),
-    z_expression = z(obs$lfc, null_lfc),
+    null_lfc_sd = apply(null_lfc, 1, stats::sd, na.rm = TRUE),
     obs_tvd = obs$tvd, null_tvd_mean = rowMeans(null_tvd, na.rm = TRUE),
-    z_splicing = z(obs$tvd, null_tvd),
-    n_null_splits = ncol(null_lfc)
+    null_tvd_sd = apply(null_tvd, 1, stats::sd, na.rm = TRUE),
+    # Excess over the null mean: identically built for both layers, no variance estimate
+    # needed, which matters because the paired null has only 3 patterns.
+    zE = obs$lfc - rowMeans(null_lfc, na.rm = TRUE),
+    zS = obs$tvd - rowMeans(null_tvd, na.rm = TRUE),
+    n_null_patterns = ncol(null_lfc),
+    null_type = if (paired) "paired (sign-flip within pairs)" else "unpaired (3v3 split)"
   ) |>
     filter(.data$gene_expression >= expr_floor)
 }
 
-message("Computing exhaustive permutation nulls (9 null splits per genotype) ...")
+message("Computing paired permutation nulls (sign-flips within pairs) ...")
 sl_t <- sample_level("T_UT"); sl_u <- sample_level("U_UT")
 if (is.null(sl_t) || is.null(sl_u)) stop("Need context + replicate expression for both UT arms. Run 01.")
-st <- layer_stats(sl_t, "T_UT")
-su <- layer_stats(sl_u, "U_UT")
-message("  null splits enumerated: ", st$n_null_splits[1], " (exact, no sampling)")
+st <- layer_stats(sl_t, "T_UT", paired = TRUE)
+su <- layer_stats(sl_u, "U_UT", paired = TRUE)
+st_up <- layer_stats(sl_t, "T_UT", paired = FALSE)
+su_up <- layer_stats(sl_u, "U_UT", paired = FALSE)
+message("  paired null patterns: ", st$n_null_patterns[1], " | unpaired: ", st_up$n_null_patterns[1])
 
 j <- inner_join(
-  st |> select(.data$gene_id, zE_T = .data$z_expression, zS_T = .data$z_splicing,
+  st |> select(.data$gene_id, zE_T = .data$zE, zS_T = .data$zS,
                oE_T = .data$obs_lfc, oS_T = .data$obs_tvd, nS_T = .data$null_tvd_mean),
-  su |> select(.data$gene_id, zE_U = .data$z_expression, zS_U = .data$z_splicing,
+  su |> select(.data$gene_id, zE_U = .data$zE, zS_U = .data$zS,
                oE_U = .data$obs_lfc, oS_U = .data$obs_tvd, nS_U = .data$null_tvd_mean),
   by = "gene_id"
 ) |>
@@ -193,14 +233,27 @@ ret_s <- boot_ratio(pos(j$zS_T), pos(j$zS_U))
 ret_raw_e <- boot_ratio(j$oE_T, j$oE_U)
 ret_raw_s <- boot_ratio(j$oS_T, j$oS_U)
 
+ju <- inner_join(
+  st_up |> select(.data$gene_id, zE_T = .data$zE, zS_T = .data$zS),
+  su_up |> select(.data$gene_id, zE_U = .data$zE, zS_U = .data$zS),
+  by = "gene_id"
+) |> filter(is.finite(.data$zE_T), is.finite(.data$zE_U), is.finite(.data$zS_T), is.finite(.data$zS_U))
+ret_e_up <- boot_ratio(pos(ju$zE_T), pos(ju$zE_U))
+ret_s_up <- boot_ratio(pos(ju$zS_T), pos(ju$zS_U))
+
 retention <- tibble(
-  layer = c("Expression", "Splicing", "Expression (raw, uncorrected)", "Splicing (raw, uncorrected)"),
-  statistic = c("standardised effect (z)", "standardised effect (z)",
-                "mean |log2FC|", "mean TVD"),
-  retained_in_KO = c(ret_e["ratio"], ret_s["ratio"], ret_raw_e["ratio"], ret_raw_s["ratio"]),
-  ci_low = c(ret_e["lo"], ret_s["lo"], ret_raw_e["lo"], ret_raw_s["lo"]),
-  ci_high = c(ret_e["hi"], ret_s["hi"], ret_raw_e["hi"], ret_raw_s["hi"]),
-  n_genes = nrow(j)
+  layer = c("Expression", "Splicing", "Expression (raw, uncorrected)", "Splicing (raw, uncorrected)",
+            "Expression (UNPAIRED null)", "Splicing (UNPAIRED null)"),
+  statistic = c("excess over paired null", "excess over paired null",
+                "mean |log2FC|", "mean TVD",
+                "excess over unpaired null", "excess over unpaired null"),
+  retained_in_KO = c(ret_e["ratio"], ret_s["ratio"], ret_raw_e["ratio"], ret_raw_s["ratio"],
+                     ret_e_up["ratio"], ret_s_up["ratio"]),
+  ci_low = c(ret_e["lo"], ret_s["lo"], ret_raw_e["lo"], ret_raw_s["lo"],
+             ret_e_up["lo"], ret_s_up["lo"]),
+  ci_high = c(ret_e["hi"], ret_s["hi"], ret_raw_e["hi"], ret_raw_s["hi"],
+              ret_e_up["hi"], ret_s_up["hi"]),
+  n_genes = c(rep(nrow(j), 4), rep(nrow(ju), 2))
 )
 write_table_pair(retention, results_tables, "layer_retention", cfg = cfg)
 print(as.data.frame(retention))
@@ -234,8 +287,15 @@ print(as.data.frame(coupling |> select(-.data$interpretation)))
 # ---- Matched-response subset -------------------------------------------------------------
 # The strictest test: genes whose EXPRESSION response is closely matched between genotypes.
 # If splicing is downstream, matching expression should abolish the splicing difference.
-matched <- j |>
-  filter(.data$zE_T > 2, .data$zE_U > 2, abs(.data$zE_T - .data$zE_U) < 1)
+# Thresholds are QUANTILE-based: the excess-over-null statistic is in natural units
+# (log2 units for expression, TVD units for splicing), so a fixed cutoff is not portable
+# between layers or between the paired and unpaired nulls.
+qsel <- function(x, y, q, tol_mult = 0.5) {
+  tx <- stats::quantile(x, q, na.rm = TRUE); ty <- stats::quantile(y, q, na.rm = TRUE)
+  tol <- tol_mult * stats::sd(c(x, y), na.rm = TRUE)
+  x > tx & y > ty & abs(x - y) < tol
+}
+matched <- j |> filter(qsel(.data$zE_T, .data$zE_U, 0.90))
 mt <- if (nrow(matched) >= 10L) {
   w <- suppressWarnings(stats::wilcox.test(matched$zS_T, matched$zS_U, paired = TRUE))
   tibble(
@@ -253,9 +313,9 @@ mt <- if (nrow(matched) >= 10L) {
 # regression to the mean, not evidence of specificity. What discriminates is whether the
 # deficit is ASYMMETRIC: splicing should be hit harder when matching on expression than
 # expression is when matching on splicing.
-recip <- bind_rows(lapply(c(1.5, 2, 2.5), function(thr) {
-  mE <- j |> filter(.data$zE_T > thr, .data$zE_U > thr, abs(.data$zE_T - .data$zE_U) < 1)
-  mS <- j |> filter(.data$zS_T > thr, .data$zS_U > thr, abs(.data$zS_T - .data$zS_U) < 1)
+recip <- bind_rows(lapply(c(0.80, 0.90, 0.95), function(thr) {
+  mE <- j |> filter(qsel(.data$zE_T, .data$zE_U, thr))
+  mS <- j |> filter(qsel(.data$zS_T, .data$zS_U, thr))
   bind_rows(
     tibble(threshold = thr, matched_on = "expression", compared = "splicing",
            n = nrow(mE),
@@ -284,7 +344,7 @@ p4 <- ggplot(recip, aes(x = factor(.data$threshold), y = .data$ratio_KO_over_WT,
   labs(
     title = "Reciprocal matching: which layer is hit harder?",
     subtitle = "Deficits appear both ways (regression to the mean); the asymmetry is the evidence",
-    x = "Matching threshold (standardised effect in both genotypes)",
+    x = "Matching threshold (quantile of response, in both genotypes)",
     y = "Other layer retained in KO"
   )
 ggsave(file.path(fig_dir, "fig_layer_reciprocal.png"), p4, width = 8, height = 5, dpi = 200)
@@ -343,7 +403,7 @@ print(as.data.frame(baseline))
 
 # ---- Figures ------------------------------------------------------------------------------
 p1 <- ggplot(
-  retention |> filter(!grepl("raw", .data$layer)),
+  retention |> filter(!grepl("raw|UNPAIRED", .data$layer)),
   aes(x = .data$layer, y = 100 * .data$retained_in_KO)
 ) +
   geom_col(fill = "#756bb1", colour = "grey25", width = 0.55) +
@@ -351,7 +411,7 @@ p1 <- ggplot(
   geom_hline(yintercept = 100, linetype = 2, colour = "grey40") +
   labs(
     title = "How much of the wildtype LPS response does the knockout retain?",
-    subtitle = "Standardised effect vs an exhaustive permutation null, identically built for both layers",
+    subtitle = "Excess over a paired permutation null (sign-flips within pairs), identically built for both layers",
     x = NULL, y = "% of wildtype response retained in KO"
   )
 ggsave(file.path(fig_dir, "fig_layer_retention.png"), p1, width = 7.5, height = 5, dpi = 200)
@@ -383,6 +443,48 @@ p3 <- ggplot(baseline, aes(x = .data$contrast)) +
   ) +
   theme(axis.text.x = element_text(angle = 12, hjust = 1))
 ggsave(file.path(fig_dir, "fig_layer_baseline.png"), p3, width = 8, height = 5, dpi = 200)
+
+# ---- Specification sensitivity -----------------------------------------------------------
+# The matched-response result turns out to depend on how the effect is normalised, not on
+# pairing. Standardising by the null SD (a z-score) shows a splicing deficit; subtracting the
+# null mean (excess) does not. With only 3 paired null patterns the SD cannot be estimated
+# reliably, so the z-based version is the less trustworthy of the two -- but the honest
+# summary is that this design cannot resolve the question, and reporting either number alone
+# would overstate what the data support.
+spec <- expand.grid(
+  paired = c(TRUE, FALSE), statistic = c("z (divide by null SD)", "excess (subtract null mean)"),
+  stringsAsFactors = FALSE
+)
+spec_rows <- list()
+for (i in seq_len(nrow(spec))) {
+  a <- layer_stats(sl_t, "T_UT", paired = spec$paired[i])
+  b <- layer_stats(sl_u, "U_UT", paired = spec$paired[i])
+  jj <- inner_join(
+    a |> select(.data$gene_id, oE_T = .data$obs_lfc, nE_T = .data$null_lfc_mean,
+                sdE_T = .data$null_lfc_sd, oS_T = .data$obs_tvd,
+                nS_T = .data$null_tvd_mean, sdS_T = .data$null_tvd_sd),
+    b |> select(.data$gene_id, oE_U = .data$obs_lfc, nE_U = .data$null_lfc_mean,
+                sdE_U = .data$null_lfc_sd, oS_U = .data$obs_tvd,
+                nS_U = .data$null_tvd_mean, sdS_U = .data$null_tvd_sd),
+    by = "gene_id"
+  )
+  use_z <- grepl("^z ", spec$statistic[i])
+  dv <- function(x, sdv) if (use_z) { sdv[!is.finite(sdv) | sdv <= 0] <- NA_real_; x / sdv } else x
+  eT <- dv(jj$oE_T - jj$nE_T, jj$sdE_T); eU <- dv(jj$oE_U - jj$nE_U, jj$sdE_U)
+  sT <- dv(jj$oS_T - jj$nS_T, jj$sdS_T); sU <- dv(jj$oS_U - jj$nS_U, jj$sdS_U)
+  ok <- is.finite(eT) & is.finite(eU) & is.finite(sT) & is.finite(sU)
+  k <- ok & qsel(eT, eU, 0.90)
+  k[is.na(k)] <- FALSE
+  spec_rows[[i]] <- tibble(
+    paired = spec$paired[i], statistic = spec$statistic[i],
+    n_matched = sum(k),
+    splicing_ratio_KO_over_WT = stats::median(sU[k], na.rm = TRUE) / stats::median(sT[k], na.rm = TRUE)
+  )
+}
+spec_tbl <- bind_rows(spec_rows) |>
+  mutate(note = "Result depends on normalisation, not on pairing; see script header.")
+write_table_pair(spec_tbl, results_tables, "layer_specification_sensitivity", cfg = cfg)
+print(as.data.frame(spec_tbl |> select(-.data$note)))
 
 write_run_manifest("08_layer_decoupling.R", cfg, root)
 message("08_layer_decoupling.R: done")

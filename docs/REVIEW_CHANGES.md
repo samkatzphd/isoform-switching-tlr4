@@ -306,6 +306,81 @@ show switching ISG counts (8, 8, 4, 3) beside every odds ratio.
 
 ---
 
+## 0e. Paired design, and what the layer question can actually answer (2026-08-07)
+
+The design was confirmed paired: `T1_minus`/`T1_plus` are the same biological sample before
+and after LPS, likewise T2/T3, U1-U3, H1-H3. `08_layer_decoupling.R` was rebuilt around a
+paired permutation null (sign-flips within pairs).
+
+Two implementation points that are easy to get wrong:
+
+- The paired null has 2^3 = 8 sign patterns, collapsing to 4 up to a global flip, so only
+  **3 null patterns** exist. That cannot support a per-gene SD, so the z-score standardisation
+  used for the unpaired null is unavailable; excess over the null mean is used instead.
+- Per-pair TVD is **invariant** to swapping a pair, being already an absolute value. The
+  splicing statistic must be the TVD of the mean per-pair dIF vector, not the mean of
+  per-pair TVDs, or the null is degenerate and identical to the observed value.
+
+### What is robust
+
+Retention of the wildtype LPS response in the knockout, across all four specifications
+(paired/unpaired x z/excess): **expression 0.59-0.66, splicing 0.64-0.67**. Both layers are
+reduced, by similar amounts, with splicing if anything slightly better retained. The claim
+that splicing is disproportionately lost (16% vs 58%) does not hold under any specification
+tried.
+
+Baseline isoform composition shows no constitutive defect: unstimulated KO-vs-WT TVD is
+0.095 against 0.142 within replicates (ratio 0.67, i.e. below replicate noise), while
+H_HT vs T_HT gives 1.31 -- a positive control that the measure detects real composition
+differences.
+
+### What is not robust, and why that matters
+
+The response-matched comparison -- the analysis that would show a splicing-specific effect --
+depends on the normalisation, not on the pairing:
+
+| paired | statistic | n matched | splicing ratio KO/WT |
+|---|---|---|---|
+| yes | z (divide by null SD) | 128 | 0.40 |
+| no | z (divide by null SD) | 59 | 0.40 |
+| yes | excess (subtract null mean) | 82 | 1.00 |
+| no | excess (subtract null mean) | 81 | 0.78 |
+
+Dividing by the null SD produces a deficit; subtracting the null mean does not. With 3 null
+patterns the SD is essentially unestimable, so the z-based result is the less trustworthy of
+the two -- but the honest conclusion is that **this design cannot resolve whether UBL5 has a
+splicing-specific role**. Reporting either number alone would overstate the evidence. Written
+out as `layer_specification_sensitivity.csv` so the ambiguity is visible rather than buried.
+
+This supersedes the earlier matched-response result (ratio 0.49, p = 4.1e-9) reported from
+the unpaired z-based specification alone.
+
+### The hidden regulatory layer (09_hidden_layer.R)
+
+Independent of the UBL5 question, and robust:
+
+- **Cryptic switchers** -- switching genes whose total output barely moves (|log2FC| < 0.25):
+  19.5% of switchers in T_UT, 29.0% U_UT, 26.3% T_HT, 32.0% H_HT. Includes IRAK3 (gene
+  -0.077, dIF 0.238), SOCS4, SP1, RAB7B, SORT1, LIG1.
+- **Compositional rescue** -- gene output falls while the baseline-dominant isoform holds and
+  minor isoforms collapse: 0.7-2.9% of dropping genes. PENK: gene -0.39, dominant +0.21,
+  minor -1.11, dominant IF 0.48 -> 0.76. Dominance is defined on unstimulated data only;
+  defining it post-LPS selects on the outcome.
+- Both survive re-annotation of the same libraries (cryptic 41% vs 0.31% base rate, 134x;
+  rescue 18% vs 0.25%, 74x). That is robustness to annotation, not biological replication.
+
+### Transcriptome design
+
+HT = T+H transcripts, UT = T+U transcripts, one PacBio run per sample type. So HT and UT are
+different transcript spaces and the earlier "35% technical ceiling" framing was wrong --
+part of that discordance is genuine annotation difference. Detection is symmetric within the
+UT reference (73.4% vs 70.9% of expression on PacBio-novel transcripts in T and U, no
+undetected isoforms in either arm), so the Q2 comparison is not biased by the design.
+Notably, 69-78% of expression sits on PacBio-novel transcripts across all four datasets from
+only 33-39% of isoforms.
+
+---
+
 ## 1. Statistics that were not interpretable as reported
 
 ### 1.1 Fisher test removed, not caveated

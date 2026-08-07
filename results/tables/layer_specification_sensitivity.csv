@@ -1,0 +1,5 @@
+"paired","statistic","n_matched","splicing_ratio_KO_over_WT","note"
+TRUE,"z (divide by null SD)",128,0.401318494366399,"Result depends on normalisation, not on pairing; see script header."
+FALSE,"z (divide by null SD)",59,0.395595319540721,"Result depends on normalisation, not on pairing; see script header."
+TRUE,"excess (subtract null mean)",82,0.996492416598324,"Result depends on normalisation, not on pairing; see script header."
+FALSE,"excess (subtract null mean)",81,0.780250983646323,"Result depends on normalisation, not on pairing; see script header."

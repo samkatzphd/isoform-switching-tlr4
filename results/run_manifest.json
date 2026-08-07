@@ -404,8 +404,8 @@
       "isg_set_source": "GO (org.Hs.eg.db, GOALL): GO:0034340 + GO:0060337; GO:0034341"
     },
     {
-      "script": "08_layer_decoupling.R",
-      "run_at": "2026-08-07T23:26:08+0200",
+      "script": "09_hidden_layer.R",
+      "run_at": "2026-08-07T23:27:42+0200",
       "git_sha": "6a0e3b9be98b89372caf4d2720edb0159b274c1d",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
@@ -426,13 +426,16 @@
         "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
         "expression_floor_snr": 3,
         "response_strata": [0.1, 0.25, 0.5, 1],
-        "near_miss_floor": 0.1
+        "near_miss_floor": 0.1,
+        "cryptic_max_abs_lfc": 0.25,
+        "rescue_min_gene_drop": 0.3,
+        "dominant_min_if": 0.3
       }
     },
     {
-      "script": "09_hidden_layer.R",
-      "run_at": "2026-08-07T23:27:42+0200",
-      "git_sha": "6a0e3b9be98b89372caf4d2720edb0159b274c1d",
+      "script": "08_layer_decoupling.R",
+      "run_at": "2026-08-08T00:10:10+0200",
+      "git_sha": "b81d77f7ec4fe07019b5c1014facdc33f11dc29d",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
       "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
