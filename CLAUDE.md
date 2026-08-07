@@ -89,7 +89,7 @@ Rules that must hold:
 - **Pathway enrichment (`05`) uses the context layer as its universe.** Never substitute a whole-genome background or the pre-reduced object — the script skips a dataset without a context rather than falling back. Report term counts alongside `pathway_enrichment_driver_summary.csv`: GO/Reactome nesting means a handful of genes can produce ~150 terms.
 - Two kinds of enrichment statistic exist and mean different things: `ut_T_vs_U_background_enrichment` / `ht_T_vs_H_background_enrichment` (valid — 11,126 and 7,671 tested genes) versus the retention accounting (descriptive, 25 already-significant genes, no test). Don't merge them.
 
-Full detail in `docs/REVIEW_CHANGES.md` §0, §0b and §0c. `docs/AGENT_CONTEXT.md` holds the
+Full detail in `docs/REVIEW_CHANGES.md`. `docs/STATISTICAL_METHODS.md` explains every method and the traps this project has hit; `docs/OPEN_QUESTIONS.md` lists what is unresolved. Read both before proposing a new analysis. `docs/AGENT_CONTEXT.md` holds the
 condensed version pasted into the project's Agent Context field — if you change an invariant
 here, update that file too so the two do not drift.
 

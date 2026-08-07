@@ -44,6 +44,9 @@ Configured analysis questions (`config/config.yml` → `analysis_questions`):
 | `reports/*.qmd` | Quarto sources; HTML companions committed where rendered |
 | `docs/REVIEW_CHANGES.md` | Review of the original code and every correction made |
 | `docs/AGENT_CONTEXT.md` | Source for the Agent Context system-prompt field |
+| `docs/STATISTICAL_METHODS.md` | Every method used, why it was chosen, and how it can mislead |
+| `docs/OPEN_QUESTIONS.md` | Tests still to run, ranked by what would change a conclusion |
+| `docs/external_review/` | Second external review with its own figures, tables and gene sets |
 | `_quarto.yml` | Shared Quarto defaults (`embed-resources: true`) |
 | `environment.yml` | Optional Conda stack |
 
