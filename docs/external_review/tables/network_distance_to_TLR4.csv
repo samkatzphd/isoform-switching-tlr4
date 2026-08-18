@@ -1,0 +1,9 @@
+gene_set,n,median_degree,obs_mean_distance,degree_matched_null_mean,null_sd,z,p_closer_than_null
+switch_WT,93,9,2.452,2.465,0.096,-0.14,0.488
+switch_KO,37,13,2.27,2.41,0.144,-0.975,0.18
+wt_only_ubl5_dependent,67,10,2.463,2.425,0.113,0.334,0.687
+ko_only,24,16,2.25,2.424,0.182,-0.954,0.198
+shared_switch,13,13,2.308,2.389,0.239,-0.342,0.496
+cryptic,18,16,2.333,2.37,0.206,-0.177,0.564
+class_b,50,20,2.12,2.202,0.103,-0.793,0.258
+class_b_repro,10,16,2.0,2.23,0.228,-1.011,0.178

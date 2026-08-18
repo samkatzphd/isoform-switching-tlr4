@@ -1,6 +1,16 @@
 # External review — findings, corrections, and work to do
 
-External analysis of the isoform-switch-pipeline results, 2026-08-07.
+External analysis of the isoform-switch-pipeline results, 2026-08-07, revised 2026-08-18.
+
+> **Revision 2026-08-18 — read this before anything else.** The GFF3 and transcript FASTA
+> files are now available locally (`gff3/`, `fa/` — both gitignored, 3.9 GB, do not commit).
+> Re-running the event-structure analysis on the project's own annotation, at 100% coverage
+> rather than the 47.6% reachable via Ensembl, **superseded three items in this document.**
+> They are listed in "Superseded — do not implement" as items 3-5. In short: the ISG-sparing
+> claim is withdrawn (it was a ratio artefact), the AFE percentages are replaced, and a
+> reported bimodality in TSS distance was an artefact of mixing two annotations and is
+> retracted. The `FIGURES.md` walkthrough (`figures/F1`-`F5`) reflects the corrected state
+> and is the fastest way in.
 
 **This document supersedes the earlier `REVIEW_HANDOFF.md`.** If that file is in the repo,
 read the "Superseded" section below before implementing anything from it — its headline
@@ -15,12 +25,28 @@ modified. Each figure and claim traces to a CSV in `tables/`.
 ## Contents
 
 ```
-HANDOFF.md                       this file
+HANDOFF.md                       this file — findings and work to do
+FIGURES.md                       narrated walkthrough of F1-F5; start here
+EXPERIMENTS.md                   proposed wet-lab follow-up, with primer designs
+literature_review.md             cited literature grounding both questions
+
 figures/
-  fig_ubl5_mechanism.png         baseline composition, layer asymmetry, matched strata
+  F1_scope.png                   what the data is; reproducibility; cryptic switching
+  F2_ubl5_mechanism.png          baseline composition, layer asymmetry, mediation
+  F3_specificity.png             what the deficit is NOT (three negative controls)
+  F4_event_structure.png         what the switches structurally are (GFF3, 100% coverage)
+  F5_implications.png            assay feasibility and a verdict per question
+
+  fig_gff3_event_structure.png   full event classification + nesting detail
+  fig_ubl5_mechanism.png         earlier version — panels b/c superseded, see item 3
   fig_ubl5_causality.png         annotation control, mediation, pathway concentration
   fig_hidden_layer.png           cryptic switchers and Class B
+  fig_network.png                STRING distance to TLR4, degree-matched null
+  fig_sparing_reanalysis.png     the ISG-sparing reanalysis (see item 3)
   fig_class_codes.png            class-code composition of switching isoforms
+  fig_event_structure.png        SUPERSEDED — Ensembl-only, 47.6% coverage
+  fig_tss_bimodality.png         SUPERSEDED — the retracted bimodality (item 5)
+
 tables/                          one CSV per claim (see "Which table backs which claim")
 gene_sets/                       gene symbol lists + the tested universe, for enrichment
 ```
@@ -80,6 +106,56 @@ Two further corrections to that earlier document:
    merges T+U, so part of that disagreement is genuine annotation-space difference rather
    than measurement noise. The decomposition of the discordance still holds and is still
    useful; the "ceiling" language should not be used.
+
+### Added 2026-08-18
+
+3. **The ISG-sparing claim is withdrawn.** Finding 3 below reports that interferon-response
+   and LPS-responsive genes retain *more* splicing response in the KO than the transcriptome
+   average (63% and 48% vs 37%), and reads this as those pathways being spared. That is an
+   artefact of expressing everything as a ratio. On the **absolute** scale the same genes
+   lose *more* response, not less (ISG 0.0121, LPS-responsive 0.0102, transcriptome 0.0081 —
+   `tables/sparing_relative_vs_absolute.csv`). Conditioning on expression, LPS-responsiveness
+   survives (p = 0.002) but **ISG status does not** (p = 0.27) —
+   `tables/sparing_conditioned_on_expression.csv`. Report both scales or neither; do not
+   claim an interferon-specific effect. `figures/F3_specificity.png` panels a-b show this
+   directly; `fig_sparing_reanalysis.png` is the full version.
+
+4. **The AFE percentages are replaced.** An earlier pass classified switching events using
+   Ensembl exon structures for the `=`-class isoforms only — 68 of 143 events, 47.6%. With
+   `gff3/U_T.gff3` every event is resolvable (143/143, and 78/78 in the KO). The corrected
+   numbers, from `tables/event_structure_summary_gff3.csv`:
+
+   | | Ensembl subset | **full GFF3** |
+   |---|---|---|
+   | naive "first exon differs" | 97.1% | **98.6%** |
+   | true alternative promoter (disjoint, >1 kb) | 51.5% | **69.2%** |
+   | **pure promoter switch (no internal change)** | 10.3% | **21.7%** |
+   | involves internal junction change | 69.1% | **59.4%** |
+
+   Four-way classification of all 143 WT events: 47.6% promoter change **plus** internal
+   splicing, 21.7% pure promoter switch, 18.9% other terminal, 11.9% internal splicing only.
+   So Robinson's alternative-first-exon concern applies to ~22% of events, not ~50%, and the
+   majority still involve genuine internal junction changes. Per-event flags are in
+   `tables/event_structure_WT_gff3.csv` / `..._KO_gff3.csv`.
+
+   The two Ensembl-derived tables (`event_structure_WT.csv`, `..._KO.csv`, and the `_modes`
+   variants) are kept for the record only. **Use the `_gff3` tables.**
+
+5. **A reported bimodality in TSS distance is retracted.** On the Ensembl subset the
+   distribution of TSS distance between switch partners appeared bimodal (Hartigan dip
+   p = 0.008, modes at ~85 bp and ~37 kb, antimode 2.7 kb), and a 2.7 kb cutoff was proposed
+   as a data-derived threshold. On complete annotation the distribution is **unimodal**
+   (dip p = 0.99, median 12,679 bp). The cause is not the added events — those have identical
+   mode composition (Fisher p = 1.0) — but disagreement between the two annotations:
+   Spearman 0.649 on TSS distance, 14 of 68 events differing more than 5-fold, and the same
+   switch partner selected in only 57% of cases. The merged reference redefines 5' ends from
+   PacBio reads and contains isoforms Ensembl lacks.
+
+   **Do not implement the 2.7 kb threshold.** Use `>1 kb` with disjoint first exons as the
+   alternative-promoter criterion, which is annotation-independent. Also retracted: a
+   claimed association between UBL5-dependence and promoter proximity (Fisher p = 0.31 once
+   classified by mode rather than tested on the continuous scale), and any claim that UBL5
+   loss preferentially removes internal-splicing events (59% vs 51%, Fisher p = 0.26).
 
 ---
 
@@ -171,6 +247,12 @@ decoupled**, not which is upstream.
 ---
 
 ## Finding 3 — The deficit is transcriptome-wide, not LPS-pathway-specific
+
+> **Partly superseded — see item 3 in "Superseded".** The headline conclusion (the deficit
+> is transcriptome-wide, not LPS-pathway-specific) stands and is strengthened. The
+> "spared / retain more" reading of the table below does **not**: it is an artefact of the
+> ratio scale. On the absolute scale these genes lose more response, and the ISG-specific
+> effect vanishes once expression is controlled for (p = 0.27).
 
 If UBL5 were required specifically for an LPS-induced splicing program, the deficit should
 concentrate in LPS-responsive genes. It does the opposite:
@@ -430,6 +512,15 @@ those columns are undefined rather than zero.
   0.0496 (H vs T); mediation 36.3% / 63.7%; Class B reproduction 11 of 47 testable (23.4%)
   vs 0.52% base rate, 11 of 56 total;
   class `j` OR 0.61.
+- Added 2026-08-18. Event structure, from `gff3/U_T.gff3` at 143/143 WT events: pure promoter
+  switch 21.7%, internal junction change 59.4%, true alternative promoter 69.2%, median TSS
+  distance 12,679 bp, Hartigan dip p = 0.99 (unimodal). Absolute-scale sparing: ISG loss
+  0.0121 vs transcriptome 0.0081. Nesting: 5 of 7 candidate isoforms nested, 6 of 7
+  unassayable by qPCR, IRAK3 `TCONS_00065141` amplified by 1 of 315,349 transcripts.
+- No stale threshold: `grep -rn "2700\|2\.7 kb" scripts/ reports/` returns nothing (the
+  retracted antimode cutoff — item 5).
+- `gff3/` and `fa/` stay untracked: `git check-ignore -q gff3/U_T.gff3 fa/transcripts_U-T.fa`
+  exits 0. These are 3.9 GB and must never enter the repo.
 - Every regenerated report renders with images embedded (the HT report had 0 once).
 - `git diff --cached --name-only` after any bulk add: no `.Rdata`.
 

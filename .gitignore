@@ -4,6 +4,15 @@
 *.RData
 *_Unfiltered_*/
 
+# Reference annotation and transcript FASTAs copied in from the external drive.
+# gff3/ is 1.1 GB and fa/ is 2.8 GB — same reason as above, never commit these.
+gff3/
+fa/
+*.gff3
+*.gtf
+*.fa
+*.fasta
+
 # R
 .Rhistory
 .RData

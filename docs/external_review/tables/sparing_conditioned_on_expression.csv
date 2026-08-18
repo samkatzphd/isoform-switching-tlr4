@@ -1,0 +1,7 @@
+"term","estimate","se","t","p","model"
+"(Intercept)",0.008266,0.002009,4.115,3.906e-05,"deficit ~ expression + LPS-responsive"
+"log10(gexpr + 1)",-0.0006472,0.0009801,-0.6603,0.5091,"deficit ~ expression + LPS-responsive"
+"lps_respTRUE",0.003216,0.001035,3.108,0.001889,"deficit ~ expression + LPS-responsive"
+"(Intercept)",0.009651,0.001968,4.903,9.616e-07,"deficit ~ expression + ISG"
+"log10(gexpr + 1)",-0.0008374,0.000983,-0.8519,0.3943,"deficit ~ expression + ISG"
+"is_isgTRUE",0.004388,0.004002,1.096,0.2729,"deficit ~ expression + ISG"

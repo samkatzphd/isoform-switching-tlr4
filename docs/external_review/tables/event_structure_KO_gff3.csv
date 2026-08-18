@@ -1,0 +1,1015 @@
+gene,isoform,partner,dIF,partner_dIF,gene_expression,first_exon_differs,last_exon_differs,internal_junction_differs,first_exons_disjoint,last_exons_disjoint,tss_distance_bp,tes_distance_bp,same_tss_id,n_exons_sw,n_exons_partner,cc_sw,cc_partner,event_class
+AQP9,TCONS_00098383,TCONS_00098382,0.324266666666667,-0.180766666666667,"<bound method Series.ge of gname                      AQP9
+gene_id             XLOC_017653
+isoform_id       TCONS_00098383
+oId           ENST00000219919.9
+cc                            =
+dIF                    0.324267
+is_sw                      True
+ge                    12.304016
+v1                     0.959576
+v2                     9.470386
+IF1                      0.5687
+IF2                    0.892967
+Name: 147, dtype: object>",True,True,True,False,True,118,39016,False,6,2,=,=,internal_splicing_only
+BCL2A1,TCONS_00107515,TCONS_00104072,-0.175433333333333,0.0835666666666666,"<bound method Series.ge of gname                 BCL2A1
+gene_id          XLOC_018964
+isoform_id    TCONS_00107515
+oId                PB.6818.6
+cc                         c
+dIF                -0.175433
+is_sw                   True
+ge                302.259333
+v1                 14.829121
+v2                 24.905869
+IF1                   0.2735
+IF2                 0.098067
+Name: 152, dtype: object>",True,True,False,False,True,138,10008,False,1,2,c,=,terminal_other
+BTBD19,TCONS_00003380,TCONS_00003382,-0.190133333333333,0.0831666666666667,"<bound method Series.ge of gname                    BTBD19
+gene_id             XLOC_000716
+isoform_id       TCONS_00003380
+oId           ENST00000450269.6
+cc                            =
+dIF                   -0.190133
+is_sw                      True
+ge                    16.574487
+v1                     4.873461
+v2                     3.564884
+IF1                      0.6121
+IF2                    0.421967
+Name: 0, dtype: object>",True,False,True,False,False,73,0,True,8,4,=,=,internal_splicing_only
+CBR3,TCONS_00192649,TCONS_00195577,-0.175933333333333,0.175933333333333,"<bound method Series.ge of gname                      CBR3
+gene_id             XLOC_033984
+isoform_id       TCONS_00192649
+oId           ENST00000290354.6
+cc                            =
+dIF                   -0.175933
+is_sw                      True
+ge                    20.956461
+v1                     5.367021
+v2                     6.589191
+IF1                      0.6803
+IF2                    0.504367
+Name: 259, dtype: object>",True,True,False,True,False,2768,3,False,3,2,=,c,pure_promoter_switch
+CBR3,TCONS_00195577,TCONS_00192649,0.175933333333333,-0.175933333333333,"<bound method Series.ge of gname                   CBR3
+gene_id          XLOC_033984
+isoform_id    TCONS_00195577
+oId               PB.11995.1
+cc                         c
+dIF                 0.175933
+is_sw                   True
+ge                 20.956461
+v1                  2.561971
+v2                  6.438277
+IF1                   0.3197
+IF2                 0.495633
+Name: 260, dtype: object>",True,True,False,True,False,2768,3,False,2,3,c,=,pure_promoter_switch
+CCL1,TCONS_00130534,TCONS_00138253,0.470433333333333,-0.474166666666667,"<bound method Series.ge of gname                   CCL1
+gene_id          XLOC_023526
+isoform_id    TCONS_00130534
+oId                PB.5407.1
+cc                         =
+dIF                 0.470433
+is_sw                   True
+ge                168.396613
+v1                    6.4781
+v2                146.381413
+IF1                   0.4776
+IF2                 0.948033
+Name: 215, dtype: object>",False,True,False,False,False,0,1,True,3,4,=,k,terminal_other
+CCL22,TCONS_00111382,TCONS_00119223,0.882166666666667,-0.779966666666667,"<bound method Series.ge of gname                  CCL22
+gene_id          XLOC_020026
+isoform_id    TCONS_00111382
+oId                PB.4996.2
+cc                         =
+dIF                 0.882167
+is_sw                   True
+ge                 16.115851
+v1                       0.0
+v2                 13.291151
+IF1                      0.0
+IF2                 0.882167
+Name: 158, dtype: object>",True,True,False,True,False,905,2,False,3,4,=,j,terminal_other
+CCL22,TCONS_00119223,TCONS_00111382,-0.779966666666667,0.882166666666667,"<bound method Series.ge of gname                  CCL22
+gene_id          XLOC_020026
+isoform_id    TCONS_00119223
+oId                PB.6379.3
+cc                         j
+dIF                -0.779967
+is_sw                   True
+ge                 16.115851
+v1                  0.961053
+v2                  1.285114
+IF1                 0.864233
+IF2                 0.084267
+Name: 159, dtype: object>",True,True,False,True,False,905,2,False,4,3,j,=,terminal_other
+CCL3,TCONS_00130712,TCONS_00130722,-0.258266666666667,0.292766666666667,"<bound method Series.ge of gname                   CCL3
+gene_id          XLOC_023567
+isoform_id    TCONS_00130712
+oId                PB.5431.1
+cc                         =
+dIF                -0.258267
+is_sw                   True
+ge               3111.072481
+v1                 65.848057
+v2               1672.894486
+IF1                 0.811667
+IF2                   0.5534
+Name: 218, dtype: object>",True,True,False,True,True,106591,106614,False,3,3,=,=,pure_promoter_switch
+CCL3,TCONS_00130722,TCONS_00130712,0.292766666666667,-0.258266666666667,"<bound method Series.ge of gname                   CCL3
+gene_id          XLOC_023567
+isoform_id    TCONS_00130722
+oId               PB.5431.20
+cc                         =
+dIF                 0.292767
+is_sw                   True
+ge               3111.072481
+v1                  6.907571
+v2               1146.757633
+IF1                   0.0843
+IF2                 0.377067
+Name: 221, dtype: object>",True,True,False,True,True,106591,106614,False,3,3,=,=,pure_promoter_switch
+CCL4,TCONS_00123817,TCONS_00123834,-0.317466666666667,0.2781,"<bound method Series.ge of gname                   CCL4
+gene_id          XLOC_022194
+isoform_id    TCONS_00123817
+oId                PB.5430.1
+cc                         =
+dIF                -0.317467
+is_sw                   True
+ge                3751.64932
+v1                 62.037835
+v2               1985.356473
+IF1                   0.8601
+IF2                 0.542633
+Name: 187, dtype: object>",True,True,False,True,True,107232,107257,False,3,3,=,=,pure_promoter_switch
+CCL4,TCONS_00123834,TCONS_00123817,0.2781,-0.317466666666667,"<bound method Series.ge of gname                   CCL4
+gene_id          XLOC_022194
+isoform_id    TCONS_00123834
+oId               PB.5430.21
+cc                         =
+dIF                   0.2781
+is_sw                   True
+ge                3751.64932
+v1                  6.140215
+v2               1348.997244
+IF1                 0.085467
+IF2                 0.363567
+Name: 195, dtype: object>",True,True,False,True,True,107232,107257,False,3,3,=,=,pure_promoter_switch
+CD72,TCONS_00303549,TCONS_00303548,-0.267066666666667,0.0975666666666667,"<bound method Series.ge of gname                   CD72
+gene_id          XLOC_054071
+isoform_id    TCONS_00303549
+oId               PB.17791.2
+cc                         j
+dIF                -0.267067
+is_sw                   True
+ge                 12.010973
+v1                  6.041481
+v2                  0.747044
+IF1                 0.614167
+IF2                   0.3471
+Name: 407, dtype: object>",True,True,True,False,True,28,39314,True,2,9,j,j,internal_splicing_only
+CDK10,TCONS_00113524,TCONS_00113525,0.1758,-0.0461666666666667,"<bound method Series.ge of gname                     CDK10
+gene_id             XLOC_020411
+isoform_id       TCONS_00113524
+oId           ENST00000625631.1
+cc                            =
+dIF                      0.1758
+is_sw                      True
+ge                    67.159355
+v1                          0.0
+v2                     6.168723
+IF1                         0.0
+IF2                      0.1758
+Name: 167, dtype: object>",False,True,True,False,True,0,5760,True,2,11,=,=,internal_splicing_only
+CDRT1,TCONS_00135886,TCONS_00136650,0.1623,-0.0795333333333333,"<bound method Series.ge of gname                  CDRT1
+gene_id          XLOC_023226
+isoform_id    TCONS_00135886
+oId                PB.6772.3
+cc                         c
+dIF                   0.1623
+is_sw                   True
+ge                 13.265649
+v1                  1.504314
+v2                  3.383394
+IF1                 0.274067
+IF2                 0.436367
+Name: 213, dtype: object>",True,True,True,True,False,19127,2,False,6,3,c,c,promoter_plus_internal
+CEP104,TCONS_00011740,TCONS_00011751,0.274566666666667,-0.228466666666667,"<bound method Series.ge of gname                    CEP104
+gene_id             XLOC_002795
+isoform_id       TCONS_00011740
+oId           ENST00000378230.8
+cc                            =
+dIF                    0.274567
+is_sw                      True
+ge                    14.652204
+v1                     0.432296
+v2                     2.435325
+IF1                    0.058667
+IF2                    0.333233
+Name: 23, dtype: object>",True,False,True,True,False,185,0,False,22,23,=,=,internal_splicing_only
+CHST10,TCONS_00179824,TCONS_00182589,-0.267866666666667,0.1479,"<bound method Series.ge of gname                 CHST10
+gene_id          XLOC_031217
+isoform_id    TCONS_00179824
+oId                PB.9211.1
+cc                         c
+dIF                -0.267867
+is_sw                   True
+ge                  23.56746
+v1                  6.627985
+v2                  2.201545
+IF1                 0.485333
+IF2                 0.217467
+Name: 247, dtype: object>",True,True,True,True,False,10691,8,False,5,7,c,j,promoter_plus_internal
+COPZ2,TCONS_00137608,TCONS_00138315,0.153266666666667,-0.0733333333333334,"<bound method Series.ge of gname                  COPZ2
+gene_id          XLOC_023878
+isoform_id    TCONS_00137608
+oId                PB.7743.2
+cc                         c
+dIF                 0.153267
+is_sw                   True
+ge                 34.809838
+v1                       0.0
+v2                  2.512223
+IF1                      0.0
+IF2                 0.153267
+Name: 235, dtype: object>",True,True,True,True,False,4684,4,False,4,8,c,c,promoter_plus_internal
+ENTPD5,TCONS_00092003,TCONS_00094772,0.165666666666667,-0.1796,"<bound method Series.ge of gname                     ENTPD5
+gene_id              XLOC_016675
+isoform_id        TCONS_00092003
+oId           ENST00000334696.11
+cc                             =
+dIF                     0.165667
+is_sw                       True
+ge                     14.813093
+v1                      4.018532
+v2                      6.039536
+IF1                     0.585767
+IF2                     0.751433
+Name: 142, dtype: object>",True,True,True,False,False,3,7,True,16,11,=,j,internal_splicing_only
+ENTPD5,TCONS_00094772,TCONS_00092003,-0.1796,0.165666666666667,"<bound method Series.ge of gname                 ENTPD5
+gene_id          XLOC_016675
+isoform_id    TCONS_00094772
+oId                PB.4063.1
+cc                         j
+dIF                  -0.1796
+is_sw                   True
+ge                 14.813093
+v1                  1.100316
+v2                  0.002888
+IF1                 0.179933
+IF2                 0.000333
+Name: 144, dtype: object>",True,True,True,False,False,3,7,True,11,16,j,=,internal_splicing_only
+ERO1B,TCONS_00021077,TCONS_00031611,-0.278433333333333,0.177933333333333,"<bound method Series.ge of gname                      ERO1B
+gene_id              XLOC_005152
+isoform_id        TCONS_00021077
+oId           ENST00000354619.10
+cc                             =
+dIF                    -0.278433
+is_sw                       True
+ge                     15.397909
+v1                      3.521724
+v2                      5.252194
+IF1                     0.767967
+IF2                     0.489533
+Name: 70, dtype: object>",True,True,True,True,False,56819,3288,False,16,4,=,c,promoter_plus_internal
+FAM156A,TCONS_00309653,TCONS_00309654,-0.2188,0.145,"<bound method Series.ge of gname                   FAM156A
+gene_id             XLOC_056546
+isoform_id       TCONS_00309653
+oId           ENST00000619518.5
+cc                            =
+dIF                     -0.2188
+is_sw                      True
+ge                     18.80082
+v1                     2.061718
+v2                          0.0
+IF1                      0.2188
+IF2                         0.0
+Name: 412, dtype: object>",True,False,False,False,False,0,0,True,4,3,=,=,terminal_other
+FAM216A,TCONS_00077194,TCONS_00077193,-0.1887,0.139166666666667,"<bound method Series.ge of gname                FAM216A
+gene_id          XLOC_011856
+isoform_id    TCONS_00077194
+oId                PB.4621.3
+cc                         c
+dIF                  -0.1887
+is_sw                   True
+ge                 26.617482
+v1                  6.086899
+v2                  1.659391
+IF1                 0.359367
+IF2                 0.170667
+Name: 118, dtype: object>",True,False,True,True,False,18010,0,False,4,7,c,j,promoter_plus_internal
+FIGNL1,TCONS_00273133,TCONS_00273135,0.2019,-0.2121,"<bound method Series.ge of gname                    FIGNL1
+gene_id             XLOC_049326
+isoform_id       TCONS_00273133
+oId           ENST00000615084.4
+cc                            =
+dIF                      0.2019
+is_sw                      True
+ge                    14.214919
+v1                      1.79355
+v2                     3.504811
+IF1                    0.265933
+IF2                    0.467833
+Name: 368, dtype: object>",True,False,False,True,False,92145,0,False,3,2,=,=,pure_promoter_switch
+FIGNL1,TCONS_00273135,TCONS_00273133,-0.2121,0.2019,"<bound method Series.ge of gname                    FIGNL1
+gene_id             XLOC_049326
+isoform_id       TCONS_00273135
+oId           ENST00000613602.3
+cc                            =
+dIF                     -0.2121
+is_sw                      True
+ge                    14.214919
+v1                     2.560787
+v2                     1.233805
+IF1                    0.377333
+IF2                    0.165233
+Name: 369, dtype: object>",True,False,False,True,False,92145,0,False,2,3,=,=,pure_promoter_switch
+FSTL3,TCONS_00144143,TCONS_00144146,0.437166666666667,-0.3737,"<bound method Series.ge of gname                     FSTL3
+gene_id             XLOC_025627
+isoform_id       TCONS_00144143
+oId           ENST00000166139.9
+cc                            =
+dIF                    0.437167
+is_sw                      True
+ge                    57.876888
+v1                     0.366625
+v2                    30.219188
+IF1                    0.105433
+IF2                      0.5426
+Name: 238, dtype: object>",True,True,True,True,False,4315,7,False,5,3,=,=,promoter_plus_internal
+FSTL3,TCONS_00144146,TCONS_00144143,-0.3737,0.437166666666667,"<bound method Series.ge of gname                     FSTL3
+gene_id             XLOC_025627
+isoform_id       TCONS_00144146
+oId           ENST00000592947.5
+cc                            =
+dIF                     -0.3737
+is_sw                      True
+ge                    57.876888
+v1                     2.479654
+v2                    23.352834
+IF1                    0.809333
+IF2                    0.435633
+Name: 239, dtype: object>",True,True,True,True,False,4315,7,False,3,5,=,=,promoter_plus_internal
+IFT81,TCONS_00075098,TCONS_00077192,-0.157733333333333,0.142366666666667,"<bound method Series.ge of gname                  IFT81
+gene_id          XLOC_011852
+isoform_id    TCONS_00075098
+oId                PB.4209.6
+cc                         c
+dIF                -0.157733
+is_sw                   True
+ge                 29.620588
+v1                  4.500959
+v2                  1.813055
+IF1                 0.287033
+IF2                   0.1293
+Name: 109, dtype: object>",True,True,True,True,False,40964,11,False,9,5,c,c,promoter_plus_internal
+IL23A,TCONS_00064570,TCONS_00078058,0.584466666666667,-0.192233333333333,"<bound method Series.ge of gname                  IL23A
+gene_id          XLOC_011393
+isoform_id    TCONS_00064570
+oId                PB.4584.2
+cc                         =
+dIF                 0.584467
+is_sw                   True
+ge                135.992735
+v1                  0.570908
+v2                112.360705
+IF1                 0.265867
+IF2                 0.850333
+Name: 101, dtype: object>",True,False,False,True,False,1900,0,False,4,4,=,j,pure_promoter_switch
+IL23A,TCONS_00078058,TCONS_00064570,-0.192233333333333,0.584466666666667,"<bound method Series.ge of gname                  IL23A
+gene_id          XLOC_011393
+isoform_id    TCONS_00078058
+oId                PB.4584.1
+cc                         j
+dIF                -0.192233
+is_sw                   True
+ge                135.992735
+v1                  0.386844
+v2                  0.925195
+IF1                 0.198967
+IF2                 0.006733
+Name: 102, dtype: object>",True,False,False,True,False,1900,0,False,4,4,j,=,pure_promoter_switch
+IPCEF1,TCONS_00260841,TCONS_00262658,-0.238733333333333,0.1381,"<bound method Series.ge of gname                    IPCEF1
+gene_id             XLOC_047270
+isoform_id       TCONS_00260841
+oId           ENST00000367220.9
+cc                            =
+dIF                   -0.238733
+is_sw                      True
+ge                    34.738119
+v1                     9.105078
+v2                     3.120578
+IF1                    0.451433
+IF2                      0.2127
+Name: 348, dtype: object>",True,True,True,True,True,85427,250806,False,12,11,=,c,promoter_plus_internal
+KDM6B,TCONS_00122000,TCONS_00122005,-0.216866666666667,0.349433333333333,"<bound method Series.ge of gname                     KDM6B
+gene_id             XLOC_021732
+isoform_id       TCONS_00122000
+oId           ENST00000448097.7
+cc                            =
+dIF                   -0.216867
+is_sw                      True
+ge                    62.684335
+v1                      2.54577
+v2                    10.434659
+IF1                    0.404833
+IF2                    0.187967
+Name: 184, dtype: object>",True,True,True,True,True,9990,9824,False,24,2,=,=,promoter_plus_internal
+LDAF1,TCONS_00109446,TCONS_00109444,-0.152066666666667,0.0572,"<bound method Series.ge of gname                  LDAF1
+gene_id          XLOC_019560
+isoform_id    TCONS_00109446
+oId                PB.4813.1
+cc                         =
+dIF                -0.152067
+is_sw                   True
+ge                  13.16422
+v1                  2.850813
+v2                  1.205204
+IF1                 0.371633
+IF2                 0.219567
+Name: 156, dtype: object>",True,True,True,False,True,45,7256,True,5,4,=,=,internal_splicing_only
+MGAT4A,TCONS_00173596,TCONS_00179806,-0.153666666666667,0.1734,"<bound method Series.ge of gname                    MGAT4A
+gene_id             XLOC_031205
+isoform_id       TCONS_00173596
+oId           ENST00000414521.6
+cc                            =
+dIF                   -0.153667
+is_sw                      True
+ge                    21.691283
+v1                      2.08802
+v2                          0.0
+IF1                    0.153667
+IF2                         0.0
+Name: 242, dtype: object>",True,True,True,True,False,67462,42,False,13,16,=,j,promoter_plus_internal
+MREG,TCONS_00177113,TCONS_00177118,0.211166666666667,-0.308733333333333,"<bound method Series.ge of gname                      MREG
+gene_id             XLOC_032056
+isoform_id       TCONS_00177113
+oId           ENST00000620139.4
+cc                            =
+dIF                    0.211167
+is_sw                      True
+ge                    18.142935
+v1                     0.866875
+v2                     3.665224
+IF1                    0.123867
+IF2                    0.335033
+Name: 251, dtype: object>",True,True,True,True,True,68196,95583,False,6,8,=,=,promoter_plus_internal
+MREG,TCONS_00177118,TCONS_00177113,-0.308733333333333,0.211166666666667,"<bound method Series.ge of gname                      MREG
+gene_id             XLOC_032056
+isoform_id       TCONS_00177118
+oId           ENST00000265322.8
+cc                            =
+dIF                   -0.308733
+is_sw                      True
+ge                    18.142935
+v1                     3.504648
+v2                     1.984474
+IF1                    0.491067
+IF2                    0.182333
+Name: 252, dtype: object>",True,True,True,True,True,68196,95583,False,8,6,=,=,promoter_plus_internal
+MTUS1,TCONS_00285763,TCONS_00285765,0.227866666666667,-0.0755333333333333,"<bound method Series.ge of gname                      MTUS1
+gene_id              XLOC_051660
+isoform_id        TCONS_00285763
+oId           ENST00000297488.10
+cc                             =
+dIF                     0.227867
+is_sw                       True
+ge                     22.336439
+v1                      0.257583
+v2                      0.785286
+IF1                     0.014667
+IF2                     0.242533
+Name: 389, dtype: object>",True,True,True,True,False,103424,3,False,10,15,=,=,promoter_plus_internal
+NCOA7,TCONS_00254331,TCONS_00261826,0.3771,-0.117966666666667,"<bound method Series.ge of gname                     NCOA7
+gene_id             XLOC_045594
+isoform_id       TCONS_00254331
+oId           ENST00000438495.6
+cc                            =
+dIF                      0.3771
+is_sw                      True
+ge                    60.862136
+v1                     5.871942
+v2                    25.344736
+IF1                    0.268733
+IF2                    0.645833
+Name: 311, dtype: object>",True,True,True,True,False,3489,3,False,6,4,=,c,promoter_plus_internal
+NET1,TCONS_00031817,TCONS_00031820,-0.1665,0.158766666666667,"<bound method Series.ge of gname                      NET1
+gene_id             XLOC_005330
+isoform_id       TCONS_00031817
+oId           ENST00000355029.9
+cc                            =
+dIF                     -0.1665
+is_sw                      True
+ge                    39.171641
+v1                      5.06895
+v2                     5.350192
+IF1                      0.3752
+IF2                      0.2087
+Name: 74, dtype: object>",True,True,True,True,False,34054,593,False,12,10,=,=,promoter_plus_internal
+NOTCH2NLC,TCONS_00030251,TCONS_00025715,-0.172033333333333,0.118133333333333,"<bound method Series.ge of gname              NOTCH2NLC
+gene_id          XLOC_001497
+isoform_id    TCONS_00030251
+oId                PB.1254.1
+cc                         c
+dIF                -0.172033
+is_sw                   True
+ge                 87.772711
+v1                  5.426418
+v2                  4.188624
+IF1                 0.236833
+IF2                   0.0648
+Name: 13, dtype: object>",True,True,False,True,True,90201,92162,False,2,2,c,c,pure_promoter_switch
+NUPR1,TCONS_00115801,TCONS_00115814,-0.165966666666667,0.165066666666667,"<bound method Series.ge of gname                  NUPR1
+gene_id          XLOC_020854
+isoform_id    TCONS_00115801
+oId                PB.4862.2
+cc                         =
+dIF                -0.165967
+is_sw                   True
+ge                 43.850207
+v1                 10.926182
+v2                  2.914948
+IF1                 0.366767
+IF2                   0.2008
+Name: 177, dtype: object>",True,True,True,True,True,71073,67883,False,3,8,=,=,promoter_plus_internal
+OR2A20P,TCONS_00276619,TCONS_00276621,0.152866666666667,-0.0793,"<bound method Series.ge of gname                   OR2A20P
+gene_id             XLOC_050117
+isoform_id       TCONS_00276619
+oId           ENST00000496968.5
+cc                            =
+dIF                    0.152867
+is_sw                      True
+ge                    13.399884
+v1                     0.711213
+v2                     1.774341
+IF1                    0.104567
+IF2                    0.257433
+Name: 374, dtype: object>",True,True,True,False,True,165,6677,True,5,6,=,=,internal_splicing_only
+P2RY6,TCONS_00057713,TCONS_00047585,-0.155166666666667,0.0929333333333334,"<bound method Series.ge of gname                  P2RY6
+gene_id          XLOC_008555
+isoform_id    TCONS_00057713
+oId                PB.3105.6
+cc                         j
+dIF                -0.155167
+is_sw                   True
+ge                 34.498437
+v1                  3.791775
+v2                  0.486084
+IF1                   0.1887
+IF2                 0.033533
+Name: 100, dtype: object>",True,True,False,True,False,16280,823,False,3,2,j,=,pure_promoter_switch
+P2RY8,TCONS_00308441,TCONS_00308442,-0.1769,0.1769,"<bound method Series.ge of gname                      P2RY8
+gene_id              XLOC_056164
+isoform_id        TCONS_00308441
+oId           ENST00000381297.10
+cc                             =
+dIF                      -0.1769
+is_sw                       True
+ge                     22.719755
+v1                      8.265442
+v2                     10.534449
+IF1                     0.942433
+IF2                     0.765533
+Name: 408, dtype: object>",True,True,False,True,False,42832,3856,False,2,2,=,=,pure_promoter_switch
+P2RY8,TCONS_00308442,TCONS_00308441,0.1769,-0.1769,"<bound method Series.ge of gname                     P2RY8
+gene_id             XLOC_056164
+isoform_id       TCONS_00308442
+oId           ENST00000460672.6
+cc                            =
+dIF                      0.1769
+is_sw                      True
+ge                    22.719755
+v1                     0.497472
+v2                     3.422392
+IF1                    0.057567
+IF2                    0.234467
+Name: 409, dtype: object>",True,True,False,True,False,42832,3856,False,2,2,=,=,pure_promoter_switch
+P2RY8,TCONS_00314770,TCONS_00308442,-0.1769,0.1769,"<bound method Series.ge of gname                            P2RY8
+gene_id                    XLOC_057581
+isoform_id              TCONS_00314770
+oId           ENST00000381297.10_PAR_Y
+cc                                   =
+dIF                            -0.1769
+is_sw                             True
+ge                           22.719755
+v1                            8.265442
+v2                           10.534449
+IF1                           0.942433
+IF2                           0.765533
+Name: 420, dtype: object>",True,True,False,True,False,42832,3856,False,2,2,=,=,pure_promoter_switch
+P2RY8,TCONS_00314771,TCONS_00308441,0.1769,-0.1769,"<bound method Series.ge of gname                           P2RY8
+gene_id                   XLOC_057581
+isoform_id             TCONS_00314771
+oId           ENST00000460672.6_PAR_Y
+cc                                  =
+dIF                            0.1769
+is_sw                            True
+ge                          22.719755
+v1                           0.497472
+v2                           3.422392
+IF1                          0.057567
+IF2                          0.234467
+Name: 421, dtype: object>",True,True,False,True,False,42832,3856,False,2,2,=,=,pure_promoter_switch
+PCOLCE2,TCONS_00220893,TCONS_00220892,-0.195833333333333,0.0969,"<bound method Series.ge of gname                PCOLCE2
+gene_id          XLOC_038421
+isoform_id    TCONS_00220893
+oId               PB.12555.1
+cc                         c
+dIF                -0.195833
+is_sw                   True
+ge                  18.64433
+v1                  2.859811
+v2                  0.384055
+IF1                   0.2493
+IF2                 0.053467
+Name: 279, dtype: object>",True,False,False,True,False,5379,0,False,7,6,c,c,pure_promoter_switch
+PELO,TCONS_00246514,TCONS_00236107,-0.265833333333333,0.107,"<bound method Series.ge of gname                   PELO
+gene_id          XLOC_041899
+isoform_id    TCONS_00246514
+oId               PB.13952.2
+cc                         c
+dIF                -0.265833
+is_sw                   True
+ge                 28.506304
+v1                  7.899973
+v2                  8.936817
+IF1                   0.7607
+IF2                 0.494867
+Name: 287, dtype: object>",True,True,True,True,True,63881,85282,False,2,6,c,=,promoter_plus_internal
+PHIP,TCONS_00258559,TCONS_00265362,-0.1562,0.1217,"<bound method Series.ge of gname                      PHIP
+gene_id             XLOC_046759
+isoform_id       TCONS_00258559
+oId           ENST00000275034.5
+cc                            =
+dIF                     -0.1562
+is_sw                      True
+ge                     51.07022
+v1                    18.450535
+v2                    21.592843
+IF1                    0.878467
+IF2                    0.722267
+Name: 342, dtype: object>",True,True,True,True,True,132096,10973,False,40,2,=,c,promoter_plus_internal
+PPP2R5B,TCONS_00046393,TCONS_00057627,0.15,-0.0899666666666666,"<bound method Series.ge of gname                   PPP2R5B
+gene_id             XLOC_008361
+isoform_id       TCONS_00046393
+oId           ENST00000164133.7
+cc                            =
+dIF                        0.15
+is_sw                      True
+ge                    15.540387
+v1                     1.419165
+v2                     2.582915
+IF1                      0.1822
+IF2                      0.3322
+Name: 92, dtype: object>",True,False,False,True,False,6421,0,False,14,14,=,j,pure_promoter_switch
+PSD3,TCONS_00285889,TCONS_00285879,-0.171466666666667,0.1145,"<bound method Series.ge of gname                      PSD3
+gene_id             XLOC_051668
+isoform_id       TCONS_00285889
+oId           ENST00000521475.1
+cc                            =
+dIF                   -0.171467
+is_sw                      True
+ge                    63.015053
+v1                     5.186516
+v2                     3.839664
+IF1                      0.2593
+IF2                    0.087833
+Name: 398, dtype: object>",True,True,True,True,True,230356,170592,False,2,6,=,=,promoter_plus_internal
+RASSF5,TCONS_00009554,TCONS_00009548,-0.159566666666667,0.140533333333333,"<bound method Series.ge of gname                    RASSF5
+gene_id             XLOC_002245
+isoform_id       TCONS_00009554
+oId           ENST00000577571.5
+cc                            =
+dIF                   -0.159567
+is_sw                      True
+ge                    91.080878
+v1                    11.193367
+v2                     6.667601
+IF1                    0.290467
+IF2                      0.1309
+Name: 17, dtype: object>",True,True,True,True,False,49634,181,False,5,6,=,=,promoter_plus_internal
+RGS19,TCONS_00190138,TCONS_00190139,-0.274633333333333,0.288566666666667,"<bound method Series.ge of gname                     RGS19
+gene_id             XLOC_033712
+isoform_id       TCONS_00190138
+oId           ENST00000395042.2
+cc                            =
+dIF                   -0.274633
+is_sw                      True
+ge                    72.735373
+v1                    22.962633
+v2                     3.942889
+IF1                    0.451333
+IF2                      0.1767
+Name: 255, dtype: object>",True,False,False,True,False,470,0,False,6,6,=,=,terminal_other
+RGS19,TCONS_00190139,TCONS_00190138,0.288566666666667,-0.274633333333333,"<bound method Series.ge of gname                     RGS19
+gene_id             XLOC_033712
+isoform_id       TCONS_00190139
+oId           ENST00000332298.9
+cc                            =
+dIF                    0.288567
+is_sw                      True
+ge                    72.735373
+v1                    21.890821
+v2                    16.103468
+IF1                    0.439533
+IF2                      0.7281
+Name: 256, dtype: object>",True,False,False,True,False,470,0,False,6,6,=,=,terminal_other
+RHOF,TCONS_00073896,TCONS_00073903,0.266533333333333,-0.142233333333333,"<bound method Series.ge of gname                      RHOF
+gene_id             XLOC_013451
+isoform_id       TCONS_00073896
+oId           ENST00000267205.7
+cc                            =
+dIF                    0.266533
+is_sw                      True
+ge                    57.025359
+v1                     5.376162
+v2                    16.849493
+IF1                      0.2278
+IF2                    0.494333
+Name: 119, dtype: object>",True,True,True,True,True,9222,17513,False,5,4,=,=,promoter_plus_internal
+RPL22P1,TCONS_00216168,TCONS_00218839,-0.155666666666667,0.155666666666667,"<bound method Series.ge of gname                   RPL22P1
+gene_id             XLOC_038616
+isoform_id       TCONS_00216168
+oId           ENST00000418623.1
+cc                            =
+dIF                   -0.155667
+is_sw                      True
+ge                    35.261896
+v1                     7.094261
+v2                     5.329053
+IF1                    0.435367
+IF2                      0.2797
+Name: 280, dtype: object>",True,True,False,False,False,146,53,False,1,1,=,c,terminal_other
+RPL22P1,TCONS_00218839,TCONS_00216168,0.155666666666667,-0.155666666666667,"<bound method Series.ge of gname                RPL22P1
+gene_id          XLOC_038616
+isoform_id    TCONS_00218839
+oId               PB.13571.1
+cc                         c
+dIF                 0.155667
+is_sw                   True
+ge                 35.261896
+v1                  9.177898
+v2                 13.660684
+IF1                 0.564633
+IF2                   0.7203
+Name: 281, dtype: object>",True,True,False,False,False,146,53,False,1,1,c,=,terminal_other
+SLC29A3,TCONS_00040531,TCONS_00033700,-0.2036,0.170033333333333,"<bound method Series.ge of gname                SLC29A3
+gene_id          XLOC_005858
+isoform_id    TCONS_00040531
+oId                PB.2253.6
+cc                         c
+dIF                  -0.2036
+is_sw                   True
+ge                 25.119019
+v1                  5.733696
+v2                  1.625789
+IF1                 0.372633
+IF2                 0.169033
+Name: 82, dtype: object>",True,False,False,True,False,3727,0,False,5,6,c,=,pure_promoter_switch
+SLC43A2,TCONS_00128134,TCONS_00128136,0.1561,-0.1065,"<bound method Series.ge of gname                    SLC43A2
+gene_id              XLOC_022990
+isoform_id        TCONS_00128134
+oId           ENST00000301335.10
+cc                             =
+dIF                       0.1561
+is_sw                       True
+ge                     42.932298
+v1                      1.859614
+v2                      9.362258
+IF1                     0.149667
+IF2                     0.305767
+Name: 206, dtype: object>",True,True,True,True,False,23749,6233,False,14,10,=,=,promoter_plus_internal
+SNX10,TCONS_00277254,TCONS_00266425,0.205166666666667,-0.0460666666666667,"<bound method Series.ge of gname                  SNX10
+gene_id          XLOC_047626
+isoform_id    TCONS_00277254
+oId               PB.17180.3
+cc                         j
+dIF                 0.205167
+is_sw                   True
+ge                 62.787625
+v1                    2.4214
+v2                  9.195532
+IF1                 0.083267
+IF2                 0.288433
+Name: 363, dtype: object>",True,True,True,True,False,69017,67,False,5,7,j,=,promoter_plus_internal
+SPECC1L,TCONS_00196541,TCONS_00200920,-0.307266666666667,0.143333333333333,"<bound method Series.ge of gname                   SPECC1L
+gene_id             XLOC_034870
+isoform_id       TCONS_00196541
+oId           ENST00000437398.5
+cc                            =
+dIF                   -0.307267
+is_sw                      True
+ge                   130.394365
+v1                     7.286481
+v2                     8.026828
+IF1                    0.381767
+IF2                      0.0745
+Name: 263, dtype: object>",True,True,True,True,True,162600,24612,False,16,2,=,c,promoter_plus_internal
+STN1,TCONS_00042169,TCONS_00042795,-0.184633333333333,0.108166666666667,"<bound method Series.ge of gname                   STN1
+gene_id          XLOC_007337
+isoform_id    TCONS_00042169
+oId                PB.2750.5
+cc                         c
+dIF                -0.184633
+is_sw                   True
+ge                 22.077552
+v1                  2.074302
+v2                       0.0
+IF1                 0.184633
+IF2                      0.0
+Name: 88, dtype: object>",True,True,False,True,False,1248,21,False,5,4,c,c,pure_promoter_switch
+SYNJ2,TCONS_00255251,TCONS_00255249,-0.181233333333333,0.110133333333333,"<bound method Series.ge of gname                     SYNJ2
+gene_id             XLOC_045851
+isoform_id       TCONS_00255251
+oId           ENST00000367113.5
+cc                            =
+dIF                   -0.181233
+is_sw                      True
+ge                    39.964441
+v1                     5.680464
+v2                     2.165367
+IF1                    0.290533
+IF2                      0.1093
+Name: 317, dtype: object>",True,True,True,False,True,175,68239,False,4,27,=,=,internal_splicing_only
+TFEB,TCONS_00257713,TCONS_00257719,0.1526,-0.0464666666666667,"<bound method Series.ge of gname                      TFEB
+gene_id             XLOC_046512
+isoform_id       TCONS_00257713
+oId           ENST00000445214.2
+cc                            =
+dIF                      0.1526
+is_sw                      True
+ge                   130.592128
+v1                     4.468784
+v2                     16.14609
+IF1                       0.073
+IF2                      0.2256
+Name: 329, dtype: object>",True,False,True,True,False,28461,0,False,10,9,=,=,promoter_plus_internal
+TMEM63B,TCONS_00252654,TCONS_00252656,0.228933333333333,-0.1888,"<bound method Series.ge of gname                    TMEM63B
+gene_id              XLOC_045100
+isoform_id        TCONS_00252654
+oId           ENST00000259746.13
+cc                             =
+dIF                     0.228933
+is_sw                       True
+ge                     73.728714
+v1                      1.872198
+v2                     13.483584
+IF1                     0.066967
+IF2                       0.2959
+Name: 300, dtype: object>",True,False,False,True,False,640,0,False,24,24,=,=,terminal_other
+TNFSF4,TCONS_00018922,TCONS_00029427,0.343966666666667,-0.1593,"<bound method Series.ge of gname                 TNFSF4
+gene_id          XLOC_004551
+isoform_id    TCONS_00018922
+oId                PB.1538.5
+cc                         =
+dIF                 0.343967
+is_sw                   True
+ge                100.957441
+v1                  7.680279
+v2                 46.982054
+IF1                 0.286367
+IF2                 0.630333
+Name: 65, dtype: object>",True,True,False,True,False,18803,5,False,3,2,=,c,pure_promoter_switch
+TPMT,TCONS_00261996,TCONS_00264086,-0.2813,0.160733333333333,"<bound method Series.ge of gname                   TPMT
+gene_id          XLOC_046117
+isoform_id    TCONS_00261996
+oId               PB.13586.2
+cc                         j
+dIF                  -0.2813
+is_sw                   True
+ge                 15.537856
+v1                  1.999918
+v2                  0.021624
+IF1                 0.283767
+IF2                 0.002467
+Name: 321, dtype: object>",True,True,False,False,False,4,1,True,10,10,j,j,terminal_other
+TRIM38,TCONS_00261420,TCONS_00263459,-0.220533333333333,0.141233333333333,"<bound method Series.ge of gname                 TRIM38
+gene_id          XLOC_044683
+isoform_id    TCONS_00261420
+oId               PB.13608.9
+cc                         c
+dIF                -0.220533
+is_sw                   True
+ge                 20.524142
+v1                  2.420184
+v2                   0.05805
+IF1                   0.2274
+IF2                 0.006867
+Name: 294, dtype: object>",True,True,False,True,False,2450,5,False,6,5,c,c,pure_promoter_switch
+UBXN8,TCONS_00281540,TCONS_00291884,0.156033333333333,-0.0962333333333334,"<bound method Series.ge of gname                     UBXN8
+gene_id             XLOC_050576
+isoform_id       TCONS_00281540
+oId           ENST00000615729.4
+cc                            =
+dIF                    0.156033
+is_sw                      True
+ge                    35.428213
+v1                     0.684358
+v2                     3.544168
+IF1                    0.039133
+IF2                    0.195167
+Name: 382, dtype: object>",True,True,True,False,False,12,589,True,8,7,=,j,internal_splicing_only
+UTS2,TCONS_00011940,TCONS_00023387,0.2337,-0.193033333333333,"<bound method Series.ge of gname                      UTS2
+gene_id             XLOC_002833
+isoform_id       TCONS_00011940
+oId           ENST00000377507.8
+cc                            =
+dIF                      0.2337
+is_sw                      True
+ge                   143.744355
+v1                     5.951594
+v2                    33.388504
+IF1                    0.119767
+IF2                    0.353467
+Name: 33, dtype: object>",True,True,True,True,True,27571,68258,False,8,5,=,j,promoter_plus_internal
+UTS2,TCONS_00023387,TCONS_00011940,-0.193033333333333,0.2337,"<bound method Series.ge of gname                   UTS2
+gene_id          XLOC_002833
+isoform_id    TCONS_00023387
+oId                  PB.72.5
+cc                         j
+dIF                -0.193033
+is_sw                   True
+ge                143.744355
+v1                 17.843033
+v2                 15.396679
+IF1                 0.358233
+IF2                   0.1652
+Name: 38, dtype: object>",True,True,True,True,True,27571,68258,False,5,8,j,=,promoter_plus_internal
+XLOC_003850,TCONS_00024189,TCONS_00029035,-0.206733333333333,0.151233333333333,"<bound method Series.ge of gname            XLOC_003850
+gene_id          XLOC_003850
+isoform_id    TCONS_00024189
+oId                PB.857.18
+cc                         u
+dIF                -0.206733
+is_sw                   True
+ge                 14.755003
+v1                  2.607991
+v2                  0.169023
+IF1                 0.243333
+IF2                   0.0366
+Name: 61, dtype: object>",True,True,False,True,False,1255,3,False,3,3,u,u,pure_promoter_switch
+XLOC_003850,TCONS_00029035,TCONS_00024189,0.151233333333333,-0.206733333333333,"<bound method Series.ge of gname            XLOC_003850
+gene_id          XLOC_003850
+isoform_id    TCONS_00029035
+oId                PB.891.11
+cc                         u
+dIF                 0.151233
+is_sw                   True
+ge                 14.755003
+v1                  0.577234
+v2                  0.772937
+IF1                 0.050767
+IF2                    0.202
+Name: 64, dtype: object>",True,True,False,True,False,1255,3,False,3,3,u,u,pure_promoter_switch
+XLOC_022235,TCONS_00137922,TCONS_00137044,-0.2021,0.0685,"<bound method Series.ge of gname            XLOC_022235
+gene_id          XLOC_022235
+isoform_id    TCONS_00137922
+oId                PB.8100.4
+cc                         c
+dIF                  -0.2021
+is_sw                   True
+ge                 18.217915
+v1                  2.609087
+v2                  4.238475
+IF1                 0.521733
+IF2                 0.319633
+Name: 205, dtype: object>",True,True,False,True,False,795,8,False,1,2,c,o,terminal_other
+XLOC_034110,TCONS_00193233,TCONS_00195595,0.163166666666667,-0.163166666666667,"<bound method Series.ge of gname            XLOC_034110
+gene_id          XLOC_034110
+isoform_id    TCONS_00193233
+oId               PB.11292.1
+cc                         =
+dIF                 0.163167
+is_sw                   True
+ge                 15.531029
+v1                  5.701287
+v2                  8.775972
+IF1                 0.836833
+IF2                      1.0
+Name: 261, dtype: object>",True,True,False,False,False,375,2,False,1,1,=,c,terminal_other
+XLOC_034110,TCONS_00195595,TCONS_00193233,-0.163166666666667,0.163166666666667,"<bound method Series.ge of gname            XLOC_034110
+gene_id          XLOC_034110
+isoform_id    TCONS_00195595
+oId               PB.12087.1
+cc                         c
+dIF                -0.163167
+is_sw                   True
+ge                 15.531029
+v1                   1.05377
+v2                       0.0
+IF1                 0.163167
+IF2                      0.0
+Name: 262, dtype: object>",True,True,False,False,False,375,2,False,1,1,c,=,terminal_other
+ZCCHC8,TCONS_00075959,TCONS_00075960,-0.1736,0.0966666666666667,"<bound method Series.ge of gname                 ZCCHC8
+gene_id          XLOC_013459
+isoform_id    TCONS_00075959
+oId                PB.4366.4
+cc                         c
+dIF                  -0.1736
+is_sw                   True
+ge                 26.910239
+v1                  6.801437
+v2                  4.319115
+IF1                   0.4988
+IF2                   0.3252
+Name: 139, dtype: object>",True,True,True,True,False,7214,2,False,8,11,c,c,promoter_plus_internal
