@@ -69,11 +69,18 @@ upward-biased number to a downward-biased one manufactures an asymmetry even whe
 layers are reduced by exactly the same factor.
 Backing: `tables/layer_estimator_calibration.csv`.
 
-**c. Inverting the calibration removes the asymmetry.** The reported 64% / 38% becomes
-**53% / 57%** on a true-signal scale — the observed gap of **+0.26 becomes −0.04**. The
-pipeline's own independent estimator, which disagreed sharply on raw numbers (60% / 65%),
-lands at 48% / 75% after correction. Both analyses agree once the layers are on a comparable
-scale: **the two layers are reduced by indistinguishable amounts.**
+**c. Inverting the calibration destroys the asymmetry.** The reported 64% / 38% becomes
+**53% / 57%** on a true-signal scale — the observed gap of **+0.26 becomes −0.04**, i.e. the
+splicing layer is no longer the more-degraded one. That is enough to retract the claim: the
+sign of the effect depends entirely on the estimator.
+
+**The two corrected analyses agree only on direction, not magnitude — do not overstate this.**
+The pipeline's own estimator (observed 60% / 65%) corrects to 48% / 75%, a gap of −0.27,
+against the external review's −0.04. Both corrected gaps are ≤ 0, so neither supports
+"splicing degrades more"; but they differ by **23 points** and the pipeline's version implies
+splicing is retained ~1.6x *better* than expression, which the external review's does not.
+The honest reading is that after correction **no reliable cross-layer ordering can be
+extracted from either estimator** — not that both converge on parity.
 Backing: `tables/layer_retention_corrected.csv`.
 
 **I checked whether matching the estimator structure rescues the comparison. It does not.**

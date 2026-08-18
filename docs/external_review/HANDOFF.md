@@ -189,9 +189,23 @@ Two further corrections to that earlier document:
    | 0.4 | 0.56 | 0.20 |
 
    Inverting on the observed values turns **64% / 38% into 53% / 57%** — the observed gap of
-   **+0.26 becomes −0.04**. The pipeline's own estimator (60% / 65% observed) corrects to
-   48% / 75%. Both analyses agree once the layers are on a true-signal scale: the layers are
-   reduced by indistinguishable amounts.
+   **+0.26 becomes −0.04**. The sign of the effect therefore depends entirely on the
+   estimator, which is sufficient to retract the claim.
+
+   **The two corrected analyses agree only on direction, not magnitude.** Do not repeat the
+   "indistinguishable amounts" framing from commit 36690a2's message — the numbers beside it
+   do not support it:
+
+   | source | observed | corrected | corrected gap |
+   |---|---|---|---|
+   | external review (estimator A) | 0.640 / 0.377 | 0.535 / 0.572 | −0.038 |
+   | this pipeline (estimator B) | 0.603 / 0.652 | 0.476 / 0.747 | −0.271 |
+
+   Both corrected gaps are ≤ 0, so neither supports "splicing degrades more than expression".
+   But they differ by **23 points**, and estimator B implies splicing is retained ~1.6x
+   *better* than expression while estimator A implies near-parity. The defensible conclusion
+   is that **after correction neither estimator yields a reliable cross-layer ordering** — the
+   two do not converge on a shared answer, they merely both fail to support the original one.
    Backing: `tables/layer_estimator_calibration.csv`, `tables/layer_retention_corrected.csv`.
 
    **I checked whether matching the estimator structure rescues it. It does not.** Applying an
