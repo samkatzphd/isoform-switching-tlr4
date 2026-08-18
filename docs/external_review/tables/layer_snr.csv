@@ -1,0 +1,5 @@
+"layer","arm","signal","noise","snr"
+"Expression","WT",0.30526,0.16864,1.81
+"Expression","KO",0.16381,0.15365,1.066
+"Splicing","WT",0.01266,0.14074,0.09
+"Splicing","KO",0.00505,0.13282,0.038

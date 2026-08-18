@@ -1,0 +1,3 @@
+"layer","estimator","WT","KO","pct_retained","snr_WT","caveat"
+"Expression","matched structure (across-minus-within pairwise, same form both layers)",0.30526,0.16381,53.7,1.81,"matched structure does NOT equalise SNR; ratios remain non-comparable across layers"
+"Splicing","matched structure (across-minus-within pairwise, same form both layers)",0.01266,0.00505,39.9,0.09,"matched structure does NOT equalise SNR; ratios remain non-comparable across layers"

@@ -2,15 +2,24 @@
 
 External analysis of the isoform-switch-pipeline results, 2026-08-07, revised 2026-08-18.
 
-> **Revision 2026-08-18 — read this before anything else.** The GFF3 and transcript FASTA
-> files are now available locally (`gff3/`, `fa/` — both gitignored, 3.9 GB, do not commit).
-> Re-running the event-structure analysis on the project's own annotation, at 100% coverage
-> rather than the 47.6% reachable via Ensembl, **superseded three items in this document.**
-> They are listed in "Superseded — do not implement" as items 3-5. In short: the ISG-sparing
-> claim is withdrawn (it was a ratio artefact), the AFE percentages are replaced, and a
-> reported bimodality in TSS distance was an artefact of mixing two annotations and is
-> retracted. The `FIGURES.md` walkthrough (`figures/F1`-`F5`) reflects the corrected state
-> and is the fastest way in.
+> **Revision 2026-08-18 — read this before anything else.** Four items in this document are
+> now superseded; they are listed in "Superseded — do not implement" as items 3-6, and the
+> `FIGURES.md` walkthrough (`figures/F1`-`F5`) reflects the corrected state and is the fastest
+> way in.
+>
+> **The most important one is item 6.** The expression-vs-splicing layer asymmetry — the
+> load-bearing claim of the UBL5 argument in Finding 2 — is **retracted**. Claude Code's
+> `scripts/10_layer_estimator_calibration.R` (commit 36690a2) showed it rests on comparing two
+> estimators biased in opposite directions; I reproduced the calibration, tested whether
+> matching the estimator structure rescues it (it does not — the layers differ 20x in
+> signal-to-noise), and the rebuttal holds. The Q2 conclusion is **unresolved** pending a
+> formal differential-splicing model, not supported.
+>
+> Items 3-5 follow from the GFF3 and transcript FASTA now being available locally (`gff3/`,
+> `fa/` — both gitignored, 3.9 GB, do not commit), which allowed the event-structure analysis
+> to run at 100% coverage rather than the 47.6% reachable via Ensembl: the ISG-sparing claim
+> is withdrawn (a ratio artefact), the AFE percentages are replaced, and a reported bimodality
+> in TSS distance turned out to be an artefact of mixing two annotations.
 
 **This document supersedes the earlier `REVIEW_HANDOFF.md`.** If that file is in the repo,
 read the "Superseded" section below before implementing anything from it — its headline
@@ -32,7 +41,7 @@ literature_review.md             cited literature grounding both questions
 
 figures/
   F1_scope.png                   what the data is; reproducibility; cryptic switching
-  F2_ubl5_mechanism.png          baseline composition, layer asymmetry, mediation
+  F2_ubl5_mechanism.png          baseline composition + the retracted layer asymmetry (item 6)
   F3_specificity.png             what the deficit is NOT (three negative controls)
   F4_event_structure.png         what the switches structurally are (GFF3, 100% coverage)
   F5_implications.png            assay feasibility and a verdict per question
@@ -157,6 +166,63 @@ Two further corrections to that earlier document:
    classified by mode rather than tested on the continuous scale), and any claim that UBL5
    loss preferentially removes internal-splicing events (59% vs 51%, Fisher p = 0.26).
 
+6. **The expression-vs-splicing layer asymmetry is retracted — Findings 2b and 2c.** This was
+   the load-bearing claim of the whole UBL5 argument: 64% of the expression response retained
+   in the KO against 38% of the splicing response, non-overlapping CIs, robust to an ENST-only
+   annotation control. `scripts/10_layer_estimator_calibration.R` (commit 36690a2) rejects it
+   on the measurement, and **the rebuttal is correct**. I reran the script and reproduced the
+   calibration table exactly.
+
+   The mechanism: expression response is |log2FC| between condition means, so averaging three
+   replicates *before* the absolute value tracks truth almost linearly. Splicing response is a
+   total variation distance — a sum of absolute values, which does not average out noise, so
+   for signal small relative to noise E|s+n| ≈ E|n| + O(s²). The splicing estimator is
+   therefore roughly **quadratic** near zero and compresses ratios toward 0, while the
+   expression estimator does not. Comparing them manufactures an asymmetry even when both
+   layers are reduced by the same factor:
+
+   | true ratio | expression reports | splicing reports |
+   |---|---|---|
+   | 1.0 | 1.00 | 1.01 |
+   | 0.8 | 0.84 | 0.68 |
+   | 0.6 | 0.68 | 0.42 |
+   | 0.4 | 0.56 | 0.20 |
+
+   Inverting on the observed values turns **64% / 38% into 53% / 57%** — the observed gap of
+   **+0.26 becomes −0.04**. The pipeline's own estimator (60% / 65% observed) corrects to
+   48% / 75%. Both analyses agree once the layers are on a true-signal scale: the layers are
+   reduced by indistinguishable amounts.
+   Backing: `tables/layer_estimator_calibration.csv`, `tables/layer_retention_corrected.csv`.
+
+   **I checked whether matching the estimator structure rescues it. It does not.** Applying an
+   identical across-minus-within pairwise form to *both* layers narrows the gap from 26 to 14
+   points (expression 53.7%, splicing 39.9%) but cannot close it, because compression depends
+   on **signal-to-noise**, not only estimator form, and the layers differ there by **20x**:
+
+   | layer | arm | signal | noise | SNR |
+   |---|---|---|---|---|
+   | expression | WT | 0.3053 | 0.1686 | 1.81 |
+   | expression | KO | 0.1638 | 0.1537 | 1.07 |
+   | splicing | WT | 0.0127 | 0.1407 | 0.09 |
+   | splicing | KO | 0.0051 | 0.1328 | 0.04 |
+
+   At SNR 0.09 the splicing estimator is deep in the quadratic regime while expression is not.
+   Matched structure is necessary but not sufficient — so this is not fixable by tweaking the
+   distance measure.
+   Backing: `tables/layer_matched_estimator.csv`, `tables/layer_snr.csv`.
+
+   **Scope of the retraction.** It does *not* show UBL5 has no splicing-specific role; it
+   shows this measurement cannot demonstrate one in either direction. Finding 2a survives
+   untouched (within-layer, no cross-layer ratio). The globally blunted LPS expression
+   response survives (expression alone). **Finding 2c must not be quoted** — the mediation
+   decomposition inherits the same compressed splicing estimator.
+
+   **What to build instead.** A formal differential-splicing model — DRIMSeq or satuRn, with
+   the pairing included if the design is paired — fitted on the count matrices, returning a
+   per-gene effect size on a scale comparable between layers. Until that exists, the Q2
+   conclusion is **unresolved**, not supported and not refuted. Any future claim of the form
+   "layer X is affected more than layer Y" must carry an estimator calibration alongside it.
+
 ---
 
 ## Experimental design facts that constrain interpretation
@@ -207,6 +273,12 @@ The layer asymmetry is annotation-independent. Backing: `tables/ubl5_retention_b
 ---
 
 ## Finding 2 — The UBL5 result, restated correctly
+
+> **2b and 2c are RETRACTED — see item 6 in "Superseded".** The estimator calibration in
+> `scripts/10_layer_estimator_calibration.R` shows the expression-vs-splicing asymmetry is an
+> artefact of comparing two estimators biased in opposite directions. I reproduced that
+> calibration and confirmed it. **2a stands** — it is a within-layer comparison with no
+> cross-layer ratio. Do not cite 2b or 2c.
 
 Three constraints, each from an independent analysis:
 
@@ -508,10 +580,15 @@ those columns are undefined rather than zero.
 - No new copy of the switching rule: `grep -rn "score_isoforms <- function" scripts/` returns
   nothing.
 - Gene summary row counts still equal distinct `gene_id` counts (`02`/`02b` assertions pass).
-- Reproduce before changing prose: retention 64.0% / 37.7%; baseline excess 0.0024 (KO) vs
-  0.0496 (H vs T); mediation 36.3% / 63.7%; Class B reproduction 11 of 47 testable (23.4%)
-  vs 0.52% base rate, 11 of 56 total;
-  class `j` OR 0.61.
+- Reproduce before changing prose: baseline excess 0.0024 (KO) vs 0.0496 (H vs T); Class B
+  reproduction 11 of 47 testable (23.4%) vs 0.52% base rate, 11 of 56 total; class `j` OR 0.61.
+  (The retention figures 64.0% / 37.7% and the mediation split 36.3% / 63.7% are still
+  reproducible from their tables, but are **retracted** — item 6. Reproducing them is a check
+  on the code, not a licence to quote them.)
+- Item 6 checks: `Rscript scripts/10_layer_estimator_calibration.R` reproduces the calibration
+  grid (true 0.6 → expression 0.68, splicing_A 0.42) and the corrected gap −0.04 for the
+  external-review row. Matched-structure control: expression 53.7% / splicing 39.9% with WT
+  SNR 1.81 vs 0.09.
 - Added 2026-08-18. Event structure, from `gff3/U_T.gff3` at 143/143 WT events: pure promoter
   switch 21.7%, internal junction change 59.4%, true alternative promoter 69.2%, median TSS
   distance 12,679 bp, Hartigan dip p = 0.99 (unimodal). Absolute-scale sparing: ISG loss

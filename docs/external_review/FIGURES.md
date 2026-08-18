@@ -43,11 +43,12 @@ Backing: `tables/cryptic_switchers_T_UT.csv`.
 
 ![F2](figures/F2_ubl5_mechanism.png)
 
-The problem this figure solves: the KO has both a weaker expression response *and* weaker
-splicing. Correlation alone cannot say which is upstream. An earlier version of this review
-stratified on expression response and concluded the splicing deficit was explained away —
-that was **conditioning on a mediator** and is retracted (see `HANDOFF.md`, "Superseded").
-These three panels discriminate instead of adjusting.
+**This figure records a retraction.** Earlier versions of this review made the
+expression-vs-splicing asymmetry the load-bearing claim for a splicing-specific UBL5 role.
+`scripts/10_layer_estimator_calibration.R` (Claude Code, commit 36690a2) showed that claim
+rests on comparing two estimators biased in opposite directions. I verified the argument,
+reproduced the calibration exactly, and **the asymmetry does not survive it.** Panel a still
+stands; panels b-c document why the asymmetry does not.
 
 **a. There is no constitutive splicing defect.** Comparing *unstimulated* cells only, using
 per-gene isoform composition distance over shared isoforms and calibrating against
@@ -57,23 +58,47 @@ essentially nil. The positive control, two genuinely different genotypes (H vs T
 at rest does not have one. Whatever UBL5 does, it is condition-dependent.
 Backing: `tables/baseline_composition_test.csv`.
 
-**b. Splicing degrades about twice as much as expression.** Noise-corrected, the KO retains
-**64.0%** (95% CI 62.5-65.6) of the wildtype expression response but only **37.7%**
-(32.7-43.1) of the splicing response — non-overlapping intervals. Restricting to
-reference-only (ENST) transcripts, so both arms use identical annotation and no PacBio-novel
-transcript can bias the comparison, reproduces it: 63.9% vs 35.0%. This asymmetry is what
-a purely downstream splicing effect does not predict.
-Backing: `tables/ubl5_retention_by_layer.csv`.
+**b. The two estimators compress signal at different rates.** Expression response is
+|log2FC| between condition means — averaging three replicates *before* the absolute value, so
+the estimate tracks truth almost linearly. Splicing response is a total variation distance, a
+sum of absolute values, which does not average out noise: for signal small relative to noise,
+E|s+n| ≈ E|n| + O(s²), so the estimator is roughly **quadratic** near zero and compresses
+ratios toward 0. Simulating a known ratio, a genotype with 60% of the true signal reads as
+68% by the expression estimator but only 42% by the splicing estimator. Comparing an
+upward-biased number to a downward-biased one manufactures an asymmetry even when both
+layers are reduced by exactly the same factor.
+Backing: `tables/layer_estimator_calibration.csv`.
 
-**c. Most of the splicing deficit is not explained by the expression deficit.** A mediation
-decomposition puts **36.3%** (CI 29.3-44.5) of the KO's effect on splicing through the
-reduced expression response and **63.7%** (55.5-70.7) unexplained by it.
-Backing: `tables/mediation_decomposition.csv`.
+**c. Inverting the calibration removes the asymmetry.** The reported 64% / 38% becomes
+**53% / 57%** on a true-signal scale — the observed gap of **+0.26 becomes −0.04**. The
+pipeline's own independent estimator, which disagreed sharply on raw numbers (60% / 65%),
+lands at 48% / 75% after correction. Both analyses agree once the layers are on a comparable
+scale: **the two layers are reduced by indistinguishable amounts.**
+Backing: `tables/layer_retention_corrected.csv`.
 
-**Read "direct" carefully.** It means *not explained by the measured mediator*, not
-*causally direct*. Reverse causation — splicing failure weakening the expression response —
-fits these data equally well. What the three panels together rule out is the specific model
-where splicing is merely a passive readout of a blunted transcriptional response.
+**I checked whether matching the estimator structure rescues the comparison. It does not.**
+Applying an identical across-minus-within pairwise form to both layers narrows the gap from
+26 to 14 points (expression 53.7%, splicing 39.9%) but cannot close it, because compression
+depends on **signal-to-noise**, not just estimator form — and the layers differ there by
+**20×** (WT expression SNR 1.81, splicing 0.09). At SNR 0.09 the splicing estimator is deep
+in the quadratic regime while expression is not. Matched structure is necessary, not
+sufficient.
+Backing: `tables/layer_matched_estimator.csv`, `tables/layer_snr.csv`.
+
+**What this does and does not overturn.** It does **not** show UBL5 has no splicing-specific
+role — it shows this measurement cannot demonstrate one in either direction. It does not
+touch panel a (a within-layer comparison, no cross-layer ratio involved), and it does not
+touch the globally blunted LPS expression response, which rests on expression alone. The
+mediation decomposition (36% / 64%, `tables/mediation_decomposition.csv`) inherits the same
+compressed splicing estimator and **should not be quoted** until recomputed on a calibrated
+scale. The simulation assumes Gaussian homoscedastic noise, so the magnitude of the
+correction is approximate; the *direction* of the two biases is not — it follows from the
+algebra of averaging before versus after an absolute value.
+
+**Resolving this properly** needs an estimator whose bias does not depend on which layer it
+is applied to: a formal differential-splicing model (DRIMSeq or satuRn) that returns a
+per-gene effect size on a comparable scale for both layers, rather than a
+noise-subtracted distance.
 
 ---
 
@@ -188,7 +213,7 @@ cheapest-potentially-fatal-first, in `EXPERIMENTS.md`.
 | question | verdict |
 |---|---|
 | Splicing responds to LPS beyond what expression shows | **Supported** — 19.7% of switching genes are invisible to gene-level DE |
-| UBL5 acts on splicing, not merely via expression | **Supported** — 63.7% of the deficit unexplained by expression; 62% of its interactome is spliceosomal |
+| UBL5 acts on splicing, not merely via expression | **Unresolved** — the layer asymmetry was an estimator artefact (F2b-c). The spliceosomal interactome (62% of 82 partners, SART1 edge) is suggestive but is annotation, not measurement |
 | UBL5 has a constitutive splicing defect | **Rejected** — baseline composition identical to WT (excess 0.0024 vs 0.0496 positive control) |
 | The deficit is LPS-pathway-specific | **Rejected** — transcriptome-wide; no TLR4 network proximity above a degree-matched null |
 | The switches are promoter choice, not splicing | **Partly** — 21.7% promoter-only, but 59.4% involve internal splicing |
@@ -201,10 +226,17 @@ cheapest-potentially-fatal-first, in `EXPERIMENTS.md`.
 Everything here derives from ISA's condition means and replicate isoform fractions. The
 composition measure (total variation distance over renormalised isoform fractions, calibrated
 against within-condition replicate pairs) is a reasonable summary but **is not a formal
-differential-splicing test**. The layer asymmetry in F2b is the claim a manuscript would rest
-on; it deserves confirmation with a purpose-built method (DRIMSeq or satuRn, with the pairing
-included if the design is paired) and against the count matrices rather than condition means,
-before it goes further than internal discussion.
+differential-splicing test** — and F2b-c is the concrete cost of that: the layer asymmetry I
+originally made load-bearing did not survive calibration. A purpose-built method (DRIMSeq or
+satuRn, with the pairing included if the design is paired), run on the count matrices rather
+than condition means, is now the blocking step for the whole UBL5 question rather than a
+nice-to-have.
+
+The general lesson, worth carrying to the other findings: **any claim of the form "layer X is
+affected more than layer Y" needs its estimators calibrated before it is believed.** The
+findings in F1, F3 and F4 do not have this problem — they are within-layer comparisons,
+proportions, or structural classifications, none of which compare two differently-biased
+estimators.
 
 Sample naming (`T1_minus`/`T1_plus` ... at n = 3) implies a **paired** design. That was
 inferred from filenames and has not been confirmed. Do not change the model on that basis —

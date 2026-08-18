@@ -1,0 +1,3 @@
+source,observed_expression,observed_splicing,true_expression,true_splicing,observed_gap,corrected_gap,note
+"this pipeline (script 08, estimator B)",0.602629718528904,0.651612546247385,0.475621737670994,0.746555514719916,-0.048982827718481,-0.270933777048922,Observed ratios are compressed by the estimator; the corrected columns invert the calibration. Compare layers only after correction.
+external review (estimator A),0.6395,0.3769,0.534577143341763,0.572485662548364,0.2626,-0.0379085192066015,Observed ratios are compressed by the estimator; the corrected columns invert the calibration. Compare layers only after correction.
