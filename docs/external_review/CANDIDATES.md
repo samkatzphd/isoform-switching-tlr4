@@ -57,9 +57,18 @@ and n = 5 with no correction for having chosen the genes on the WT outcome. It i
 with the KO's blunted response but is not independent evidence for it. Under the project's own
 convention this is a `selconf_`-class observation: descriptive only.
 
-**c. All four are cryptic in both arms.** Gene-level LPS log2FC stays inside ±0.25 in WT for
-all four, and the KO values are also small — so the "invisible to differential expression"
-property is not an artefact of one contrast.
+**c. All four are cryptic in WT; three of the four are also cryptic in the KO.** Gene-level LPS
+log2FC stays inside the ±0.25 cryptic window in WT for all four (IRAK3 −0.109, SOCS4 +0.049,
+RAB7B −0.217, SPRING1 +0.012). In the KO, **RAB7B falls outside it at −0.334** — the other
+three stay in (IRAK3 +0.188, SOCS4 +0.201, SPRING1 +0.034). So the "invisible to differential
+expression" property carries over to the second contrast for three genes but not for RAB7B,
+whose gene-level LPS response in the KO is large enough to be picked up by gene-level DE.
+
+RAB7B is also the gene whose absolute abundance differs most between arms (715 in WT vs 194 in
+the KO, 3.7x), so its KO behaviour is the least comparable of the four on both counts. Note the
+cryptic classification was only ever *defined* on the WT contrast — the KO column is a
+descriptive check, not a selection criterion — so this does not remove RAB7B from the candidate
+set. It does mean "cryptic in both arms" must not be stated as a property of the set.
 
 **Reproduction in the independent T_HT annotation:** SOCS4 and RAB7B reproduce as switching;
 SPRING1 is testable but does **not**; IRAK3 is **not testable** there (its gene expression is
