@@ -39,7 +39,25 @@ Run from the project root. Every script takes an optional config path as `argv[1
    ~2 SD of noise. It removes 33–52% of raw calls by design. The floor is on GENE
    expression, not isoform expression.
 
-4. **Raw inputs live on an external drive at `/Volumes/Expansion`**, which is **exFAT and has
+4. **`H` and `T`/`U` are different kinds of experiment, and `H_HT` alone is batch-corrected.**
+   All four have real replication (`T1`–`T3` were matured, treated and extracted separately,
+   not split from one flask), but `T`/`U` are one clonal line processed on a single day while
+   `H` is human **primary** macrophages from **three donors** on **three different days** —
+   two extra variance components, perfectly confounded with each other. So `importRdata` found 2 surrogate
+   variables for `H` and none for the others, and applied `limma::removeBatchEffect` to H's
+   expression, deriving all its IF/dIF from the corrected matrix. That halves its replicate IF
+   noise and drives its 2.07%-vs-0.87% switching rate. **Never compare an `H_HT` rate or dIF
+   distribution to another dataset's** — the H-vs-T contrast in `02e` confounds genotype with
+   design and should be retired, not recomputed. The fix for H is an **explicit** donor
+   blocking factor, *not* `detectUnwantedEffects = FALSE`. `REVIEW_CHANGES.md` §0g.
+
+5. **The ISA objects have been reconciled against raw RSEM counts** at
+   `/Volumes/Expansion/IsoformSwitchAnalyzer/Counts/`. `T_HT`, `T_UT` and `U_UT` reproduce
+   exactly (dIF r = 1.0000); `H_HT` only after its correction is reapplied (0.777 → 0.99915).
+   The counts cover all twelve libraries per reference, so a model-based DTU refit can test
+   `genotype x treatment` in one 2x2 model.
+
+6. **Raw inputs live on an external drive at `/Volumes/Expansion`**, which is **exFAT and has
    no journaling** — interrupted writes leave silently corrupt files. Two exports have
    arrived damaged. Always run `Rscript scripts/99_verify_inputs.R` before the pipeline; it
    exits non-zero on failure. Scripts `01`, `04`, `06` need the drive; the rest work from

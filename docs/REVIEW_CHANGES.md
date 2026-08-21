@@ -468,6 +468,174 @@ after correction**.
 
 ---
 
+## 0g. The ISA objects reconciled against raw counts, and why `H_HT` is not comparable (2026-08-10)
+
+RSEM matrices for all twelve libraries of each reference arrived at
+`/Volumes/Expansion/IsoformSwitchAnalyzer/Counts/{H-T,U-T}/{Genes,Isoforms}/` (expected
+counts, TPM and FPKM). Every ISA object was reconciled against them by recomputing isoform
+fraction from scratch: IF per library = isoform TPM / sum over the gene's isoforms, then
+condition means and `dIF`.
+
+### Three datasets reproduce exactly; one does not
+
+| dataset | dIF correlation | median abs difference | switching genes ISA -> recomputed | Jaccard |
+|---|---|---|---|---|
+| `T_HT_anchor` | **1.0000** | 1.4e-05 | 95 -> 106 | 0.90 |
+| `T_UT` | **1.0000** | 1.4e-05 | 118 -> 112 | 0.95 |
+| `U_UT` | **1.0000** | 1.5e-05 | 62 -> 64 | 0.94 |
+| `H_HT_supplementary` | **0.777** | 1.9e-02 | 169 -> 35 | 0.17 |
+
+The 1.4e-05 residual is exactly the four-decimal rounding of the stored IF values, so those
+three are reproduced to the precision the objects carry. The Jaccard below 1 is threshold
+ties at `|dIF| = 0.15`, not disagreement.
+
+Gene-level totals agree for all four (r = 0.9999), including `H_HT`. Whatever differs about
+`H_HT` changes how a gene's expression is **apportioned across its isoforms**, not how much
+the gene has.
+
+### The cause: a confounder correction applied to one dataset out of four
+
+Three hypotheses were tested and rejected before the right one. It is not a mislabelled or
+foreign count file — cross-correlating each ISA `H` column against all twelve RSEM columns,
+every column matches its own library best (r ~ 0.987) against 0.75-0.82 for any `T` column.
+It is not an annotation-version mismatch — the `gene_id` map is 100% identical and all
+128,491 isoform ids are present. It is not a filtered-denominator artefact — restricting the
+gene sum to the isoforms retained in the object changes nothing.
+
+The `args` recorded in each `.Rdata` show all four runs read the same RSEM directory and the
+same GTF. The design matrices differ:
+
+| run | design columns | ISA version |
+|---|---|---|
+| `T_HT` | `sampleID, condition` | 2.6.0 |
+| `T_UT` | `sampleID, condition` | 2.6.0 |
+| `U_UT` | `sampleID, condition` | 2.6.0 |
+| `H_HT` | `sampleID, condition, `**`sv1, sv2`** | 2.4.0 |
+
+`IsoformSwitchAnalyzeR::importRdata` runs `sva::num.sv` on every import. When it finds
+surrogate variables it applies
+`limma::removeBatchEffect(log2(TPM+1), design = condition, covariates = SVs, method = "robust")`,
+back-transforms with `2^x - 1`, clips negatives to zero, and **derives gene expression and
+every IF/dIF value from the corrected matrix** (source lines ~1170-1205). It found two
+surrogate variables for `H_HT` and zero for the other three.
+
+Reapplying that exact transform to the RSEM TPM reproduces the object:
+
+| | raw RSEM vs ISA | corrected RSEM vs ISA |
+|---|---|---|
+| per-replicate IF | r = 0.978-0.987 | **r = 0.9997-0.9999** |
+| `dIF` | r = 0.777 | **r = 0.99915** |
+| within-condition replicate IF SD (`H_minus`) | 0.0062 | 0.0030 (object holds 0.0031) |
+
+So the counts are complete and correctly labelled, and all four objects are now verified
+against them. The difference is processing, not data.
+
+### Why only `H_HT` has surrogate variables — the sample provenance
+
+Confirmed by the experimentalist 2026-08-10, and it makes the asymmetry expected rather than
+accidental:
+
+- **`T`** is the THP-1 **cell line** differentiated to macrophages, and **`U`** the UBL5
+  knockout line. `T1`-`T3` are **independent replicates through the whole workflow** —
+  matured separately, treated with LPS separately, RNA extracted separately. They are not
+  splits of one flask, and they do capture maturation, treatment and extraction variability.
+  What they do not span is **genotype** (one clonal line) or **day** (all processed
+  together).
+- **`H`** is **h**uman **primary** macrophages donated by volunteers. `H1`, `H2`, `H3` are
+  **three different donors**, so genotype varies, and because scheduling followed donor
+  availability **each was prepped on a different day**.
+
+So all four datasets have real replication. `H` simply carries **two additional variance
+components** — donor genotype and prep day — layered on top of the same process variability
+`T`/`U` have. `sva` finding two surrogate variables in `H` and none in the others is
+**correct behaviour, not a defect**: it is detecting structure that is genuinely present in
+one design and genuinely absent from the other.
+
+Note that in `H`, **donor and prep day are perfectly confounded** — one donor per day. A
+single blocking term absorbs both, and no analysis of this data can attribute H's between-
+replicate variation to genotype rather than batch.
+
+The ISA version difference is **not** the cause: the H *unfiltered* export was built with
+2.6.0 and still acquired `sv1`/`sv2`, while `T` under that same 2.6.0 acquired none. The
+detection is data-driven.
+
+### What this invalidates
+
+This resolves Tier-2 open question #6. The answer is not "biological outlier" and not
+"annotation bias" — it is that two datasets with fundamentally different replicate structures
+were processed by one pipeline that adapted to each, and then their outputs were compared as
+though they were on one scale. It explains `H_HT`'s whole profile:
+
+- **Lowest replicate IF noise of the four datasets.** The correction halves it
+  (0.0062 -> 0.0030). Uncorrected, H's donor variation would make it the *noisiest*, not the
+  quietest — the ranking is inverted by the correction.
+- **Its recommended expression floor is the lowest of the four.**
+  `expression_floor_recommendation.csv` gives `T_UT` 20.16, `U_UT` 11.96, `T_HT` 10.07,
+  **`H_HT` 6.02**. `02d` takes the *median* of the four, so H pulls the consensus down only
+  modestly (~11 vs ~12.5 if H were on the same footing) — the median of four is set by the
+  middle two. Real, but a second-order effect, not a distortion of the floor.
+- **2.07% switching genes against 0.87% for `T_HT`.** Less replicate noise, plus `sv1`/`sv2`
+  carried in the design into the downstream test, yields more calls at the same threshold.
+
+Consequently the **H-vs-T switching contrast in `02e` (crude OR 2.29, MH 2.49) is not
+interpretable as a biological difference** — and, given the provenance above, it would not be
+even if both were processed identically. A switching rate is a count of genes whose effect is
+consistent across that dataset's replicates, so the two rates answer **different questions**:
+in `H`, "consistent across three donors on three days"; in `T`, "consistent across three
+process replicates of one genotype on one day". H's is the strictly harder test. Their ratio
+is therefore not a genotype effect. Re-scoring `H_HT` on raw-count `dIF` while holding its
+ISA q-values fixed drops it from 169 to 35 switching genes and inverts the OR to 0.44; that
+number is **not** the corrected answer (the q-values still come from the corrected fit), it
+only bounds how much of the contrast rides on the correction.
+
+One real concern for whoever reruns this: `H`'s `sv1` is **not orthogonal to condition**
+(`H1_plus` +0.56, `H2_plus` +0.57, but `H3_plus` -0.46, against -0.21 to -0.23 for all three
+minus samples). A latent variable partly collinear with the contrast of interest absorbs real
+condition signal along with the unwanted variation. `sv2` looks like a cleaner H3-vs-H1/H2
+split — i.e. donor. This is the specific hazard of letting `sva` *rediscover* a factor that
+is already known.
+
+### What is unaffected
+
+Q1's anchor (`T_HT`) and both Q2 datasets (`T_UT`, `U_UT`) reproduce exactly from raw counts.
+Nothing resting on those three is touched by this. `H_HT` is supplementary throughout, and
+the ISG result it was already the odd one out on (no enrichment) now has a candidate
+explanation.
+
+### The fix
+
+**Not** `detectUnwantedEffects = FALSE`. Given the provenance, that would leave genuine
+donor and batch variation in `H` uncorrected — inflating its noise and discarding real power
+— and it would not make `H` comparable to `T` in any meaningful sense, because the two
+designs are not comparable to begin with.
+
+The right change is that **donor is a known factor, so it belongs in the design explicitly**:
+fit `~ donor + condition` for `H` (a paired donor design, which is what the experiment
+actually is) rather than letting `sva` rediscover it latently. That removes the same
+variation, is reproducible, and eliminates the collinearity hazard `sv1` exhibits.
+
+Apply the analogous term uniformly — `~ replicate + condition` for `T` and `U`. Their
+replicates are independent through maturation, treatment and extraction, and the design is
+paired (§0e), so replicate is a legitimate blocking factor there too, not a formality. `sva`
+finds nothing in those datasets, so they should barely move; running the same model
+everywhere is easier to defend than blocking only the dataset that forced the issue.
+
+Then re-import all four **under one ISA version** — a consistency fix in its own right, since
+`H_HT` was built with 2.4.0 and the other three with 2.6.0 — but note that the version is not
+what produced the asymmetry, so this will not by itself change H's behaviour.
+
+Everything needed is on the drive: the RSEM matrices, the GTFs named in `args`
+(`{H-T,U-T}_Comparisons/reference/GRCh38_Gencode_CHR_v40_plus_*_Isoseq.gtf`) and the
+transcript fastas (`transcripts_{H-T,U-T}.fa`). The installed build is 2.4.0, so upgrade
+before rerunning.
+
+**What will not be fixed by any of this:** the H-vs-T switching-rate contrast. Correct
+per-dataset modelling makes each dataset's own calls trustworthy; it does not make a
+three-donor design and a one-day cell-line design yield comparable rates. That comparison
+should be retired rather than recomputed.
+
+---
+
 ## 1. Statistics that were not interpretable as reported
 
 ### 1.1 Fisher test removed, not caveated

@@ -1,6 +1,6 @@
 # Open questions and tests to revisit
 
-Status as of 2026-08-07. Each entry states the question, what is blocking it, what would
+Status as of 2026-08-10. Each entry states the question, what is blocking it, what would
 answer it, and why it matters. Ordered by what would change a conclusion.
 
 Companion documents: `STATISTICAL_METHODS.md` (why each method was chosen),
@@ -15,9 +15,27 @@ Companion documents: `STATISTICAL_METHODS.md` (why each method was chosen),
 **Question.** Is the LPS response reduced more in one layer than the other in the UBL5
 knockout?
 
-**Blocked on.** Raw per-isoform counts for all genes (being supplied). Everything so far
-uses IsoformSwitchAnalyzeR's condition means and replicate isoform fractions, not a fitted
-model.
+**No longer blocked (2026-08-10).** The counts arrived at
+`/Volumes/Expansion/IsoformSwitchAnalyzer/Counts/{H-T,U-T}/Isoforms/` — RSEM expected counts
+for all twelve libraries of each reference, with `gene_id`/`GeneName`, isoform ids matching
+the ISA objects 100%. Verified against the ISA objects in `REVIEW_CHANGES.md` §0g.
+
+Because the U-T file carries **all twelve** libraries, the layer question becomes a
+`genotype x treatment` interaction in **one** 2x2 model rather than a comparison of two
+separately-fit ISA runs. That removes the cross-run normalisation problem as well as the
+estimator problem. Counts are fractional (RSEM EM output) — fine for DRIMSeq/satuRn, round
+for DEXSeq. `satuRn`, `DEXSeq`, `edgeR` and `limma` are installed; `DRIMSeq` is not.
+
+**Choose the count scale deliberately.** ISA's own `isoformCountMatrix` is *not* RSEM
+expected counts: its column totals match (40.5M vs 40.5M) but per-isoform it differs by a
+factor of 0.18-2.3, because ISA derives counts from abundance (scaledTPM: TPM x libsize/1e6)
+rather than carrying RSEM's effective-length-weighted expected counts. For DTU that is the
+*recommended* scale — raw expected counts are biased by effective-length differences between
+isoforms of the same gene. Both are derivable from the supplied files, so pick one on
+purpose and record it.
+
+Everything so far uses IsoformSwitchAnalyzeR's condition means and replicate isoform
+fractions, not a fitted model.
 
 **Why the current answer is unsatisfactory.** The comparison depends on the estimator rather
 than the biology. Expression response (`|log2FC|`) is biased *toward* no-difference; splicing
@@ -103,24 +121,44 @@ depending on any of the normalisation arguments in #1.
 
 ---
 
-### 6. `H_HT` annotation-bias check
+### 6. `H_HT` — ANSWERED 2026-08-10, and it is neither option
 
-**Question.** Is `H_HT` a genuine biological outlier or an artefact of its annotation?
+**Question as posed.** Is `H_HT` a genuine biological outlier or an artefact of its
+annotation?
 
-**Evidence it is odd.** 2.07% switching genes vs 0.87% for `T_HT`; 3.11% of isoforms over
-|dIF| 0.15 vs 0.91%; the *lowest* replicate noise (median IF SD 0.0241); loses only 14.2% of
-calls to the expression floor against 35.7 / 48.4 / 58.7% elsewhere.
+**Answer: neither. `H_HT` has a different experimental design, and the pipeline adapted to
+it.** `importRdata` detected two surrogate variables for `H_HT` and none for the other three,
+so it applied `limma::removeBatchEffect` to H's expression and derived all its IF/dIF from
+the corrected matrix. Its IFs are batch-corrected; the other three are raw. Full evidence and
+reproduction from raw counts in `REVIEW_CHANGES.md` §0g.
 
-**The concern.** H is a different genotype quantified against a reference built partly from
-its own PacBio run.
+**Why H and only H:** all four datasets have real replication — `T1`-`T3` were matured,
+LPS-treated and RNA-extracted **separately**, not split from one flask. But `T`/`U` are one
+clonal line processed on a single day, whereas `H` is human **primary** macrophages from
+**three different donors**, each prepped on a **different day**. H therefore carries two extra
+variance components (donor genotype, prep day) that T/U structurally lack, and sva detecting
+them is correct behaviour. In H those two are **perfectly confounded** — one donor per day —
+so no analysis of this data can separate genotype from batch.
 
-**What would answer it.** Compare the H-derived and T-derived transcript contributions to the
-HT reference and ask whether H's expression concentrates on transcripts discovered in H.
-Structurally the same test already run for the UT pair, which passed
-(`02f_reference_concordance.R` machinery applies).
+Every listed oddity follows: the correction halves within-condition replicate IF noise
+(0.0062 -> 0.0030) — uncorrected, H's donor variance would make it the *noisiest* dataset,
+so the correction inverts the ranking — and the reduced noise plus `sv1`/`sv2` in the design
+explains the elevated switching rate.
 
-**Matters because.** `H_HT` is used as supplementary support for Q1, and it is also the one
-dataset showing no ISG enrichment.
+**What is now open instead.** Refit with donor as an **explicit** blocking factor
+(`~ donor + condition`) rather than a latent one, and re-import all four under a single ISA
+version. Do **not** simply set `detectUnwantedEffects = FALSE` — that would leave real donor
+variation uncorrected. Details in §0g.
+
+**Watch for.** `H`'s `sv1` is not orthogonal to condition (`H1_plus` +0.56, `H2_plus` +0.57,
+`H3_plus` -0.46 against -0.21 to -0.23 for all minus samples), so the latent correction may
+absorb real condition signal. An explicit donor term does not have this failure mode.
+
+**Retire rather than recompute:** the H-vs-T switching-rate contrast in `02e` (OR 2.29/2.49).
+A switching rate counts genes consistent across that dataset's replicates, so the two rates
+answer different questions — "consistent across three donors on three days" versus
+"consistent across three process replicates of one genotype on one day". H's is the harder
+test. No modelling choice makes the ratio a genotype effect.
 
 ---
 
@@ -170,6 +208,12 @@ The floor (gene expression ≥ 12) was derived from within-condition replicate I
 without using the pairing. A paired noise estimate should be smaller, which would justify a
 lower floor and recover some of the 33–52% of calls currently removed.
 
+Now also entangled with #6: `H_HT`'s replicate IF noise was halved by a batch correction the
+others did not get, so its recommended floor (6.02) is the lowest of the four — against
+`T_HT` 10.07, `U_UT` 11.96, `T_UT` 20.16. `02d` takes the *median*, so the effect on the
+applied value is modest (~11 vs ~12.5 if H were on the same footing), not a distortion. Still,
+redo `02d` after the re-import rather than before.
+
 ### 11. Confirm the `PENK` and Class B examples
 
 `PENK` (gene −0.39, dominant isoform +0.21, minor −1.11, dominant IF 0.48 → 0.76) is the
@@ -191,3 +235,5 @@ writeup needs its reproduction flag checked first.
 | Is the design paired? | Yes, confirmed by the experimentalist | §0e |
 | Is the 64%-vs-38% layer asymmetry real? | Not supported — estimator artefact | §0f |
 | Is baseline composition abnormal in the KO? | No, and the positive control works | §0e, §0f |
+| Do the ISA objects match the raw counts? | Yes for `T_HT`/`T_UT`/`U_UT` (dIF r = 1.0000); `H_HT` only after its batch correction is reapplied | §0g |
+| Why is `H_HT` an outlier? | sva confounder correction applied to it alone | §0g, #6 |
