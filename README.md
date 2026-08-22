@@ -343,15 +343,25 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
   **cryptic** subset of `T_UT` and then hand-picked for TLR relevance. That is a Q2-shaped
   selection — it never used the Q1 anchor `T_HT`, and the cryptic filter discards the
   largest LPS switches in the data.
-- Ranks every gene switching in **either** wildtype annotation (`T_HT` ∪ `T_UT` = 157) by
-  effect size, flags whether it is **annotation-robust** (called in both = 55), whether it
-  is cryptic or DE-visible, and whether it also switches in `H_HT`.
+- Emits **two lists, because they answer two questions** and a gene can be a strong answer
+  to one and irrelevant to the other:
+  - **List A — `q1_response_candidates`** (the main Q1 question: what does LPS do to isoform
+    usage?). Annotation-robust switchers ranked purely by effect. Whether the gene also
+    moves in abundance is beside the point — NCOA7 shifts dIF 0.65 either way.
+  - **List B — `q1_cryptic_candidates`** (the sub-question: which switches would DE miss?).
+    All 37 cryptic candidates. Membership is the finding; rank is secondary. Ranking A by
+    effect and filtering to cryptic would bury B's point, which is why they are separate.
+- Union of the two wildtype annotations is 157: **55 annotation-robust**, 77 tested in both
+  but called in one, 25 never testable in one of them.
+- `annotation_status` never conflates *tested and not called* with *below the expression
+  floor*. IRAK3 is the worked example — expression 10.3 in `T_HT` against a floor of 12, so
+  its absence from the anchor is missing data, not disagreement.
 - `T_HT`/`T_UT` agreement is **robustness to transcript space, not replication** — the same
   six libraries. `H_HT` agreement is genuine cross-genotype support but is reported as a
   flag only, never a filter, since `H_HT` alone is batch-corrected (§0g).
-- Ranking selects on the outcome, so the table is descriptive and carries no test.
-- **Writes:** `results/tables/q1_candidates{,_shortlist,_summary}.*`, figures under
-  `results/figures/q1_candidates/`.
+- Ranking selects on the outcome, so the tables are descriptive and carry no test.
+- **Writes:** `results/tables/q1_{candidates,response_candidates,cryptic_candidates,candidates_summary}.*`,
+  figures under `results/figures/q1_candidates/`.
 
 ## Quick start
 

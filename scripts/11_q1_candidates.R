@@ -116,6 +116,7 @@ sym_of <- function(k, switching_only = TRUE) {
   unique(d$gene_name)
 }
 
+tested_anchor <- unique(tabs[[ANCHOR]]$gene_name)
 tested_reannot <- if (is.null(tabs[[REANNOT]])) character(0) else unique(tabs[[REANNOT]]$gene_name)
 tested_cross <- if (is.null(tabs[[CROSS]])) character(0) else unique(tabs[[CROSS]]$gene_name)
 sw_reannot <- sym_of(REANNOT)
@@ -181,12 +182,24 @@ cand <- cand |>
 cand <- cand |>
   mutate(
     switches_anchor = .data$gene_name %in% sym_of(ANCHOR),
+    testable_anchor = .data$gene_name %in% tested_anchor,
     switches_reannot = .data$gene_name %in% sw_reannot,
     testable_reannot = .data$gene_name %in% tested_reannot,
     switches_cross = .data$gene_name %in% sw_cross,
     testable_cross = .data$gene_name %in% tested_cross,
     # Annotation-robust: called in BOTH transcript spaces for the same libraries.
     annotation_robust = .data$switches_anchor & .data$switches_reannot,
+    # Failing robustness has two very different causes and the project's standing rule is
+    # never to conflate them: a gene TESTED in the other annotation and not called is a
+    # real failure, while a gene below the expression floor there was never given the
+    # chance. IRAK3 is the worked example -- gene expression 10.3 in T_HT against a floor
+    # of 12, so its absence from the anchor is missing data, not disagreement.
+    annotation_status = case_when(
+      .data$switches_anchor & .data$switches_reannot ~ "robust (called in both)",
+      .data$switches_anchor & !.data$testable_reannot ~ paste0("not testable in ", REANNOT),
+      !.data$switches_anchor & !.data$testable_anchor ~ paste0("not testable in ", ANCHOR),
+      TRUE ~ "tested in both, called in one"
+    ),
     called_in = case_when(
       .data$switches_anchor & .data$switches_reannot ~ "both annotations",
       .data$switches_anchor ~ paste0(ANCHOR, " only"),
@@ -210,56 +223,87 @@ cand <- cand |>
   # Plain names here: select() is a tidyselect context, where .data$ is deprecated.
   # `.data$` stays in the data-masking verbs above, per the project style.
   select("rank", "gene_name", "dif_rank", "lfc_rank", "visibility",
-         "called_in", "annotation_robust", "cross_genotype_support",
+         "called_in", "annotation_robust", "annotation_status", "cross_genotype_support",
          "dif_anchor", "dif_reannot", "dif_cross",
          "lfc_anchor", "lfc_reannot",
          "expr_anchor", "n_iso_anchor",
-         "switches_anchor", "switches_reannot", "testable_reannot",
+         "switches_anchor", "testable_anchor", "switches_reannot", "testable_reannot",
          "switches_cross", "testable_cross")
 
 write_table_pair(cand, results_tables, "q1_candidates", cfg = cfg)
 
-# ---- Shortlist ------------------------------------------------------------------------
-# The defensible Q1 assay list: switching in BOTH transcript spaces for these libraries,
-# ranked by effect. Annotation robustness is the only filter applied; cryptic status is
-# reported, never required, because both kinds of candidate are wanted for Q1.
-shortlist <- cand |>
+# ---- Two lists, two questions ------------------------------------------------------------
+# These are deliberately NOT one ranked table with a flag. They answer different questions
+# and a gene can be a strong answer to one and irrelevant to the other:
+#
+#   LIST A -- "what does LPS do to isoform usage in wildtype?"  The main Q1 question.
+#   Ranked purely by effect size. Whether the gene also changes in abundance is beside the
+#   point: NCOA7 shifts dIF 0.65 and that is the biggest switch in the data whether or not
+#   DE would also have found it.
+#
+#   LIST B -- "which LPS switches would differential expression miss?"  A sub-question of
+#   Q1, and the one the hidden-layer analysis is about. Membership is the finding here;
+#   within the set, effect size is secondary. Ranking A by effect and then filtering to
+#   cryptic would bury the point of B, which is why they are separate outputs.
+#
+# Both use the same cryptic definition as script 09 (config analysis.cryptic_max_abs_lfc),
+# so there is one threshold in the project, not two.
+
+list_a <- cand |>
   filter(.data$annotation_robust) |>
   arrange(desc(.data$dif_rank)) |>
   head(shortlist_n) |>
-  mutate(shortlist_rank = row_number())
+  mutate(list_rank = row_number())
 
-write_table_pair(shortlist, results_tables, "q1_candidates_shortlist", cfg = cfg)
+write_table_pair(list_a, results_tables, "q1_response_candidates", cfg = cfg)
+
+# List B keeps every cryptic candidate in the union, not just the annotation-robust ones:
+# at this set size the robust subset is small, and `annotation_status` already says which
+# non-robust entries are genuine disagreements and which were never testable.
+list_b <- cand |>
+  filter(grepl("^cryptic", .data$visibility)) |>
+  arrange(desc(.data$annotation_robust), desc(.data$dif_rank)) |>
+  mutate(list_rank = row_number())
+
+write_table_pair(list_b, results_tables, "q1_cryptic_candidates", cfg = cfg)
 
 # ---- Summary --------------------------------------------------------------------------
+cryptic_all <- grepl("^cryptic", cand$visibility)
 summary_tbl <- tibble(
   metric = c(
     "genes switching in the anchor (T_HT)",
     "genes switching in the re-annotation (T_UT)",
     "union across the two wildtype annotations",
     "annotation-robust (switching in both)",
-    "  of those, cryptic",
-    "  of those, also switching in H_HT",
-    "anchor-only calls",
-    "re-annotation-only calls"
+    "  never testable in one annotation",
+    "  tested in both, called in one",
+    "LIST A -- response candidates (robust, ranked)",
+    "LIST B -- cryptic candidates (invisible to DE)",
+    "  of those, annotation-robust",
+    "  of those, also switching in H_HT"
   ),
   n = c(
     sum(cand$switches_anchor),
     sum(cand$switches_reannot),
     nrow(cand),
     sum(cand$annotation_robust),
-    sum(cand$annotation_robust & grepl("^cryptic", cand$visibility)),
-    sum(cand$annotation_robust & cand$switches_cross),
-    sum(cand$switches_anchor & !cand$switches_reannot),
-    sum(!cand$switches_anchor & cand$switches_reannot)
+    sum(grepl("^not testable", cand$annotation_status)),
+    sum(cand$annotation_status == "tested in both, called in one"),
+    nrow(list_a),
+    nrow(list_b),
+    sum(cryptic_all & cand$annotation_robust),
+    sum(cryptic_all & cand$switches_cross)
   )
 )
 write_table_pair(summary_tbl, results_tables, "q1_candidates_summary", cfg = cfg)
 print(as.data.frame(summary_tbl))
-message("\nTop of the annotation-robust shortlist:")
-print(as.data.frame(shortlist |> select("shortlist_rank", "gene_name", "dif_rank",
-                                        "lfc_rank", "visibility",
-                                        "cross_genotype_support") |> head(12)))
+
+message("\nLIST A -- the LPS response, ranked by effect:")
+print(as.data.frame(list_a |> select("list_rank", "gene_name", "dif_rank", "lfc_rank",
+                                     "cross_genotype_support") |> head(12)))
+message("\nLIST B -- switches differential expression would miss:")
+print(as.data.frame(list_b |> select("list_rank", "gene_name", "dif_rank", "lfc_rank",
+                                     "annotation_status") |> head(12)))
 
 # ---- Figures --------------------------------------------------------------------------
 if (has_ggplot) {
@@ -287,26 +331,46 @@ if (has_ggplot) {
            width = 8, height = 5.5, dpi = 200)
   }
 
-  if (nrow(shortlist)) {
-    sl <- shortlist |>
-      mutate(gene_name = factor(.data$gene_name, levels = rev(.data$gene_name)))
-    p2 <- ggplot(sl, aes(x = .data$dif_rank, y = .data$gene_name)) +
+  lollipop <- function(d, title, sub, colour_by, palette) {
+    d <- d |> mutate(gene_name = factor(.data$gene_name, levels = rev(.data$gene_name)))
+    ggplot(d, aes(x = .data$dif_rank, y = .data$gene_name)) +
       geom_segment(aes(x = 0, xend = .data$dif_rank, yend = .data$gene_name),
                    colour = "grey75") +
-      geom_point(aes(colour = .data$visibility), size = 3) +
-      scale_colour_manual(
-        values = c("cryptic (DE would miss it)" = "#e6550d",
-                   "also changes expression" = "#1f78b4"),
-        name = NULL
-      ) +
-      labs(
-        title = paste0("Q1 shortlist: top ", nrow(sl), " annotation-robust LPS switchers"),
-        subtitle = "Wildtype THP-1, switching in both transcript spaces for these libraries",
-        x = "max |dIF| among switching isoforms", y = NULL
-      ) +
+      geom_point(aes(colour = .data[[colour_by]]), size = 3) +
+      scale_colour_manual(values = palette, name = NULL) +
+      labs(title = title, subtitle = sub,
+           x = "max |dIF| among switching isoforms", y = NULL) +
       theme(legend.position = "top")
-    ggsave(file.path(fig_dir, "fig_q1_shortlist.png"), p2,
-           width = 8, height = 0.32 * nrow(sl) + 2.2, dpi = 200)
+  }
+
+  if (nrow(list_a)) {
+    p2 <- lollipop(
+      list_a,
+      paste0("LIST A -- the wildtype LPS response, top ", nrow(list_a)),
+      "Annotation-robust: switching in both transcript spaces for these libraries",
+      "cross_genotype_support",
+      c("also switches in H_HT" = "#1f78b4",
+        "tested in H_HT, not switching" = "grey60",
+        "not testable in H_HT" = "grey82")
+    )
+    ggsave(file.path(fig_dir, "fig_q1_response_candidates.png"), p2,
+           width = 8.5, height = 0.32 * nrow(list_a) + 2.2, dpi = 200)
+  }
+
+  if (nrow(list_b)) {
+    p3 <- lollipop(
+      list_b,
+      paste0("LIST B -- switches differential expression would miss (", nrow(list_b), ")"),
+      paste0("Wildtype LPS switchers with |gene log2FC| < ", cryptic_lfc,
+             "; membership is the finding, rank is secondary"),
+      "annotation_status",
+      c("robust (called in both)" = "#e6550d",
+        "tested in both, called in one" = "grey60",
+        "not testable in T_UT" = "grey82",
+        "not testable in T_HT" = "grey82")
+    )
+    ggsave(file.path(fig_dir, "fig_q1_cryptic_candidates.png"), p3,
+           width = 8.5, height = 0.28 * nrow(list_b) + 2.2, dpi = 200)
   }
   message("Figures: ", fig_dir)
 } else {

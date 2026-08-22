@@ -3,7 +3,9 @@
 "genes switching in the re-annotation (T_UT)",117
 "union across the two wildtype annotations",157
 "annotation-robust (switching in both)",55
-"  of those, cryptic",8
-"  of those, also switching in H_HT",6
-"anchor-only calls",40
-"re-annotation-only calls",62
+"  never testable in one annotation",25
+"  tested in both, called in one",77
+"LIST A -- response candidates (robust, ranked)",20
+"LIST B -- cryptic candidates (invisible to DE)",37
+"  of those, annotation-robust",8
+"  of those, also switching in H_HT",2

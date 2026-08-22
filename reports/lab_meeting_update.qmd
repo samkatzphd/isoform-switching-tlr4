@@ -38,6 +38,12 @@ spar <- xr_read("sparing_relative_vs_absolute.csv")
 cand <- xr_read("candidate_summary.csv")
 net  <- xr_read("network_distance_to_TLR4.csv")
 
+# Q1 candidate lists (script 11)
+q1s  <- read_tab("q1_candidates_summary.csv")
+q1a  <- read_tab("q1_response_candidates.csv")
+q1b  <- read_tab("q1_cryptic_candidates.csv")
+q1n  <- function(k) q1s$n[match(k, q1s$metric)]
+
 # Figure helpers
 flay <- make_fig("layers")
 fhid <- make_fig("hidden_layer")
@@ -513,6 +519,111 @@ data. It cannot substitute for the refit.
 
 # Candidates for validation {#sec-candidates}
 
+## Q1 candidates — two lists, two questions {#sec-q1cand}
+
+The candidate set carried through the external review (IRAK3, SOCS4, RAB7B, SPRING1) is
+**Q2-shaped**. Its chain is: 117 switching genes in `T_UT` → 23 cryptic → **4 genes
+hand-picked for TLR-pathway relevance** → 7 isoforms. Their ranks among the 23 cryptic
+switchers are 1, 3, **10** and **11**, so this is a judgement call for assay design, not a
+statistical selection — no claim of the form "the top candidates are TLR genes" follows
+from it.
+
+Two gaps followed, and `scripts/11_q1_candidates.R` now fills them. The set never used
+**`T_HT`, the designated Q1 anchor**; and the cryptic filter, while exactly right for the
+sub-question, discards the largest switches in the data purely because those genes also
+change in abundance.
+
+::: {.callout-note}
+## Why these are two lists rather than one ranked table with a flag
+"Invisible to DE" is a **sub-question within Q1, not the main one**, so it gets its own
+list. A gene can be a strong answer to one and irrelevant to the other. Ranking the
+response list by effect and then filtering it to cryptic would bury the point of the
+cryptic list, where **membership is the finding** and rank is secondary.
+:::
+
+```{r}
+#| label: tbl-q1summary
+kable(
+  q1s |> transmute(Metric = .data$metric, n = .data$n),
+  caption = "Q1 candidate accounting across the two wildtype annotations of the same six libraries"
+)
+```
+
+### List A — the wildtype LPS response
+
+The main Q1 question, ranked purely by effect size.
+
+```{r}
+#| label: tbl-q1a
+kable(
+  q1a |> head(12) |> transmute(
+    Rank = .data$list_rank, Gene = .data$gene_name,
+    `max |dIF|` = round(.data$dif_rank, 3),
+    `gene log2FC` = round(.data$lfc_rank, 2),
+    `Cross-genotype (H_HT)` = .data$cross_genotype_support
+  ),
+  caption = "Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q1_response_candidates.csv"
+)
+```
+
+A coherent interferon and inflammatory signature — **NCOA7, RSAD2, DDX58, IFITM2, IL23A,
+CCL3, CD86, KDM6B, GBP1** — and almost entirely disjoint from the Q2 four.
+
+```{r}
+#| label: fig-q1a
+#| fig-cap: "List A — the wildtype LPS response, ranked by effect among annotation-robust switchers."
+knitr::include_graphics(existing_figs(figs("q1_candidates", "fig_q1_response_candidates.png")))
+```
+
+### List B — switches differential expression would miss
+
+The sub-question, and the one the hidden-layer analysis is about.
+`r q1n("LIST B -- cryptic candidates (invisible to DE)")` genes qualify;
+**`r q1n("  of those, annotation-robust")`** are annotation-robust.
+
+```{r}
+#| label: tbl-q1b
+kable(
+  q1b |> head(12) |> transmute(
+    Rank = .data$list_rank, Gene = .data$gene_name,
+    `max |dIF|` = round(.data$dif_rank, 3),
+    `gene log2FC` = round(.data$lfc_rank, 3),
+    `Annotation status` = .data$annotation_status
+  ),
+  caption = "Cryptic candidates, annotation-robust first. Full list in q1_cryptic_candidates.csv"
+)
+```
+
+```{r}
+#| label: fig-q1b
+#| fig-cap: "List B — cryptic candidates. Membership is the finding; rank is secondary."
+knitr::include_graphics(existing_figs(figs("q1_candidates", "fig_q1_cryptic_candidates.png")))
+```
+
+::: {.callout-warning}
+## Two things this table is careful about
+**Failing annotation-robustness has two different causes.** A gene *tested* in the other
+annotation and not called is a real disagreement; a gene below the **expression floor**
+there was never given the chance. **IRAK3** is the worked example — gene expression 10.3 in
+`T_HT` against a floor of 12 — so its absence from the anchor is missing data, not evidence
+against it. The `annotation_status` column keeps these apart.
+
+**`T_HT`/`T_UT` agreement is robustness to transcript space, not replication.** Same six
+libraries, same RNA. `H_HT` agreement *is* genuine cross-genotype support, but it is
+reported as a flag only and never used as a filter, since `H_HT` alone is batch-corrected
+(@sec-hht). No `H_HT` effect size is compared to a `T` effect size anywhere.
+:::
+
+::: {.callout-important}
+## Neither Q1 list has been through the assayability screen yet
+The nesting and primer-specificity analysis that eliminated **6 of the 7** Q2 candidates
+below has **not** been run on these genes. Expect it to remove several. Until it has, treat
+both lists as biological shortlists, not assay-ready ones. This is the next task —
+see @sec-next.
+:::
+
+## Q2 candidates and assay feasibility
+
 ```{r}
 #| label: tbl-cand
 kable(
@@ -628,14 +739,21 @@ is **not**. Counts are fractional (RSEM EM output) — fine for satuRn, round fo
 Requires the external drive to be mounted.] Until this runs, the splicing-specific UBL5 claim
 stays unresolved.
 
-**2. Recompute the mediation decomposition on a calibrated scale.** It inherits the compressed
+**2. Run the assayability screen on the Q1 lists.** The nesting and primer-specificity
+analysis that eliminated 6 of the 7 Q2 candidates has not been applied to List A or List B
+(@sec-q1cand). Everything it needs is on disk — `gff3/U_T.gff3` and `fa/transcripts_U-T.fa`
+— so it runs without the external drive. Expect it to remove several candidates, and expect
+the 5′-end problem to recur: if ~22% of events are pure promoter switches (@sec-events),
+nested isoforms are the norm rather than the exception here.
+
+**3. Recompute the mediation decomposition on a calibrated scale.** It inherits the compressed
 estimator and is currently unquotable.
 
-**3. Promote the hidden-layer analysis into the pipeline.** `scripts/03b_hidden_layer.R`
+**4. Promote the hidden-layer analysis into the pipeline.** `scripts/03b_hidden_layer.R`
 writing per-dataset cryptic-switcher and Class B tables with cross-annotation reproduction
 flags, so these stop living only in the review tree.
 
-**4. GO enrichment on the hidden-layer sets.** Could not be run during the review —
+**5. GO enrichment on the hidden-layer sets.** Could not be run during the review —
 Bioconductor mirrors were unreachable from that sandbox. `gene_sets/` has everything needed
 (`universe_tested_genes.txt`, 8,916 symbols, plus the four candidate sets); feed them through
 `05_pathway_enrichment.R` so the universe convention matches the rest of the project. At
@@ -644,12 +762,12 @@ Bioconductor mirrors were unreachable from that sandbox. `gene_sets/` has everyt
 dominant ones full-length coding? That converts "purification" from a pattern into a
 mechanism.
 
-**5. Re-examine the abundance floor under a paired noise model.** The floor was derived from
+**6. Re-examine the abundance floor under a paired noise model.** The floor was derived from
 within-condition replicate IF noise without using the pairing; a paired estimate should be
 smaller and would recover some of the 33–52% of calls currently removed. Do this **after** the
 re-import, not before.
 
-**6. Wet-lab sequence** (full proposal, ordered cheapest-potentially-fatal-first, in
+**7. Wet-lab sequence** (full proposal, ordered cheapest-potentially-fatal-first, in
 `docs/external_review/EXPERIMENTS.md`): allele characterisation → intron retention under
 stimulation, ribo-depleted → the IRAK3 assay → independent perturbation as a clonal-artefact
 control → rescue, only once the first three support the model.

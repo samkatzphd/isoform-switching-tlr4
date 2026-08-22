@@ -499,8 +499,8 @@
     },
     {
       "script": "11_q1_candidates.R",
-      "run_at": "2026-08-22T03:15:20+0200",
-      "git_sha": "cf996c3aeef8168a4f3f90dd20f551cdd5aa175c",
+      "run_at": "2026-08-22T03:25:18+0200",
+      "git_sha": "7b29dba4ac025ef6ab84b27e67623a12d06ef920",
       "r_version": "R version 4.4.1 (2024-06-14)",
       "platform": "aarch64-apple-darwin20",
       "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
