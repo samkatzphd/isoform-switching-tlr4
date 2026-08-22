@@ -97,6 +97,30 @@ same of new ones and check before reporting.
   terms; always report `pathway_enrichment_driver_summary` alongside.
 - **Check small-n patterns before claiming them.** Several compelling-looking contrasts have
   failed Fisher tests at p ≈ 0.24.
+- **Do not condition on a mediator.** `02e`'s Mantel-Haenszel stratification on LPS-response
+  magnitude is arithmetically right and causally over-adjusted: UBL5 is a spliceosome-
+  associated modifier, so response magnitude is plausibly downstream of the very effect being
+  measured. It cannot distinguish the two causal models.
+
+## Retracted — do not cite these numbers
+
+Each was reproducible from its table and still wrong. Reproducing one is a check on the code,
+not a licence to quote it. Detail in `docs/external_review/HANDOFF.md` §"Superseded".
+
+- **The layer asymmetry** (64.0% expression vs 37.7% splicing retained) — an artefact of
+  comparing two estimators biased in opposite directions. `scripts/10_layer_estimator_calibration.R`
+  calibrates it; the corrected gap is −0.04. The mediation split (36.3% / 63.7%) goes with it.
+- **"The UT deficit does not survive its confounder"** — withdrawn, mediator over-adjustment
+  (above). The deficit is not explained away.
+- **ISG/LPS "sparing"** (63% / 48% retained vs 37%) — a ratio-scale artefact. On the absolute
+  scale those genes lose *more* response, and ISG status does not survive conditioning on
+  expression (p = 0.27). The transcriptome-wide headline stands; the sparing reading does not.
+- **The "35% reproducibility ceiling"** — HT and UT are different annotation spaces, not one
+  space viewed twice. The Jaccard is real; the ceiling framing is not.
+- **The H-vs-T switching contrast** (OR 2.29/2.49) — retire, do not recompute (fact 4 above).
+- **AFE percentages from the Ensembl subset** (47.6% coverage) — superseded by full GFF3
+  coverage (143/143). Pure promoter switch is **21.7%**, not 10.3%. Also retracted: the TSS
+  bimodality and its 2.7 kb antimode cutoff (Hartigan dip p = 0.99, unimodal).
 
 ## Conventions
 
