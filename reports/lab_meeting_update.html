@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Project">
-<meta name="dcterms.date" content="2026-08-22">
+<meta name="dcterms.date" content="2026-08-23">
 
 <title>Isoform switching after LPS, and what UBL5 does to it</title>
 <style>
@@ -2376,7 +2376,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 22, 2026</p>
+      <p class="date">August 23, 2026</p>
     </div>
   </div>
   
@@ -3465,10 +3465,11 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <table class="cell caption-top table table-sm table-striped small">
 <colgroup>
 <col style="width: 6%">
-<col style="width: 9%">
-<col style="width: 27%">
-<col style="width: 16%">
-<col style="width: 40%">
+<col style="width: 8%">
+<col style="width: 25%">
+<col style="width: 15%">
+<col style="width: 7%">
+<col style="width: 37%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -3476,6 +3477,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <th style="text-align: left;">Gene</th>
 <th style="text-align: right;">max |dIF|</th>
 <th style="text-align: right;">gene log2FC</th>
+<th style="text-align: left;">Class</th>
 <th style="text-align: left;">Cross-genotype (H_HT)</th>
 </tr>
 </thead>
@@ -3485,6 +3487,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">NCOA7</td>
 <td style="text-align: right;">0.652</td>
 <td style="text-align: right;">2.86</td>
+<td style="text-align: left;">=,c</td>
 <td style="text-align: left;">also switches in H_HT</td>
 </tr>
 <tr class="even">
@@ -3492,6 +3495,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">RBKS</td>
 <td style="text-align: right;">0.465</td>
 <td style="text-align: right;">1.26</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">tested in H_HT, not switching</td>
 </tr>
 <tr class="odd">
@@ -3499,6 +3503,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">THAP2</td>
 <td style="text-align: right;">0.439</td>
 <td style="text-align: right;">0.36</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">not testable in H_HT</td>
 </tr>
 <tr class="even">
@@ -3506,6 +3511,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">RSAD2</td>
 <td style="text-align: right;">0.367</td>
 <td style="text-align: right;">4.24</td>
+<td style="text-align: left;">=,c</td>
 <td style="text-align: left;">also switches in H_HT</td>
 </tr>
 <tr class="odd">
@@ -3513,6 +3519,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">CD86</td>
 <td style="text-align: right;">0.344</td>
 <td style="text-align: right;">0.09</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">tested in H_HT, not switching</td>
 </tr>
 <tr class="even">
@@ -3520,6 +3527,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">MREG</td>
 <td style="text-align: right;">0.318</td>
 <td style="text-align: right;">0.53</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">not testable in H_HT</td>
 </tr>
 <tr class="odd">
@@ -3527,6 +3535,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">KDM6B</td>
 <td style="text-align: right;">0.304</td>
 <td style="text-align: right;">2.73</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">tested in H_HT, not switching</td>
 </tr>
 <tr class="even">
@@ -3534,6 +3543,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">KITLG</td>
 <td style="text-align: right;">0.294</td>
 <td style="text-align: right;">0.72</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">tested in H_HT, not switching</td>
 </tr>
 <tr class="odd">
@@ -3541,6 +3551,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">IPCEF1</td>
 <td style="text-align: right;">0.290</td>
 <td style="text-align: right;">0.14</td>
+<td style="text-align: left;">=,c</td>
 <td style="text-align: left;">tested in H_HT, not switching</td>
 </tr>
 <tr class="even">
@@ -3548,6 +3559,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">IFITM2</td>
 <td style="text-align: right;">0.289</td>
 <td style="text-align: right;">0.77</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">also switches in H_HT</td>
 </tr>
 <tr class="odd">
@@ -3555,6 +3567,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">DDX58</td>
 <td style="text-align: right;">0.282</td>
 <td style="text-align: right;">3.42</td>
+<td style="text-align: left;">=,c</td>
 <td style="text-align: left;">tested in H_HT, not switching</td>
 </tr>
 <tr class="even">
@@ -3562,6 +3575,7 @@ Table 12: Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q
 <td style="text-align: left;">IL23A</td>
 <td style="text-align: right;">0.266</td>
 <td style="text-align: right;">4.43</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">tested in H_HT, not switching</td>
 </tr>
 </tbody>
@@ -3602,9 +3616,10 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <colgroup>
 <col style="width: 6%">
 <col style="width: 12%">
-<col style="width: 25%">
-<col style="width: 15%">
-<col style="width: 38%">
+<col style="width: 24%">
+<col style="width: 14%">
+<col style="width: 7%">
+<col style="width: 36%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -3612,6 +3627,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <th style="text-align: left;">Gene</th>
 <th style="text-align: right;">max |dIF|</th>
 <th style="text-align: right;">gene log2FC</th>
+<th style="text-align: left;">Class</th>
 <th style="text-align: left;">Annotation status</th>
 </tr>
 </thead>
@@ -3621,6 +3637,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">CD86</td>
 <td style="text-align: right;">0.344</td>
 <td style="text-align: right;">0.091</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">robust (called in both)</td>
 </tr>
 <tr class="even">
@@ -3628,6 +3645,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">IPCEF1</td>
 <td style="text-align: right;">0.290</td>
 <td style="text-align: right;">0.141</td>
+<td style="text-align: left;">=,c</td>
 <td style="text-align: left;">robust (called in both)</td>
 </tr>
 <tr class="odd">
@@ -3635,6 +3653,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">PLD6</td>
 <td style="text-align: right;">0.222</td>
 <td style="text-align: right;">0.169</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">robust (called in both)</td>
 </tr>
 <tr class="even">
@@ -3642,6 +3661,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">CTTNBP2NL</td>
 <td style="text-align: right;">0.221</td>
 <td style="text-align: right;">-0.118</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">robust (called in both)</td>
 </tr>
 <tr class="odd">
@@ -3649,6 +3669,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">ATRN</td>
 <td style="text-align: right;">0.208</td>
 <td style="text-align: right;">-0.200</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">robust (called in both)</td>
 </tr>
 <tr class="even">
@@ -3656,6 +3677,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">ACP3</td>
 <td style="text-align: right;">0.173</td>
 <td style="text-align: right;">-0.152</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">robust (called in both)</td>
 </tr>
 <tr class="odd">
@@ -3663,6 +3685,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">PCSK7</td>
 <td style="text-align: right;">0.165</td>
 <td style="text-align: right;">-0.101</td>
+<td style="text-align: left;">c</td>
 <td style="text-align: left;">robust (called in both)</td>
 </tr>
 <tr class="even">
@@ -3670,6 +3693,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">SOCS4</td>
 <td style="text-align: right;">0.162</td>
 <td style="text-align: right;">0.015</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">robust (called in both)</td>
 </tr>
 <tr class="odd">
@@ -3677,6 +3701,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">TMEM234</td>
 <td style="text-align: right;">0.268</td>
 <td style="text-align: right;">-0.147</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">tested in both, called in one</td>
 </tr>
 <tr class="even">
@@ -3684,6 +3709,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">ALKBH3</td>
 <td style="text-align: right;">0.267</td>
 <td style="text-align: right;">-0.136</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">tested in both, called in one</td>
 </tr>
 <tr class="odd">
@@ -3691,6 +3717,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">PHLDA3</td>
 <td style="text-align: right;">0.251</td>
 <td style="text-align: right;">-0.197</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">tested in both, called in one</td>
 </tr>
 <tr class="even">
@@ -3698,6 +3725,7 @@ Table 13: Cryptic candidates, annotation-robust first. Full list in q1_cryptic_
 <td style="text-align: left;">IRAK3</td>
 <td style="text-align: right;">0.238</td>
 <td style="text-align: right;">-0.077</td>
+<td style="text-align: left;">=</td>
 <td style="text-align: left;">not testable in T_HT</td>
 </tr>
 </tbody>
@@ -3719,6 +3747,26 @@ Figure 11: List B — cryptic candidates. Membership is the finding; rank is se
 </figcaption>
 </figure>
 </div>
+</div>
+</div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Read the <code>Class</code> column: <code>c</code> means the call rests on a contained transcript
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>class_codes</code> is the gffcompare code of the gene’s <strong>switching</strong> isoforms — <code>=</code> matches a reference transcript end to end, <code>c</code> is <strong>contained</strong> inside one, <code>j</code> is a novel junction combination.</p>
+<p><strong><code>c</code> is the one to read carefully.</strong> Structurally it means the isoform starts inside another and shares all of its junctions — our nested candidates begin a median of <strong>25 kb</strong> downstream of their host and contribute no new splice site, which is <strong>promoter choice, not a spliceosome event</strong>. That is a real and documented mechanism. But <code>c</code> is <em>equally</em> the code a <strong>5′-incomplete assembly</strong> lands in: a PacBio read that never reached the 5′ end, or degraded input. Without cap selection those are produced in quantity, and this data cannot separate the two.<a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></p>
+<ul>
+<li><strong>List A:</strong> 4 of 20 genes have a <code>c</code>-class switching isoform (NCOA7, RSAD2, IPCEF1, DDX58) — each also has an <code>=</code>-class one, so no call rests on contained transcripts alone.</li>
+<li><strong>List B:</strong> 7 of 37, and <strong>6 rest entirely on <code>c</code></strong> — PCSK7, CCDC117, SPRING1, DCUN1D4, SORT1, ITSN1. These are the exposed ones. SPRING1 landing here is coherent: it is the review’s Q2 candidate that failed to reproduce in <code>T_HT</code>.</li>
+<li><strong>RBKS</strong>, the strongest assay candidate, is pure <code>=</code> on both sides of its switch.</li>
+</ul>
+<p>Resolving this needs one fact we do not have — see <a href="#sec-feedback" class="quarto-xref">Section 8</a>.</p>
 </div>
 </div>
 <div class="callout callout-style-default callout-warning callout-titled">
@@ -4084,7 +4132,7 @@ Figure 13: F5 — Assay feasibility and the verdict per question.
 <h1 data-number="7"><span class="header-section-number">7</span> Methods notes worth carrying forward</h1>
 <p>Short version of the traps this project has actually fallen into. Full treatment in <code>docs/STATISTICAL_METHODS.md</code>.</p>
 <p><strong>Backgrounds.</strong> Every enrichment test uses the genes <em>quantified and tested in that same experiment</em> (8,000–12,000 per dataset), recovered from unfiltered exports. Never the whole genome, and never the saved analysis objects — those were written with <code>reduceToSwitchingGenes = TRUE</code>, so every gene in them is already significant. One early test in this project had a background of <strong>25 genes, all significant by construction</strong>, and reported an odds ratio of 15.</p>
-<p><strong>The abundance floor.</strong> <code>min_gene_expression = 12</code>, derived from replicate IF noise versus gene expression. dIF is a ratio, so at low <em>gene</em> abundance the isoform fraction rests on few reads. It removes 33–52% of raw calls by design, and <code>is_switching_before_expr_floor</code> is kept so the cost stays auditable.<a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></p>
+<p><strong>The abundance floor.</strong> <code>min_gene_expression = 12</code>, derived from replicate IF noise versus gene expression. dIF is a ratio, so at low <em>gene</em> abundance the isoform fraction rests on few reads. It removes 33–52% of raw calls by design, and <code>is_switching_before_expr_floor</code> is kept so the cost stays auditable.<a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></p>
 <p><strong>Effect sizes over p-values.</strong> With thousands of matched isoforms, p-values track n. A paired Wilcoxon p of 7e-9 on a median log2 ratio of 0.003 is sample size, not biology.</p>
 <p><strong>Calibrate before comparing layers.</strong> The general lesson from <a href="#sec-layers" class="quarto-xref">Section 5.2</a>: <em>any</em> claim of the form “layer X is affected more than layer Y” needs its estimators calibrated first. The results in <a href="#sec-q1" class="quarto-xref">Section 4</a> and <a href="#sec-notspecific" class="quarto-xref">Section 5.4</a> do not have this problem — they are within-layer comparisons, proportions, or structural classifications.</p>
 <p><strong>The measurement ceiling on all of this.</strong> Everything above derives from ISA’s condition means and replicate isoform fractions. The composition measure is a reasonable summary but is <strong>not a formal differential-splicing test</strong>, and <a href="#sec-layers" class="quarto-xref">Section 5.2</a> is the concrete cost of that.</p>
@@ -4094,15 +4142,16 @@ Figure 13: F5 — Assay feasibility and the verdict per question.
 <p>These are blocking or near-blocking, and we cannot resolve them from the data.</p>
 <p><strong>1. What exactly is the UBL5 allele?</strong> Full knockout, frameshift, hypomorph, degron, or knockdown? Published work reports human UBL5 as <strong>essential for viability</strong> (Ammon et al. 2014), so a viable complete null needs explaining. If it is a hypomorph or partial knockdown that changes the interpretation substantially and reconciles a literature contradiction. This is the cheapest thing on the list and its outcome reframes everything else.</p>
 <p><strong>2. Library chemistry — polyA-selected or ribo-depleted?</strong> <strong>Intron retention</strong> is the readout most diagnostic for a Hub1/UBL5 mechanism, and it is poorly captured by polyA selection. If the existing libraries are polyA, the central falsification test needs new sequencing.</p>
-<p><strong>3. LPS dose, timepoint, and PMA differentiation protocol.</strong> Needed so any validation experiment matches the original conditions.</p>
-<p><strong>4. Do we want the count scale decision made now?</strong> For the refit (<a href="#sec-next" class="quarto-xref">Section 9</a>) we must choose between ISA’s scaledTPM — the recommended scale for DTU, since raw expected counts are biased by effective-length differences between isoforms of the same gene — and RSEM expected counts. They differ per-isoform by 0.18–2.3×. Both are derivable from the supplied files. Default recommendation is <strong>scaledTPM</strong>, but it should be a deliberate, recorded choice.</p>
-<p><strong>5. Is the TSS reframing acceptable?</strong> Given <a href="#sec-events" class="quarto-xref">Section 4.3</a>, should we retitle this work from “isoform switching” to something that leads with promoter/TSS selection? It is more accurate and arguably a <em>cleaner</em> story, but it changes the framing of the whole project.</p>
+<p><strong>3. Was the PacBio/IsoSeq library cap-selected?</strong> (TeloPrime, or IsoSeq with 5′-cap verification.) This is new since the last update and it is not just a QC detail. <strong>23,044 of the 166,394 quantified transcripts in the UT reference — 13.8% — are class <code>c</code></strong> — contained inside another isoform. Those are either genuine alternative-internal-promoter isoforms or 5′-incomplete assemblies, and without cap selection the second class is produced in quantity. It decides how much of the <code>c</code>-class transcript space to trust, which in turn affects 7 of the 37 cryptic candidates — 6 of which rest on <code>c</code>-class transcripts <em>alone</em> (<a href="#sec-q1cand" class="quarto-xref">Section 6.1</a>).</p>
+<p><strong>4. LPS dose, timepoint, and PMA differentiation protocol.</strong> Needed so any validation experiment matches the original conditions.</p>
+<p><strong>5. SETTLED — the count scale is now recorded, no decision needed.</strong> The refit uses <strong>scaledTPM</strong> as primary, since raw expected counts are biased by effective-length differences between isoforms of the same gene, with <code>expected_count</code> fitted alongside every run as a standing sensitivity check. Flag it if you disagree; otherwise this one is closed.</p>
+<p><strong>6. Is the TSS reframing acceptable?</strong> Given <a href="#sec-events" class="quarto-xref">Section 4.3</a>, should we retitle this work from “isoform switching” to something that leads with promoter/TSS selection? It is more accurate and arguably a <em>cleaner</em> story, but it changes the framing of the whole project.</p>
 </section>
 <section id="sec-next" class="level1" data-number="9">
 <h1 data-number="9"><span class="header-section-number">9</span> What’s planned next</h1>
 <p>Ordered by what would change a conclusion.</p>
 <p><strong>1. DONE — the model-based refit is complete (<a href="#sec-refit" class="quarto-xref">Section 5.3</a>).</strong> It was the blocking step and it is no longer blocking; what remains is what it could not settle, below. Original framing kept for context: RSEM matrices for <strong>all twelve libraries per reference</strong> arrived and every ISA object has been reconciled against them. Because the UT file carries all twelve, the layer question becomes a <code>genotype × treatment</code> <strong>interaction in one 2×2 model</strong> rather than a comparison of two separately-fit runs — which removes the cross-run normalisation problem <em>and</em> the estimator problem in <a href="#sec-layers" class="quarto-xref">Section 5.2</a> at the same time.</p>
-<p>Plan: <code>satuRn</code> or <code>DEXSeq</code>, with the pairing included and an <strong>explicit blocking factor</strong> (<code>~ donor + condition</code> for H, <code>~ replicate + condition</code> for T/U), re-imported under a single ISA version.<a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> The claim stays unresolved after it, but for a different reason: the interaction is underpowered at n = 3, not un-tested. <strong>Resolving it needs more replicates or a larger perturbation, not another estimator.</strong></p>
+<p>Plan: <code>satuRn</code> or <code>DEXSeq</code>, with the pairing included and an <strong>explicit blocking factor</strong> (<code>~ donor + condition</code> for H, <code>~ replicate + condition</code> for T/U), re-imported under a single ISA version.<a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> The claim stays unresolved after it, but for a different reason: the interaction is underpowered at n = 3, not un-tested. <strong>Resolving it needs more replicates or a larger perturbation, not another estimator.</strong></p>
 <p><strong>2. Design and specificity-check primers for the 25 survivors.</strong> The screen (<a href="#sec-assay" class="quarto-xref">Section 6.2</a>) says <em>where</em> a discriminating primer can sit; it has not designed one or matched it against all 315,349 transcripts. Start with the five both-sides genes — RBKS first.</p>
 <p><strong>3. Recompute the mediation decomposition on a calibrated scale.</strong> It inherits the compressed estimator and is currently unquotable.</p>
 <p><strong>4. Promote the hidden-layer analysis into the pipeline.</strong> <code>scripts/03b_hidden_layer.R</code> writing per-dataset cryptic-switcher and Class B tables with cross-annotation reproduction flags, so these stop living only in the review tree.</p>
@@ -4209,8 +4258,9 @@ Table 17: Which table backs which claim (<code>xr:</code> = docs/external_revie
 <li id="fn6"><p>The simulation assumes Gaussian homoscedastic noise, so the <em>magnitude</em> of the correction is approximate. The <em>direction</em> of the two biases is not — it follows from the algebra of averaging before versus after an absolute value.<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn7"><p>The unselected transcriptome-wide slope (0.068) is <strong>not</strong> a retention estimate and is kept only as a diagnostic. The reliability of the WT estimate – the share of its observed variance that is signal rather than measurement error – is <strong>0.0066</strong>, so ~99% of that spread is noise and the slope measures regression dilution. The standard correction (divide by reliability) is unstable there and returns beta &gt; 10. Any future transcriptome-wide ratio must report its reliability alongside it.<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn8"><p>This is worth remembering before we run any similar proximity analysis: without a degree-matched null, hub genes make everything look close to everything.<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn9"><p>The floor is on <strong>gene</strong> expression, not isoform expression — IF is isoform/gene, so it is gene abundance that sets the precision. Note that <code>H_HT</code>’s recommended floor (6.02) is the lowest of the four <em>because</em> its noise was halved by the batch correction; <code>02d</code> takes the median of the four, so the effect on the applied value is modest (~11 vs ~12.5), not a distortion.<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn10"><p><code>satuRn</code> 1.12.0, <code>DEXSeq</code> 1.50.0, <code>edgeR</code> and <code>limma</code> are installed; <code>DRIMSeq</code> is <strong>not</strong>. Counts are fractional (RSEM EM output) — fine for satuRn, round for DEXSeq. Requires the external drive to be mounted.<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p>Mild reassurance: the nested forms do not move as a class — 8 rise, 5 fall (p = 0.58), against 22/28 for the non-nested candidates. A uniform 5′-coverage shift would push them all one way. Not conclusive, since a technical effect could be gene-specific.<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p>The floor is on <strong>gene</strong> expression, not isoform expression — IF is isoform/gene, so it is gene abundance that sets the precision. Note that <code>H_HT</code>’s recommended floor (6.02) is the lowest of the four <em>because</em> its noise was halved by the batch correction; <code>02d</code> takes the median of the four, so the effect on the applied value is modest (~11 vs ~12.5), not a distortion.<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><code>satuRn</code> 1.12.0, <code>DEXSeq</code> 1.50.0, <code>edgeR</code> and <code>limma</code> are installed; <code>DRIMSeq</code> is <strong>not</strong>. Counts are fractional (RSEM EM output) — fine for satuRn, round for DEXSeq. Requires the external drive to be mounted.<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section></div></main>
 <!-- /main column -->

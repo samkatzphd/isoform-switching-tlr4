@@ -49,6 +49,7 @@ dtu  <- read_tab("dtu_refit_summary.csv")
 datt <- read_tab("dtu_refit_attenuation.csv")
 asy  <- read_tab("q1_assayability_summary.csv")
 asyg <- read_tab("q1_assayability_by_gene.csv")
+asyc <- read_tab("q1_assayability_by_class_code.csv")
 dtup <- dtu |> filter(.data$scale == "scaledTPM", grepl("^primary", .data$model))
 dn   <- function(c) dtup$genes_significant[match(c, dtup$contrast)]
 attp <- datt |> filter(.data$scale == "scaledTPM", grepl("^primary", .data$model))
@@ -675,6 +676,7 @@ kable(
     Rank = .data$list_rank, Gene = .data$gene_name,
     `max |dIF|` = round(.data$dif_rank, 3),
     `gene log2FC` = round(.data$lfc_rank, 2),
+    Class = .data$class_codes,
     `Cross-genotype (H_HT)` = .data$cross_genotype_support
   ),
   caption = "Top 12 of 20 annotation-robust wildtype LPS switchers. Full list in q1_response_candidates.csv"
@@ -703,6 +705,7 @@ kable(
     Rank = .data$list_rank, Gene = .data$gene_name,
     `max |dIF|` = round(.data$dif_rank, 3),
     `gene log2FC` = round(.data$lfc_rank, 3),
+    Class = .data$class_codes,
     `Annotation status` = .data$annotation_status
   ),
   caption = "Cryptic candidates, annotation-robust first. Full list in q1_cryptic_candidates.csv"
@@ -714,6 +717,32 @@ kable(
 #| fig-cap: "List B — cryptic candidates. Membership is the finding; rank is secondary."
 knitr::include_graphics(existing_figs(figs("q1_candidates", "fig_q1_cryptic_candidates.png")))
 ```
+
+::: {.callout-warning}
+## Read the `Class` column: `c` means the call rests on a contained transcript
+`class_codes` is the gffcompare code of the gene's **switching** isoforms — `=` matches a
+reference transcript end to end, `c` is **contained** inside one, `j` is a novel junction
+combination.
+
+**`c` is the one to read carefully.** Structurally it means the isoform starts inside another
+and shares all of its junctions — our nested candidates begin a median of **25 kb** downstream
+of their host and contribute no new splice site, which is **promoter choice, not a spliceosome
+event**. That is a real and documented mechanism. But `c` is *equally* the code a
+**5′-incomplete assembly** lands in: a PacBio read that never reached the 5′ end, or degraded
+input. Without cap selection those are produced in quantity, and this data cannot separate the
+two.^[Mild reassurance: the nested forms do not move as a class — 8 rise, 5 fall (p = 0.58),
+against 22/28 for the non-nested candidates. A uniform 5′-coverage shift would push them all
+one way. Not conclusive, since a technical effect could be gene-specific.]
+
+- **List A:** 4 of 20 genes have a `c`-class switching isoform (NCOA7, RSAD2, IPCEF1, DDX58)
+  — each also has an `=`-class one, so no call rests on contained transcripts alone.
+- **List B:** 7 of 37, and **6 rest entirely on `c`** — PCSK7, CCDC117, SPRING1, DCUN1D4,
+  SORT1, ITSN1. These are the exposed ones. SPRING1 landing here is coherent: it is the
+  review's Q2 candidate that failed to reproduce in `T_HT`.
+- **RBKS**, the strongest assay candidate, is pure `=` on both sides of its switch.
+
+Resolving this needs one fact we do not have — see @sec-feedback.
+:::
 
 ::: {.callout-warning}
 ## Two things this table is careful about
@@ -879,16 +908,23 @@ is the cheapest thing on the list and its outcome reframes everything else.
 most diagnostic for a Hub1/UBL5 mechanism, and it is poorly captured by polyA selection. If
 the existing libraries are polyA, the central falsification test needs new sequencing.
 
-**3. LPS dose, timepoint, and PMA differentiation protocol.** Needed so any validation
+**3. Was the PacBio/IsoSeq library cap-selected?** (TeloPrime, or IsoSeq with 5′-cap
+verification.) This is new since the last update and it is not just a QC detail. **23,044 of the 166,394 quantified
+transcripts in the UT reference — 13.8% — are class `c`** — contained inside another
+isoform. Those are either genuine alternative-internal-promoter isoforms or 5′-incomplete
+assemblies, and without cap selection the second class is produced in quantity. It decides
+how much of the `c`-class transcript space to trust, which in turn affects 7 of the 37
+cryptic candidates — 6 of which rest on `c`-class transcripts *alone* (@sec-q1cand).
+
+**4. LPS dose, timepoint, and PMA differentiation protocol.** Needed so any validation
 experiment matches the original conditions.
 
-**4. Do we want the count scale decision made now?** For the refit (@sec-next) we must choose
-between ISA's scaledTPM — the recommended scale for DTU, since raw expected counts are biased
-by effective-length differences between isoforms of the same gene — and RSEM expected counts.
-They differ per-isoform by 0.18–2.3×. Both are derivable from the supplied files. Default
-recommendation is **scaledTPM**, but it should be a deliberate, recorded choice.
+**5. SETTLED — the count scale is now recorded, no decision needed.** The refit uses
+**scaledTPM** as primary, since raw expected counts are biased by effective-length differences
+between isoforms of the same gene, with `expected_count` fitted alongside every run as a
+standing sensitivity check. Flag it if you disagree; otherwise this one is closed.
 
-**5. Is the TSS reframing acceptable?** Given @sec-events, should we retitle this work from
+**6. Is the TSS reframing acceptable?** Given @sec-events, should we retitle this work from
 "isoform switching" to something that leads with promoter/TSS selection? It is more accurate
 and arguably a *cleaner* story, but it changes the framing of the whole project.
 
