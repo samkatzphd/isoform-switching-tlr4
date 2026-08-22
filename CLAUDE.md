@@ -25,6 +25,7 @@ Rscript scripts/03_novel_isoform_analysis.R
 Rscript scripts/04_comparison_T_vs_U.R
 Rscript scripts/06_visualization.R
 Rscript scripts/07_isg_analysis.R         # curated interferon gene-set test
+Rscript scripts/11_q1_candidates.R        # Q1 assay candidates: WT LPS switchers, both annotations
 Rscript scripts/00_threshold_scan_abs_dif.R   # optional sensitivity scan
 Rscript scripts/05_pathway_enrichment.R  # GO/Reactome/KEGG; needs context tables
 

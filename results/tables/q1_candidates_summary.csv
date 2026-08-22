@@ -1,0 +1,9 @@
+"metric","n"
+"genes switching in the anchor (T_HT)",95
+"genes switching in the re-annotation (T_UT)",117
+"union across the two wildtype annotations",157
+"annotation-robust (switching in both)",55
+"  of those, cryptic",8
+"  of those, also switching in H_HT",6
+"anchor-only calls",40
+"re-annotation-only calls",62

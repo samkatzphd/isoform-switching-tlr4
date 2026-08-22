@@ -337,6 +337,22 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 - **Writes:** HT rank/overlap tables under `results/tables/`, plots under `results/figures/ht_top_switch_plots/`.
 - **Report:** `reports/ht_switch_analysis.{qmd,html}`.
 
+### `11_q1_candidates.R` — assay candidates for Q1, on Q1's own terms
+
+- Fills a gap: the reviewed candidate set (IRAK3, SOCS4, RAB7B, SPRING1) was built from the
+  **cryptic** subset of `T_UT` and then hand-picked for TLR relevance. That is a Q2-shaped
+  selection — it never used the Q1 anchor `T_HT`, and the cryptic filter discards the
+  largest LPS switches in the data.
+- Ranks every gene switching in **either** wildtype annotation (`T_HT` ∪ `T_UT` = 157) by
+  effect size, flags whether it is **annotation-robust** (called in both = 55), whether it
+  is cryptic or DE-visible, and whether it also switches in `H_HT`.
+- `T_HT`/`T_UT` agreement is **robustness to transcript space, not replication** — the same
+  six libraries. `H_HT` agreement is genuine cross-genotype support but is reported as a
+  flag only, never a filter, since `H_HT` alone is batch-corrected (§0g).
+- Ranking selects on the outcome, so the table is descriptive and carries no test.
+- **Writes:** `results/tables/q1_candidates{,_shortlist,_summary}.*`, figures under
+  `results/figures/q1_candidates/`.
+
 ## Quick start
 
 1. **Clone / open** the project at `/Users/samkatz/projects/isoform-switch-pipeline` and use that as the working directory, or set:
