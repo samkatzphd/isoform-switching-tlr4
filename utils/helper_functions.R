@@ -659,20 +659,40 @@ write_run_manifest <- function(script, cfg, root, extra = list()) {
     list()
   }
   si <- utils::sessionInfo()
+  sha <- git_sha(root)
+  key_pkgs <- vapply(
+    c("dplyr", "tibble", "ggplot2", "yaml", "IsoformSwitchAnalyzeR"),
+    function(p) {
+      v <- tryCatch(as.character(utils::packageVersion(p)), error = function(e) NA_character_)
+      if (is.na(v)) "not installed" else v
+    },
+    character(1)
+  )
+  # A manifest entry that silently records `git_sha: null` or a missing package looks like
+  # provenance but is not: an Aug-2026 rerun under a transient R 4.5.3 wrote both and nobody
+  # noticed until the tables were already committed. Say so at run time instead.
+  if (is.na(sha)) {
+    warning(
+      "write_run_manifest(): git SHA unavailable, recording null. Is `git` on PATH ",
+      "and is ", root, " inside the work tree? This entry cannot be traced to a commit.",
+      call. = FALSE, immediate. = TRUE
+    )
+  }
+  if (any(key_pkgs == "not installed")) {
+    warning(
+      "write_run_manifest(): key package(s) not installed: ",
+      paste(names(key_pkgs)[key_pkgs == "not installed"], collapse = ", "),
+      ". Results may not be comparable to earlier runs.",
+      call. = FALSE, immediate. = TRUE
+    )
+  }
   entry <- list(
     script = script,
     run_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z"),
-    git_sha = git_sha(root),
+    git_sha = sha,
     r_version = si$R.version$version.string,
     platform = si$platform,
-    key_packages = vapply(
-      c("dplyr", "tibble", "ggplot2", "yaml", "IsoformSwitchAnalyzeR"),
-      function(p) {
-        v <- tryCatch(as.character(utils::packageVersion(p)), error = function(e) NA_character_)
-        if (is.na(v)) "not installed" else v
-      },
-      character(1)
-    ),
+    key_packages = key_pkgs,
     significance = cfg$significance,
     analysis = cfg$analysis
   )
