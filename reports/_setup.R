@@ -62,6 +62,27 @@ read_tab <- function(name) {
   utils::read.csv(tab(name), stringsAsFactors = FALSE, check.names = FALSE)
 }
 
+# --- External review artefacts -------------------------------------------------
+# The 2026-08 review wrote its own tables and figures under docs/external_review/
+# rather than results/, because they came from analyses that are not (yet) pipeline
+# scripts. A report that tells the whole story has to cite both trees, so give the
+# review side the same three helpers rather than letting each .qmd invent paths.
+
+xr_tab  <- function(...) proj_path("docs", "external_review", "tables", ...)
+xr_figs <- function(...) proj_path("docs", "external_review", "figures", ...)
+
+xr_read <- function(name) {
+  utils::read.csv(xr_tab(name), stringsAsFactors = FALSE, check.names = FALSE)
+}
+
+#' Pull one value out of a two-column statistic/value table by its key.
+#' Returns NA rather than erroring, so a renamed row degrades to a visible gap
+#' instead of killing the render.
+xr_stat <- function(d, key, col = "value", key_col = "statistic") {
+  i <- match(key, d[[key_col]])
+  if (is.na(i)) NA_real_ else as.numeric(d[[col]][i])
+}
+
 #' Keep only figure paths that exist, so a report never renders a broken image
 existing_figs <- function(paths) paths[file.exists(paths)]
 

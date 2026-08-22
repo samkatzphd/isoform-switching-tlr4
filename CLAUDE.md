@@ -31,6 +31,7 @@ Rscript scripts/05_pathway_enrichment.R  # GO/Reactome/KEGG; needs context table
 # Every script takes an optional alternate config as argv[1]:
 Rscript scripts/02_gene_level_summary.R config/other.yml
 
+quarto render reports/lab_meeting_update.qmd           # whole-project status; read this first
 quarto render reports/isoform_switching_overview.qmd   # also: ht_switch_analysis,
                                                        # novel_isoform_analysis,
                                                        # ut_t_vs_u_comparison, seminar_summary
@@ -101,7 +102,7 @@ here, update that file too so the two do not drift.
 
 ### Reports
 
-All four `.qmd` files start with `source("_setup.R")`, which supplies `PROJECT_ROOT`, `proj_path()`, `tab()`, `figs()`, `make_fig()`, `require_outputs()`, `read_tab()`, `existing_figs()` and `reduction_caveat()`. Paths are **absolute**; do not set `knitr` `root.dir` — it breaks `include_graphics()` combined with `embed-resources`, which is why the reports originally diverged into three different setups.
+Every `.qmd` starts with `source("_setup.R")`, which supplies `PROJECT_ROOT`, `proj_path()`, `tab()`, `figs()`, `make_fig()`, `require_outputs()`, `read_tab()`, `existing_figs()` and `reduction_caveat()`, plus `xr_tab()`/`xr_figs()`/`xr_read()`/`xr_stat()` for the `docs/external_review/` artefact tree (its tables and figures live outside `results/` because they came from analyses that are not yet pipeline scripts). Paths are **absolute**; do not set `knitr` `root.dir` — it breaks `include_graphics()` combined with `embed-resources`, which is why the reports originally diverged into three different setups.
 
 Call `knitr::include_graphics()` **once on a vector**, never inside a `for` loop — the looped form returns a value that is never printed, which silently produced an HT report containing zero images.
 

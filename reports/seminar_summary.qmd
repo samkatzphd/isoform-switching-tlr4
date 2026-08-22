@@ -48,10 +48,11 @@ pc <- function(x) sprintf("%.1f%%", x)
 ```
 
 ::: {.callout-warning}
-## Scope of this document
+## Scope of this document — see `lab_meeting_update` for the current picture
 This report covers scripts `00`–`07`. It **predates** the layer-decoupling, hidden-layer and
 GFF3 event-structure work (scripts `08`–`10` and `docs/external_review/`), and does not
-include those results.
+include those results. **`reports/lab_meeting_update.qmd` covers the whole project** and is
+the document to read first; this one is kept for its detail on the `00`–`07` analyses.
 
 Claims corrected since the first version, now reflected in the text below: the Q2
 response-magnitude stratification conditions on a **mediator** and does not explain the

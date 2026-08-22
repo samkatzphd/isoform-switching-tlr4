@@ -1,0 +1,686 @@
+---
+title: "Isoform switching after LPS, and what UBL5 does to it"
+subtitle: "Lab meeting update — state of the project, open decisions, and what's next"
+author: "Project"
+date: last-modified
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    fig-align: center
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(knitr)
+library(dplyr)
+source("_setup.R")
+
+# Pipeline tables
+qc   <- read_tab("qc_snapshot_gene_level.csv")
+hl   <- read_tab("hidden_layer_summary.csv")
+cal  <- read_tab("layer_estimator_calibration.csv")
+lrc  <- read_tab("layer_retention_corrected.csv")
+utr  <- read_tab("ut_response_magnitude_control.csv")
+refc <- read_tab("reference_concordance_T_HT_vs_T_UT.csv")
+
+# External review tables
+ev   <- xr_read("event_structure_summary_gff3.csv")
+base <- xr_read("baseline_composition_test.csv")
+spar <- xr_read("sparing_relative_vs_absolute.csv")
+cand <- xr_read("candidate_summary.csv")
+net  <- xr_read("network_distance_to_TLR4.csv")
+
+# Figure helpers
+flay <- make_fig("layers")
+fhid <- make_fig("hidden_layer")
+
+pc  <- function(x, d = 1) sprintf(paste0("%.", d, "f%%"), x)
+num <- function(x, d = 2) sprintf(paste0("%.", d, "f"), x)
+
+ut_row <- utr[grepl("^UT", utr$pair), ]
+```
+
+::: {.callout-note}
+## How to read this update
+This replaces the earlier seminar summary as the current picture. It covers the whole
+project: the original pipeline (scripts `00`–`07`), the layer-decoupling and hidden-layer
+work (`08`–`10`), and the external review round.
+
+Three claims we previously reported are **withdrawn**. They are listed in
+@sec-withdrawn rather than quietly dropped, because two of them were headline results and
+one of them shaped a script. Everything still standing has been re-checked against the
+tables it came from.
+:::
+
+# Where the project stands {#sec-status}
+
+Two questions, tracked separately throughout because they have different answers and
+different levels of support.
+
+```{r}
+#| label: tbl-verdicts
+verdicts <- tibble::tribble(
+  ~Question, ~Verdict, ~`Resting on`,
+  "Splicing responds to LPS beyond what expression shows",
+    "**Supported**",
+    "19.7% of switching genes are invisible to gene-level DE",
+  "The switches are promoter choice, not splicing",
+    "**Partly true**",
+    "21.7% promoter-only, but 59.4% involve internal splicing",
+  "UBL5 loss blunts the LPS response globally",
+    "**Supported**",
+    "Expression response at ~half amplitude (slope 0.52, 8,595 genes)",
+  "UBL5 has a constitutive splicing defect",
+    "**Rejected**",
+    "Baseline composition identical to WT (0.0024 vs 0.0496 control)",
+  "The deficit is targeted at the LPS/TLR4 programme",
+    "**Rejected**",
+    "Transcriptome-wide; no network proximity above a degree-matched null",
+  "UBL5 acts on splicing specifically, not only via expression",
+    "**Unresolved**",
+    "The layer asymmetry was an estimator artefact — see @sec-layers",
+  "Candidates are testable by qPCR",
+    "**Mostly no**",
+    "6 of 7 candidate isoforms need 5' RACE or long reads"
+)
+kable(verdicts, caption = "Current verdict on each claim, and what it rests on")
+```
+
+**The one-line version.** Q1 is in good shape and has a real, defensible result. Q2 has a
+solid negative (no constitutive defect, not pathway-targeted) and a solid global phenotype
+(halved LPS response), but the *splicing-specific* claim — the reason UBL5 is interesting —
+is currently unresolved and blocked on a proper model-based refit.
+
+# What changed since the last update {#sec-withdrawn}
+
+::: {.callout-important}
+## Three retractions and one retirement
+Each was reproducible from its table and still wrong. Reproducing one of these numbers is a
+check on the code, not a licence to quote it.
+:::
+
+**1. The expression-vs-splicing layer asymmetry (64% vs 38%) is retracted.** This was the
+load-bearing evidence for a splicing-specific UBL5 role. It compares two estimators biased
+in *opposite* directions; on a calibrated scale the gap inverts. Detail and the calibration
+in @sec-layers. The mediation decomposition (36% / 64%) inherits the same compressed
+estimator and goes with it.
+
+**2. The "UT deficit does not survive its confounder" reading is withdrawn.** We stratified
+switching rates on each gene's own LPS-response magnitude and found the odds ratio drop from
+`r num(ut_row$crude_odds_ratio, 2)` to a non-significant MH
+`r num(ut_row$mh_odds_ratio, 2)` (p = `r num(ut_row$mh_p, 2)`). The arithmetic is right; the
+causal logic was not. UBL5 is a spliceosome-associated modifier, so if splicing regulation
+sits upstream of the LPS response then response magnitude is a **mediator**, not a
+confounder — and conditioning on a mediator subtracts the very effect being
+measured.^[Both causal orderings — "blunted response reduces switching" and "impaired
+splicing blunts the response" — predict exactly this correlation. With two conditions and
+n = 3 there is no design-based way to separate them. `docs/STATISTICAL_METHODS.md` §2.6.]
+The numbers stay on the record; they are not evidence the deficit is an artefact.
+
+**3. The ISG "sparing" result is withdrawn.** On the relative scale, interferon-response
+genes looked *protected* in the KO (63% of response retained vs 37% transcriptome-wide). On
+the absolute scale the same genes lose **more** (@sec-notspecific). Conditioning on
+expression, LPS-responsiveness survives (p = 0.002) but ISG status does not (p = 0.27) — the
+interferon effect was abundance.
+
+**4. The H-vs-T switching contrast is retired, not recomputed.** `H_HT` is the one dataset
+that had a batch correction applied to it, so its rates and dIF distributions are not on the
+same scale as the other three. Details in @sec-hht — this one is a methods finding with
+consequences well beyond the single contrast.
+
+Also superseded: the TSS bimodality (and its 2.7 kb antimode), and the alternative-first-exon
+percentages computed from the Ensembl subset — both replaced by full-GFF3 results in
+@sec-events.
+
+# The data, and whether it holds up {#sec-data}
+
+```{r}
+#| label: tbl-qc
+kable(
+  qc |> transmute(
+    Dataset = .data$dataset,
+    `Genes tested` = .data$n_genes,
+    `Switching` = .data$n_switching_genes,
+    `% switching` = .data$pct_switching_genes,
+    `% of switchers novel-involved` = .data$pct_of_switching_genes_novel_involved
+  ),
+  caption = "Gene-level snapshot across the four datasets"
+)
+```
+
+Four datasets on two merged reference transcriptomes: **Q1 (HT)** is `T_HT` (WT THP-1 ± LPS,
+our anchor) with `H_HT` as a supplementary genotype; **Q2 (UT)** is `T_UT` (WT) versus
+`U_UT` (UBL5 KO), both ± LPS.
+
+## `H_HT` is not on the same scale as the others {#sec-hht}
+
+::: {.callout-warning}
+## Do not read the `H_HT` row alongside the other three
+`H_HT`'s 2.07% switching rate is **not** comparable to `T_HT`'s 0.87%, for two independent
+reasons.
+
+**It is the only batch-corrected dataset.** `importRdata` runs `sva::num.sv` on every import;
+it found two surrogate variables for `H_HT` and none for the other three, so `H_HT` alone had
+`limma::removeBatchEffect` applied and every one of its IF/dIF values derives from the
+corrected matrix. That halves its replicate IF noise (0.0062 → 0.0030) — *inverting* its
+noise ranking, so the dataset that should be noisiest reads as the quietest — and drives the
+elevated rate.^[Verified by reconciling all four objects against the raw RSEM counts. `T_HT`,
+`T_UT` and `U_UT` reproduce exactly (dIF r = 1.0000, residual at the four-decimal rounding of
+the stored IFs). `H_HT` reproduces only once the correction is reapplied (r = 0.777 →
+0.99915). `docs/REVIEW_CHANGES.md` §0g.]
+
+**Its design is different in kind.** `T`/`U` are one clonal line processed on a single day.
+`H` is primary macrophages from **three donors**, each prepped on a **different day** — two
+extra variance components, and they are perfectly confounded (one donor per day), so no
+analysis of this data can separate donor genotype from batch. A switching rate counts genes
+consistent across that dataset's replicates, so H's rate answers a strictly harder question
+than T's. Their ratio is not a genotype effect under any modelling choice, which is why the
+contrast is retired rather than recomputed.
+
+The fix for H is an **explicit** donor blocking factor (`~ donor + condition`), *not*
+`detectUnwantedEffects = FALSE`, which would leave real donor variation uncorrected.
+:::
+
+## Reproducibility: the same libraries, twice
+
+`T_HT` and `T_UT` are the **same six sequencing libraries** quantified against two different
+merged transcriptomes, which makes them a technical control. Of 156 genes called switching in
+either, 55 are called in both — a Jaccard of
+**`r num(refc$jaccard, 2)`**.
+
+Most disagreement is threshold-level rather than contradictory: 53 more are near-misses
+(|dIF| 0.10–0.15 in the reference that did not call them) and 24 fall below the gene
+expression floor; only 24 are clearly absent.
+
+::: {.callout-note}
+## Treat this as a reference point, not a ceiling
+An earlier version of this analysis called `r pc(100 * refc$jaccard, 0)` a "reproducibility
+ceiling". That framing is retired: HT merges the T+H PacBio transcripts and UT merges T+U, so
+the two are **not the same transcript space viewed twice**. Part of the disagreement is
+genuine annotation-space difference rather than measurement noise.
+:::
+
+# Q1 — Splicing in the LPS response {#sec-q1}
+
+```{r}
+#| label: fig-f1
+#| fig-cap: "F1 — What the data is: same-library reproducibility (a), the KO's halved expression response (b), and switching genes invisible to differential expression (c)."
+knitr::include_graphics(existing_figs(xr_figs("F1_scope.png")))
+```
+
+## The result: one in five switching genes is invisible to DE {#sec-cryptic}
+
+This is the cleanest positive result in the project and the direct answer to "does the
+splicing layer see anything gene-level expression is blind to".
+
+```{r}
+#| label: tbl-cryptic
+kable(
+  hl |> transmute(
+    Dataset = .data$dataset,
+    `Genes tested` = .data$n_genes_tested,
+    Switching = .data$n_switching,
+    Cryptic = .data$n_cryptic,
+    `% of switchers cryptic` = round(.data$pct_of_switchers_cryptic, 1)
+  ),
+  caption = "Cryptic switchers: isoform composition shifts while total gene output barely moves"
+)
+```
+
+In `T_UT`, **23 of 118** switching genes (19.5%) have |gene log2FC| < 0.25 — median 0.136,
+while shifting isoform fraction by a median of 0.171.^[The threshold is deliberately strict.
+These are not genes with a *modest* expression change; they are genes where total output is
+essentially flat and the composition moves underneath it.] The list is biologically pointed:
+**IRAK3** (IRAK-M, a negative TLR regulator), **SOCS4**, **SP1**, **RAB7B** (TLR4
+trafficking), **LIG1**.
+
+Crucially, they are **not preferentially artefacts**: 64.7% are called switching again in the
+independent `T_HT` annotation of the same libraries, against a 59.8% baseline for all
+switchers.
+
+```{r}
+#| label: fig-cryptic
+#| fig-cap: "Cryptic switchers and the compositional-rescue class, from the pipeline's own hidden-layer analysis (script 09)."
+knitr::include_graphics(existing_figs(c(
+  fhid("fig_cryptic_switchers.png"),
+  fhid("fig_cryptic_share.png")
+)))
+```
+
+## Class B — "gene down, dominant isoform preserved"
+
+A second, rarer pattern. Of 2,611 genes falling more than 0.3 log2, **56 (2.1%)** hold or
+raise their baseline-dominant isoform while minor isoforms collapse (median: gene −0.362,
+dominant −0.04, minor −0.532; dominant IF rises 0.25 → 0.32).
+
+Dominance is defined at **baseline**, not post-LPS — defining it after stimulation selects on
+the outcome and inflates the class.^[This is the tempting bug in this analysis and is
+asserted in a comment in the script for that reason.]
+
+Reproduction, with denominators stated because they differ: of those 56, **47 are testable**
+in `T_HT` and **11 reproduce** as Class B there — 23.4% of the testable set, against a 0.52%
+base rate among all testable genes (45× enrichment, Fisher OR 78, p = 3e-16). On the
+conservative denominator (counting the 9 untestable as failures) it is 19.6%, a 37.5×
+enrichment. The reproducing genes: *AMT, CD163L1, CKAP5, COQ6, DEDD2, FBXL19, HHLA3, NRF1,
+RBL2, RTEL1, VPS26C*.
+
+::: {.callout-note}
+## Correction on the record
+An earlier draft named **IRF3** and **BCL7B** as reproducing Class B genes and used IRF3 as
+the illustrative example. Both have `reproduces_in_T_HT = FALSE`. IRF3 remains an interesting
+single-reference observation and must be labelled as not reproducing across annotations.
+:::
+
+Structurally, Class B genes are more isoform-complex than background (median 19.5 vs 13
+isoforms, Wilcoxon p = 1.6e-5) while cryptic switchers are not (p = 0.53) — mechanistically
+sensible, since "gene falls while the dominant isoform holds" requires enough minor isoforms
+to absorb the decline. **Class B looks like a property of complex loci, not a distinct
+functional programme**, and at 2.1% it matters for interpreting specific genes rather than as
+a claim that DE is broadly misleading.
+
+## What the switching events structurally are {#sec-events}
+
+This matters more than it first appears. Robinson (2021) reports that roughly half of
+macrophage LPS splicing changes are alternative-first-exon events — promoter choice, not
+spliceosome catalysis. If that held here, attributing anything to a spliceosome modifier
+would be undercut.
+
+```{r}
+#| label: fig-f4
+#| fig-cap: "F4 — Event structure from the project's own GFF3, resolving 143 of 143 WT switching events."
+knitr::include_graphics(existing_figs(xr_figs("F4_event_structure.png")))
+```
+
+```{r}
+#| label: tbl-events
+keys <- c("naive_first_exon_differs_pct", "true_alt_promoter_pct",
+          "pure_promoter_switch_pct", "internal_junction_pct",
+          "promoter_plus_internal_pct", "internal_only_pct", "terminal_other_pct")
+labs <- c("First exon differs (naive criterion)", "True alternative promoter (disjoint, >1 kb)",
+          "**Pure** promoter switch (no internal change)", "Involves internal junction change",
+          "Promoter change *plus* internal splicing", "Internal splicing only", "Other terminal")
+kable(
+  tibble::tibble(Criterion = labs,
+                 `% of 143 WT events` = vapply(keys, function(k) xr_stat(ev, k), numeric(1))),
+  caption = "Event classification, full GFF3 annotation (100% coverage)"
+)
+```
+
+**The answer is: partly, but not half.** 98.6% of events differ in their first exon — which is
+why the "it's all first exon" impression is well founded. But under a stringent criterion
+(disjoint first exon *and* TSS > 1 kb apart), only **21.7% are *pure* promoter switches** with
+no internal junction change, while **59.4% involve a genuine internal junction change**.
+Robinson's concern applies to about a fifth of events.
+
+The event-class mix is **unchanged in the KO** (internal-splicing share 59.4% vs 51.3%,
+Fisher p = `r num(xr_stat(ev, "WT_vs_KO_internal_fisher_p"), 2)`), so UBL5 loss does not
+selectively remove one event class. TSS distances are unimodal (median
+`r format(xr_stat(ev, "median_tss_distance_bp"), big.mark = ",")` bp, Hartigan dip
+p = `r num(xr_stat(ev, "dip_test_p_FULL"), 2)`).^[An apparent bimodality on the earlier
+Ensembl-only subset (dip p = 0.008) did not survive complete annotation and is retracted. It
+came from coordinate disagreement between the two annotations (Spearman 0.649), not biology.
+This is also why the earlier AFE percentages changed so much: the Ensembl pass resolved only
+68 of 143 events.]
+
+::: {.callout-important}
+## Wording change we should adopt
+If ~22% of events are pure promoter switches and much of the rest involves 5' truncation, a
+substantial fraction of what the pipeline calls "isoform switching" is **TSS selection**.
+That is a real and claimable regulatory layer — it is just not a spliceosome one. The reports
+should stop describing it generically as "splicing".
+:::
+
+# Q2 — What UBL5 is doing {#sec-q2}
+
+## No constitutive splicing defect
+
+```{r}
+#| label: tbl-baseline
+kable(
+  base |> transmute(
+    Contrast = .data$contrast,
+    Genes = .data$n_genes,
+    `Within-genotype (noise)` = .data$median_within,
+    `Between-genotype` = .data$median_cross,
+    Excess = .data$median_excess,
+    Ratio = .data$ratio
+  ),
+  caption = "Baseline isoform composition, unstimulated cells only"
+)
+```
+
+Comparing **unstimulated cells only**, the KO's excess over replicate noise is
+**`r num(base$median_excess[1], 4)`** — essentially nil. The positive control (two genuinely
+different genotypes, H vs T) gives **`r num(base$median_excess[2], 4)`**, about 21× larger.
+
+So the assay detects real composition differences, and the KO at rest does not have one.
+**Whatever UBL5 is doing is condition-dependent.** This is a within-layer comparison with no
+cross-layer ratio, so it is untouched by the estimator problem below.
+
+## The layer asymmetry, and why it did not survive {#sec-layers}
+
+```{r}
+#| label: fig-f2
+#| fig-cap: "F2 — Q2 mechanism. Panel a stands; panels b-c document why the expression-vs-splicing asymmetry does not."
+knitr::include_graphics(existing_figs(xr_figs("F2_ubl5_mechanism.png")))
+```
+
+We reported that the KO retains 64% of its expression response but only 38% of its splicing
+response — non-overlapping CIs, robust to an annotation-neutral subset. That looked like
+direct evidence for a splicing-specific role.
+
+**The two numbers come from estimators biased in opposite directions.**
+
+- *Expression response* is |log2FC| between condition means — it averages three replicates
+  **before** taking the absolute value, so it tracks truth almost linearly.
+- *Splicing response* is a total variation distance — a **sum of absolute values**, which
+  does not average noise away. For signal small relative to noise,
+  $E|s+n| \approx E|n| + O(s^2)$, so the estimator is roughly **quadratic** near zero and
+  compresses ratios toward 0.
+
+```{r}
+#| label: tbl-calib
+kable(
+  cal |> transmute(
+    `True ratio` = .data$true_ratio,
+    `Read by expression estimator` = round(.data$expression, 3),
+    `Read by splicing estimator (A)` = round(.data$splicing_A, 3),
+    `Read by splicing estimator (B)` = round(.data$splicing_B, 3)
+  ),
+  caption = "Simulation: what each estimator reports for a known true ratio (script 10)"
+)
+```
+
+A genotype with **60% of the true signal** reads as **68%** by the expression estimator and
+**42%** by the splicing estimator. Comparing an upward-biased number to a downward-biased one
+manufactures an asymmetry even when both layers are reduced by exactly the same factor.
+
+```{r}
+#| label: tbl-corrected
+kable(
+  lrc |> transmute(
+    Source = .data$source,
+    `Observed expr.` = round(.data$observed_expression, 3),
+    `Observed splicing` = round(.data$observed_splicing, 3),
+    `Corrected expr.` = round(.data$true_expression, 3),
+    `Corrected splicing` = round(.data$true_splicing, 3),
+    `Observed gap` = round(.data$observed_gap, 3),
+    `Corrected gap` = round(.data$corrected_gap, 3)
+  ),
+  caption = "Inverting the calibration: the sign of the gap depends on the estimator"
+)
+```
+
+Inverting the calibration turns 64% / 38% into 53% / 57% — the observed gap of **+0.26
+becomes −0.04**. The splicing layer is no longer the more-degraded one.
+
+::: {.callout-important}
+## The two corrected analyses agree on direction only — do not overstate this
+The pipeline's own estimator (observed 60% / 65%) corrects to 48% / 75%, a gap of
+**`r num(lrc$corrected_gap[1], 2)`**, against the external review's
+**`r num(lrc$corrected_gap[2], 2)`**. Both corrected gaps are ≤ 0, so neither supports
+"splicing degrades more" — but they differ by 23 points, and the pipeline's version implies
+splicing is retained ~1.6× *better* than expression, which the review's does not.
+
+The honest reading: after correction, **no reliable cross-layer ordering can be extracted
+from either estimator.** Not that both converge on parity.
+:::
+
+Matching the estimator *structure* does not rescue the comparison. An identical
+across-minus-within pairwise form applied to both layers narrows the gap from 26 to 14 points
+(expression 53.7%, splicing 39.9%) but cannot close it, because compression depends on
+**signal-to-noise**, not just estimator form — and the layers differ there by **20×** (WT
+expression SNR 1.81, splicing 0.09). At SNR 0.09 the splicing estimator is deep in the
+quadratic regime while expression is not.^[The simulation assumes Gaussian homoscedastic
+noise, so the *magnitude* of the correction is approximate. The *direction* of the two biases
+is not — it follows from the algebra of averaging before versus after an absolute value.]
+
+```{r}
+#| label: fig-calib
+#| fig-cap: "Estimator calibration and the corrected retention, from script 10."
+knitr::include_graphics(existing_figs(c(
+  flay("fig_estimator_calibration.png"),
+  flay("fig_layer_retention.png")
+)))
+```
+
+**What this does and does not overturn.** It does **not** show UBL5 has no splicing-specific
+role — it shows *this measurement cannot demonstrate one in either direction*. It does not
+touch the baseline result above, and it does not touch the globally blunted expression
+response, which rests on expression alone.
+
+## What the deficit is *not* {#sec-notspecific}
+
+```{r}
+#| label: fig-f3
+#| fig-cap: "F3 — Three negative controls: the sparing artefact (a), conditioning on expression (b), and network proximity against a degree-matched null (c)."
+knitr::include_graphics(existing_figs(xr_figs("F3_specificity.png")))
+```
+
+**Not LPS-pathway-specific.** If UBL5 were required for an LPS-induced splicing programme,
+the deficit should concentrate in LPS-responsive genes. It does the opposite on the relative
+scale — and that reading is the artefact:
+
+```{r}
+#| label: tbl-sparing
+kable(
+  spar |> transmute(
+    Class = .data$class, n = .data$n, WT = .data$WT, KO = .data$KO,
+    `% retained (relative)` = .data$pct_retained,
+    `Absolute loss` = .data$absolute_loss
+  ),
+  caption = "The same table read two ways: relative retention suggests sparing, absolute loss says the opposite"
+)
+```
+
+Interferon-response genes retain 62.8% against a 36.6% transcriptome average — but they
+*lose* 0.0122 in absolute terms against 0.0081. Conditioning on expression quintiles,
+LPS-responsiveness stays significant (p = 0.002) while **ISG status does not (p = 0.27)**.
+The interferon effect was abundance. Report both scales or neither.
+
+**No network proximity to TLR4.** Using the full STRING v12 human physical interactome
+(15,809 proteins, 210,667 edges at score ≥ 400) seeded with 33 TLR4-pathway proteins and
+tested against a **degree-matched null**, every candidate set is non-significant: switching
+in WT p = 0.49, KO p = 0.18, UBL5-dependent p = 0.69, cryptic p = 0.56, Class B p = 0.26.
+
+The reason is structural and visible in the null itself — degree-matched *random* genes sit
+only 2.20–2.47 steps from the pathway (SD 0.10–0.24). In a network this dense, almost every
+expressed gene is two to three steps from TLR4, so **distance carries almost no discriminating
+information**.^[This is worth remembering before we run any similar proximity analysis: without
+a degree-matched null, hub genes make everything look close to everything.]
+
+## What survives on the positive side
+
+Two results from the network work do stand:
+
+- A short list of candidates that are **genuine direct physical interactors** of pathway
+  components (`direct_TLR4_interactors.csv`).
+- **UBL5's own neighbourhood: 62% of its 82 partners are core spliceosome or RBP**, including
+  a direct **SART1** edge — the mammalian counterpart of the known Hub1–Snu66 interaction.
+  Its single apparent TLR4 link is to UBE2N and is best read as ubiquitin-system
+  co-annotation, not signalling.
+
+This is suggestive of a spliceosomal role, but it is **annotation, not measurement** from our
+data. It cannot substitute for the refit.
+
+# Candidates for validation {#sec-candidates}
+
+```{r}
+#| label: tbl-cand
+kable(
+  cand |> transmute(
+    Gene = .data$gene, `Cryptic rank` = .data$cryptic_rank,
+    `Expr WT` = .data$gene_expr_WT, `log2FC WT` = .data$gene_log2FC_WT,
+    `max |dIF| WT` = .data$max_abs_dIF_WT,
+    `Testable in T_HT` = .data$testable_in_T_HT,
+    `Reproduces` = .data$reproduces_in_T_HT
+  ),
+  caption = "Lead candidates and their cross-annotation status"
+)
+```
+
+```{r}
+#| label: fig-f5
+#| fig-cap: "F5 — Assay feasibility and the verdict per question."
+knitr::include_graphics(existing_figs(xr_figs("F5_implications.png")))
+```
+
+::: {.callout-warning}
+## Most of these cannot be assayed by qPCR, for a structural reason
+Of 7 candidate isoforms, **5 are fully nested** inside a longer isoform — every junction and
+every base they contain is also present in the host transcript, so **no primer pair can
+distinguish them**. A 6th (SOCS4 `TCONS_00086549`) is not nested but still has zero unique
+sequence ≥ 60 bp, because other isoforms tile across all of it.
+
+That leaves **one** designable assay: the **IRAK3** long form `TCONS_00065141` — 129 bp
+product, specificity verified empirically as **1 of 315,349 transcripts** by matching both
+primers against every transcript in `fa/transcripts_U-T.fa`, not predicted.
+
+**The right assays instead:** the discriminating feature for the nested isoforms is the 5'
+end (TSS 863 bp to 55.8 kb apart), so **5' RACE, CAGE, or targeted long-read cDNA**. Long-read
+cDNA on the validation RNA would resolve all seven at once and is likely cheaper than
+developing six assays that cannot work.
+:::
+
+# Methods notes worth carrying forward {#sec-methods}
+
+Short version of the traps this project has actually fallen into. Full treatment in
+`docs/STATISTICAL_METHODS.md`.
+
+**Backgrounds.** Every enrichment test uses the genes *quantified and tested in that same
+experiment* (8,000–12,000 per dataset), recovered from unfiltered exports. Never the whole
+genome, and never the saved analysis objects — those were written with
+`reduceToSwitchingGenes = TRUE`, so every gene in them is already significant. One early test
+in this project had a background of **25 genes, all significant by construction**, and
+reported an odds ratio of 15.
+
+**The abundance floor.** `min_gene_expression = 12`, derived from replicate IF noise versus
+gene expression. dIF is a ratio, so at low *gene* abundance the isoform fraction rests on few
+reads. It removes 33–52% of raw calls by design, and `is_switching_before_expr_floor` is kept
+so the cost stays auditable.^[The floor is on **gene** expression, not isoform expression —
+IF is isoform/gene, so it is gene abundance that sets the precision. Note that `H_HT`'s
+recommended floor (6.02) is the lowest of the four *because* its noise was halved by the
+batch correction; `02d` takes the median of the four, so the effect on the applied value is
+modest (~11 vs ~12.5), not a distortion.]
+
+**Effect sizes over p-values.** With thousands of matched isoforms, p-values track n. A paired
+Wilcoxon p of 7e-9 on a median log2 ratio of 0.003 is sample size, not biology.
+
+**Calibrate before comparing layers.** The general lesson from @sec-layers: *any* claim of the
+form "layer X is affected more than layer Y" needs its estimators calibrated first. The
+results in @sec-q1 and @sec-notspecific do not have this problem — they are within-layer
+comparisons, proportions, or structural classifications.
+
+**The measurement ceiling on all of this.** Everything above derives from ISA's condition
+means and replicate isoform fractions. The composition measure is a reasonable summary but is
+**not a formal differential-splicing test**, and @sec-layers is the concrete cost of that.
+
+# Where we need your input {#sec-feedback}
+
+These are blocking or near-blocking, and we cannot resolve them from the data.
+
+**1. What exactly is the UBL5 allele?** Full knockout, frameshift, hypomorph, degron, or
+knockdown? Published work reports human UBL5 as **essential for viability** (Ammon et al.
+2014), so a viable complete null needs explaining. If it is a hypomorph or partial knockdown
+that changes the interpretation substantially and reconciles a literature contradiction. This
+is the cheapest thing on the list and its outcome reframes everything else.
+
+**2. Library chemistry — polyA-selected or ribo-depleted?** **Intron retention** is the readout
+most diagnostic for a Hub1/UBL5 mechanism, and it is poorly captured by polyA selection. If
+the existing libraries are polyA, the central falsification test needs new sequencing.
+
+**3. LPS dose, timepoint, and PMA differentiation protocol.** Needed so any validation
+experiment matches the original conditions.
+
+**4. Do we want the count scale decision made now?** For the refit (@sec-next) we must choose
+between ISA's scaledTPM — the recommended scale for DTU, since raw expected counts are biased
+by effective-length differences between isoforms of the same gene — and RSEM expected counts.
+They differ per-isoform by 0.18–2.3×. Both are derivable from the supplied files. Default
+recommendation is **scaledTPM**, but it should be a deliberate, recorded choice.
+
+**5. Is the TSS reframing acceptable?** Given @sec-events, should we retitle this work from
+"isoform switching" to something that leads with promoter/TSS selection? It is more accurate
+and arguably a *cleaner* story, but it changes the framing of the whole project.
+
+# What's planned next {#sec-next}
+
+Ordered by what would change a conclusion.
+
+**1. Model-based refit from raw counts — the blocking step.** This is now unblocked: RSEM
+matrices for **all twelve libraries per reference** arrived and every ISA object has been
+reconciled against them. Because the UT file carries all twelve, the layer question becomes a
+`genotype × treatment` **interaction in one 2×2 model** rather than a comparison of two
+separately-fit runs — which removes the cross-run normalisation problem *and* the estimator
+problem in @sec-layers at the same time.
+
+Plan: `satuRn` or `DEXSeq`, with the pairing included and an **explicit blocking factor**
+(`~ donor + condition` for H, `~ replicate + condition` for T/U), re-imported under a single
+ISA version.^[`satuRn` 1.12.0, `DEXSeq` 1.50.0, `edgeR` and `limma` are installed; `DRIMSeq`
+is **not**. Counts are fractional (RSEM EM output) — fine for satuRn, round for DEXSeq.
+Requires the external drive to be mounted.] Until this runs, the splicing-specific UBL5 claim
+stays unresolved.
+
+**2. Recompute the mediation decomposition on a calibrated scale.** It inherits the compressed
+estimator and is currently unquotable.
+
+**3. Promote the hidden-layer analysis into the pipeline.** `scripts/03b_hidden_layer.R`
+writing per-dataset cryptic-switcher and Class B tables with cross-annotation reproduction
+flags, so these stop living only in the review tree.
+
+**4. GO enrichment on the hidden-layer sets.** Could not be run during the review —
+Bioconductor mirrors were unreachable from that sandbox. `gene_sets/` has everything needed
+(`universe_tested_genes.txt`, 8,916 symbols, plus the four candidate sets); feed them through
+`05_pathway_enrichment.R` so the universe convention matches the rest of the project. At
+11–56 genes this is likely underpowered, so a more informative alternative is to annotate the
+**isoforms** instead — are the lost minor isoforms NMD targets or truncated, and the retained
+dominant ones full-length coding? That converts "purification" from a pattern into a
+mechanism.
+
+**5. Re-examine the abundance floor under a paired noise model.** The floor was derived from
+within-condition replicate IF noise without using the pairing; a paired estimate should be
+smaller and would recover some of the 33–52% of calls currently removed. Do this **after** the
+re-import, not before.
+
+**6. Wet-lab sequence** (full proposal, ordered cheapest-potentially-fatal-first, in
+`docs/external_review/EXPERIMENTS.md`): allele characterisation → intron retention under
+stimulation, ribo-depleted → the IRAK3 assay → independent perturbation as a clonal-artefact
+control → rescue, only once the first three support the model.
+
+# Appendix — provenance {#sec-provenance}
+
+```{r}
+#| label: tbl-prov
+prov <- tibble::tribble(
+  ~Claim, ~`Backing table`,
+  "Cryptic switchers", "results/tables/hidden_layer_*.csv; xr: cryptic_switchers_T_UT.csv",
+  "Class B reproduction", "xr: class_b_purification_T_UT.csv",
+  "Event structure", "xr: event_structure_{summary,WT,KO}_gff3.csv",
+  "Baseline composition", "xr: baseline_composition_test.csv",
+  "Estimator calibration", "results/tables/layer_estimator_calibration.csv",
+  "Corrected retention", "results/tables/layer_retention_corrected.csv",
+  "Sparing, both scales", "xr: sparing_relative_vs_absolute.csv",
+  "Network distance", "xr: network_distance_to_TLR4.csv",
+  "Primer designs", "xr: primer_designs.csv",
+  "H_HT batch correction", "docs/REVIEW_CHANGES.md §0g"
+)
+kable(prov, caption = "Which table backs which claim (`xr:` = docs/external_review/tables/)")
+```
+
+Every table in `results/` carries a `run_manifest.json` entry recording the git SHA, R
+version, package versions and thresholds that produced it. Reports are read-only consumers of
+those tables.
+
+**Standing caveats.** The four ISA objects are pre-reduced to switching genes, so "genes
+present" ≠ "genes tested"; significance always comes from the unfiltered context layer, never
+from the reduced objects. `TCONS_*` ids are assigned per reference and are not comparable
+across HT and UT — cross-reference comparisons join on gene symbols.
+
+`r reduction_caveat()`
