@@ -254,21 +254,29 @@ Run from the **project root** unless noted. Order matters for dependents of `01`
 - **Writes:** `expression_if_stability`, `expression_floor_recommendation`,
   `expression_between_groups`, figures under `results/figures/expression/`.
 
-### `02e_response_magnitude_control.R` — is a switching deficit just a smaller LPS response?
+### `02e_response_magnitude_control.R` — stratification on LPS-response magnitude
 
-- Stratifies each gene by its own |log2FC| and asks whether a switching-rate difference
-  survives. **Changes the Q2 conclusion:** the KO's LPS response runs at ~half amplitude
+- Stratifies each gene by its own |log2FC|. The KO's LPS response runs at ~half amplitude
   (slope 0.52), and the crude switching OR of 0.51 becomes MH OR 0.77 (p = 0.11).
-- Run on both pairs. The HT pair *strengthens* on adjustment (OR 2.29 → 2.49), which is the
-  control showing stratification is not flattening everything.
+- **This does NOT change the Q2 conclusion, despite the script's name.** UBL5 is a
+  spliceosome-associated modifier, so response magnitude is plausibly a **mediator** rather
+  than a confounder, and conditioning on a mediator subtracts the effect being measured.
+  Both causal orderings predict the same correlation. Keep the numbers; do not present them
+  as evidence the deficit is an artefact. See `docs/STATISTICAL_METHODS.md` §2.6.
+- The HT arm (OR 2.29 → 2.49) is **retired**, not merely caveated: `H_HT` alone is
+  batch-corrected and its three-donor design confounds genotype with prep day
+  (`docs/REVIEW_CHANGES.md` §0g).
 - **Writes:** `ut_response_magnitude_{strata,control}.*`, figures under `results/figures/response/`.
 
-### `02f_reference_concordance.R` — the same-sample technical ceiling
+### `02f_reference_concordance.R` — the same-sample technical comparison
 
 - `T_HT` and `T_UT` are **the same six libraries** under two references (verified from
   replicate sample names; gene-level r ≈ 0.99). All disagreement is annotation + thresholding.
 - Switching-gene Jaccard **0.35** — so a single-dataset call has roughly a one-in-three chance
-  of not replicating under re-annotation. Judge replication rates against this, not 100%.
+  of not replicating under re-annotation. Judge replication rates against this, not 100% —
+  but **not as a hard "ceiling"**: HT merges the T+H PacBio transcripts and UT merges T+U, so
+  the two are not one transcript space viewed twice, and part of the disagreement is genuine
+  annotation-space difference rather than measurement noise.
 - Note `TCONS_*` ids are **not** comparable across references; compare on gene symbols.
 - **Writes:** `reference_{concordance,discordance_reasons,discordant_genes}_*.*`.
 

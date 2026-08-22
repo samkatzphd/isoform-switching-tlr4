@@ -1,5 +1,21 @@
 # Review handoff: isoform-switch-pipeline
 
+> **SUPERSEDED — historical record, 2026-08-07.** This is the first review round. It is kept
+> unedited (the append-don't-edit rule below applies to it too), but do not act on it
+> directly. The current document is `docs/external_review/HANDOFF.md`.
+>
+> **Finding 1 below is withdrawn.** It concluded that the Q2 / UBL5 switching deficit "does
+> not survive its confounder". Response magnitude is plausibly a **mediator**, not a
+> confounder — UBL5 is a spliceosome-associated modifier — and conditioning on a mediator
+> removes the effect being measured. The MH arithmetic was right, the causal logic was not.
+> `02e` was built on this recommendation and its output is kept as a record only.
+>
+> **Finding 2's "technical ceiling" framing is retired.** HT and UT merge different PacBio
+> transcript sets, so part of the 0.35 Jaccard is annotation-space difference, not noise.
+>
+> Full ledger of what has since been retracted: `docs/AGENT_CONTEXT.md`
+> §"Retracted — do not cite", and `docs/external_review/HANDOFF.md` §"Superseded".
+
 External review, 2026-08-07. Every number below was recomputed from the committed
 `data/processed/isoformContext_*.rds` tables using the repo's own `score_isoforms()` and
 `config/config.yml`. No repo files were modified (grant was read-only).
