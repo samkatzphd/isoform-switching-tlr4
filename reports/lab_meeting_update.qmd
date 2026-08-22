@@ -44,6 +44,16 @@ q1a  <- read_tab("q1_response_candidates.csv")
 q1b  <- read_tab("q1_cryptic_candidates.csv")
 q1n  <- function(k) q1s$n[match(k, q1s$metric)]
 
+# Model-based DTU refit (script 12) and assayability screen (script 13)
+dtu  <- read_tab("dtu_refit_summary.csv")
+datt <- read_tab("dtu_refit_attenuation.csv")
+asy  <- read_tab("q1_assayability_summary.csv")
+asyg <- read_tab("q1_assayability_by_gene.csv")
+dtup <- dtu |> filter(.data$scale == "scaledTPM", grepl("^primary", .data$model))
+dn   <- function(c) dtup$genes_significant[match(c, dtup$contrast)]
+attp <- datt |> filter(.data$scale == "scaledTPM", grepl("^primary", .data$model))
+an   <- function(k) asy$n[match(k, asy$metric)]
+
 # Figure helpers
 flay <- make_fig("layers")
 fhid <- make_fig("hidden_layer")
@@ -64,6 +74,10 @@ Three claims we previously reported are **withdrawn**. They are listed in
 @sec-withdrawn rather than quietly dropped, because two of them were headline results and
 one of them shaped a script. Everything still standing has been re-checked against the
 tables it came from.
+
+**New since the last version:** the model-based 2x2 refit (@sec-refit), which was the step
+the whole Q2 question was blocked on, and the assayability screen on the Q1 candidates
+(@sec-assay).
 :::
 
 # Where the project stands {#sec-status}
@@ -92,18 +106,25 @@ verdicts <- tibble::tribble(
     "Transcriptome-wide; no network proximity above a degree-matched null",
   "UBL5 acts on splicing specifically, not only via expression",
     "**Unresolved**",
-    "The layer asymmetry was an estimator artefact — see @sec-layers",
-  "Candidates are testable by qPCR",
+    "Direct 2x2 interaction test: 2 genes of 13,086 — but underpowered (@sec-refit)",
+  "The KO degrades splicing more than expression",
+    "**Rejected**",
+    "Retention >=56% on one estimator, matching the expression figure (@sec-refit)",
+  "Q2 candidates are testable by qPCR",
     "**Mostly no**",
-    "6 of 7 candidate isoforms need 5' RACE or long reads"
+    "6 of 7 need 5' RACE or long reads",
+  "Q1 candidates are testable by qPCR",
+    "**Partly**",
+    "25 of 63 isoforms designable; 5 genes have both sides (@sec-assay)"
 )
 kable(verdicts, caption = "Current verdict on each claim, and what it rests on")
 ```
 
 **The one-line version.** Q1 is in good shape and has a real, defensible result. Q2 has a
 solid negative (no constitutive defect, not pathway-targeted) and a solid global phenotype
-(halved LPS response), but the *splicing-specific* claim — the reason UBL5 is interesting —
-is currently unresolved and blocked on a proper model-based refit.
+(halved LPS response). The *splicing-specific* claim — the reason UBL5 is interesting — has
+now been tested directly for the first time and the interaction is nearly empty, but that
+test is underpowered at n = 3, so it stays **unresolved** rather than rejected (@sec-refit).
 
 # What changed since the last update {#sec-withdrawn}
 
@@ -463,6 +484,100 @@ role — it shows *this measurement cannot demonstrate one in either direction*.
 touch the baseline result above, and it does not touch the globally blunted expression
 response, which rests on expression alone.
 
+## The model-based refit: the interaction is nearly empty {#sec-refit}
+
+::: {.callout-important}
+## This is new, and it is the test the project was blocked on
+`scripts/12_dtu_refit_2x2.R`. The RSEM matrix carries **all twelve `U-T` libraries**, so the
+layer question was fitted as **one `genotype x treatment` interaction** in satuRn instead of
+two separately-fit arms compared after the fact. That removes the cross-run normalisation
+problem and the estimator problem in @sec-layers at the same time.
+:::
+
+```{r}
+#| label: tbl-dtu
+kable(
+  dtu |> filter(.data$scale == "scaledTPM") |> transmute(
+    Model = .data$model, Contrast = .data$contrast,
+    `Genes tested` = .data$genes_tested,
+    Significant = .data$genes_significant,
+    `%` = .data$pct_significant
+  ),
+  caption = "satuRn, scaledTPM, BH FDR < 0.05. expected_count is fitted alongside as a sensitivity check and is uniformly more liberal (290 / 47 / 4) without changing any conclusion."
+)
+```
+
+**The 174-vs-37 gap between arms does not survive being tested directly.** The interaction --
+"does the LPS-driven shift *differ* between genotypes?" -- returns **`r dn("interaction")`
+genes** out of `r format(dtup$genes_tested[dtup$contrast == "interaction"], big.mark = ",")`.
+Every earlier version of this comparison read the gap between two separately-fitted arms,
+which is the textbook trap of treating a **difference of significance as the significance of
+a difference**.
+
+::: {.callout-warning}
+## "Cannot support" is not "ruled out"
+The interaction is intrinsically the least powered contrast: it is a difference of
+differences, so variance adds, and its median standard error is **0.655 against 0.470** for
+the WT main effect. At n = 3 per group a real but modest interaction would not be detected.
+The Q2 verdict therefore stays **unresolved** rather than moving to rejected.
+:::
+
+### Retention, finally on one scale
+
+Both arms now come from the same model and the same estimator, so a KO/WT ratio is
+like-for-like -- which the retracted 64% / 38% never was.
+
+```{r}
+#| label: tbl-att
+kable(
+  datt |> transmute(
+    Scale = .data$scale, Model = .data$model,
+    `Isoforms (WT-sig)` = .data$n_isoforms_wt_sig,
+    `Retention (lower bound)` = round(.data$retention_lower_bound, 3),
+    `95% CI` = paste0(round(.data$ci_low, 3), "-", round(.data$ci_high, 3))
+  ),
+  caption = "Slope through the origin, KO = beta x WT, on WT-significant isoforms"
+)
+```
+
+Retention is **at least `r sprintf("%.0f%%", 100 * attp$retention_lower_bound)`** -- consistent
+with the old *expression* figure (~64%) and **not** with the retracted *splicing* figure
+(38%). On a single estimator the two layers degrade at similar rates, which is exactly what
+@sec-layers predicted once the calibration was inverted.
+
+It is a **lower bound** because selecting isoforms on WT significance gives the WT estimates
+a winner's curse, inflating the denominator and biasing the slope down; the KO estimates for
+those isoforms are unselected and stay unbiased.^[The unselected transcriptome-wide slope
+(0.068) is **not** a retention estimate and is kept only as a diagnostic. The reliability of
+the WT estimate -- the share of its observed variance that is signal rather than measurement
+error -- is **0.0066**, so ~99% of that spread is noise and the slope measures regression
+dilution. The standard correction (divide by reliability) is unstable there and returns
+beta > 10. Any future transcriptome-wide ratio must report its reliability alongside it.]
+
+```{r}
+#| label: fig-dtu
+#| fig-cap: "Genes called per contrast. The interaction -- the direct test of a UBL5 splicing effect -- is nearly empty in every model and on both count scales."
+knitr::include_graphics(existing_figs(figs("dtu_refit", "fig_dtu_refit_counts.png")))
+```
+
+::: {.callout-note}
+## Two method findings worth carrying
+**satuRn's empirical FDR fails at n = 3.** Its `locfdr`-based null misfits on every contrast
+and never drops below q ~ 0.30 -- it returns **zero** genes even for the WT LPS effect, which
+ISA independently calls for 118 genes. A correction that finds nothing where the positive
+control is strongest is broken, not conservative. BH is reported; both are written to
+`dtu_refit_fdr_comparison.csv`.
+
+**The paired design cannot be blocked here.** A 6-level pair factor is rank deficient in the
+2x2 (ncol 9, rank 8) because pair nests entirely inside genotype. The primary model is
+unblocked; a `+ rep3` sensitivity fit assumes T1 and U1 were matched batches, which is
+unconfirmed. They agree throughout.
+
+**Count scale, settled and recorded:** **scaledTPM** primary, since raw expected counts are
+biased by effective-length differences between isoforms of the *same* gene -- precisely the
+comparison DTU makes. This closes the open decision from the last update.
+:::
+
 ## What the deficit is *not* {#sec-notspecific}
 
 ```{r}
@@ -614,12 +729,68 @@ reported as a flag only and never used as a filter, since `H_HT` alone is batch-
 (@sec-hht). No `H_HT` effect size is compared to a `T` effect size anywhere.
 :::
 
-::: {.callout-important}
-## Neither Q1 list has been through the assayability screen yet
-The nesting and primer-specificity analysis that eliminated **6 of the 7** Q2 candidates
-below has **not** been run on these genes. Expect it to remove several. Until it has, treat
-both lists as biological shortlists, not assay-ready ones. This is the next task —
-see @sec-next.
+## Can the Q1 candidates actually be measured? {#sec-assay}
+
+`scripts/13_assayability_screen.R` applies the same screen that eliminated 6 of the 7 Q2
+candidates: an isoform is undesignable if it is **nested** inside a longer isoform of the
+same gene (every base and every junction contained, so no primer pair can discriminate it),
+or if the other isoforms **tile over** it leaving no unique run of at least 60 bp.
+
+::: {.callout-note}
+## The screen was validated before it was trusted
+Run against the review's 7 Q2 isoforms it reproduces all five checkable verdicts exactly,
+including the subtle SOCS4 case — `TCONS_00086549` is *not* nested but has only **6 bp** of
+unique sequence, so it fails for a different reason than the other four.
+:::
+
+```{r}
+#| label: tbl-asy
+kable(
+  asy |> transmute(Metric = .data$metric, n = .data$n),
+  caption = "Assayability of the Q1 candidate isoforms and the genes they belong to"
+)
+```
+
+**`r an("  designable")` of `r an("candidate isoforms screened")` isoforms are designable** —
+materially better than Q2's 1 of 7. More useful still, **`r an("  both sides designable")`
+genes have *both* the falling and the rising isoform designable**, which the Q2 set had none
+of. That matters because it lets the switch be measured *as a switch* rather than inferred
+from one side.
+
+```{r}
+#| label: tbl-asyg
+kable(
+  asyg |> filter(.data$n_designable > 0) |>
+    arrange(desc(.data$n_designable), desc(.data$max_unique_bp)) |>
+    head(12) |>
+    transmute(Gene = .data$gene_name, List = .data$lists,
+              `Designable isoforms` = .data$n_designable,
+              `Nested` = .data$n_nested,
+              `Longest unique (bp)` = .data$max_unique_bp,
+              Verdict = .data$gene_verdict),
+  caption = "Genes with at least one designable isoform, best first"
+)
+```
+
+**RBKS is the strongest single candidate**: both sides of the switch (dIF −0.33 and +0.44)
+with 110 and 273 bp of unique sequence. KDM6B, ATRN, PLD6 and SAMD14 also have both sides.
+
+```{r}
+#| label: fig-asy
+#| fig-cap: "Why candidates fail. Nested isoforms cannot be discriminated by any primer pair; tiled-over ones have no room to design into."
+knitr::include_graphics(existing_figs(figs("assayability", "fig_q1_assayability.png")))
+```
+
+The improvement over Q2 tracks @sec-events: the response list carries large **internal
+splicing** switches, not only the promoter switches that make an isoform nested by
+construction.
+
+::: {.callout-warning}
+## What this screen does not do
+It does not design primers or run the empirical specificity match against all 315,349
+transcripts — the step that confirmed the one surviving Q2 assay at 1-of-315,349. That is
+the next task and only makes sense for the `r an("  designable")` survivors, which are
+written out with their unique interval so design can start from a coordinate.
 :::
 
 ## Q2 candidates and assay feasibility
@@ -725,7 +896,9 @@ and arguably a *cleaner* story, but it changes the framing of the whole project.
 
 Ordered by what would change a conclusion.
 
-**1. Model-based refit from raw counts — the blocking step.** This is now unblocked: RSEM
+**1. DONE — the model-based refit is complete (@sec-refit).** It was the blocking step and
+it is no longer blocking; what remains is what it could not settle, below. Original framing
+kept for context: RSEM
 matrices for **all twelve libraries per reference** arrived and every ISA object has been
 reconciled against them. Because the UT file carries all twelve, the layer question becomes a
 `genotype × treatment` **interaction in one 2×2 model** rather than a comparison of two
@@ -736,15 +909,13 @@ Plan: `satuRn` or `DEXSeq`, with the pairing included and an **explicit blocking
 (`~ donor + condition` for H, `~ replicate + condition` for T/U), re-imported under a single
 ISA version.^[`satuRn` 1.12.0, `DEXSeq` 1.50.0, `edgeR` and `limma` are installed; `DRIMSeq`
 is **not**. Counts are fractional (RSEM EM output) — fine for satuRn, round for DEXSeq.
-Requires the external drive to be mounted.] Until this runs, the splicing-specific UBL5 claim
-stays unresolved.
+Requires the external drive to be mounted.] The claim stays unresolved after it, but for a
+different reason: the interaction is underpowered at n = 3, not un-tested. **Resolving it
+needs more replicates or a larger perturbation, not another estimator.**
 
-**2. Run the assayability screen on the Q1 lists.** The nesting and primer-specificity
-analysis that eliminated 6 of the 7 Q2 candidates has not been applied to List A or List B
-(@sec-q1cand). Everything it needs is on disk — `gff3/U_T.gff3` and `fa/transcripts_U-T.fa`
-— so it runs without the external drive. Expect it to remove several candidates, and expect
-the 5′-end problem to recur: if ~22% of events are pure promoter switches (@sec-events),
-nested isoforms are the norm rather than the exception here.
+**2. Design and specificity-check primers for the 25 survivors.** The screen
+(@sec-assay) says *where* a discriminating primer can sit; it has not designed one or matched
+it against all 315,349 transcripts. Start with the five both-sides genes — RBKS first.
 
 **3. Recompute the mediation decomposition on a calibrated scale.** It inherits the compressed
 estimator and is currently unquotable.
