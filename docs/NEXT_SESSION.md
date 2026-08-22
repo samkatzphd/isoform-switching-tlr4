@@ -53,6 +53,21 @@ way `13` guards the GFF3: warn and skip, do not fail.
 - External drive was mounted for this pass; `99_verify_inputs.R` exits 0 on all 12 inputs.
   Primer design needs only local `fa/` and `gff3/`, so it runs without the drive.
 
+## New question for the experimentalist, added 2026-08-23
+
+**Was the PacBio/IsoSeq library cap-selected?** (TeloPrime, or IsoSeq with 5'-cap
+verification.) 23,044 of 166,394 quantified transcripts — **13.8%** — are gffcompare class
+`c`, contained inside another isoform. Those are either genuine alternative-internal-promoter
+isoforms or 5'-incomplete assemblies, and without cap selection the second class is produced
+in quantity.
+
+It bears on the biology, not just assay design: 6 cryptic candidates (PCSK7, CCDC117,
+SPRING1, DCUN1D4, SORT1, ITSN1) rest on `c`-class transcripts **alone**. All candidate tables
+now carry `class_codes` / `n_switching_contained` so the exposure is visible per gene.
+
+Mild reassurance already checked: the nested forms do not move as a class (8 rise, 5 fall,
+p = 0.58), so there is no global 5'-coverage signature. Not conclusive.
+
 ## Still waiting on the wet-lab side
 
 Unchanged, and now the main brake on Q2. All three are in the lab meeting update §6: the
