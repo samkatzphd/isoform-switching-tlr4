@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Project">
-<meta name="dcterms.date" content="2026-08-07">
+<meta name="dcterms.date" content="2026-08-22">
 
 <title>Isoform switching after LPS, and what UBL5 loss does to it</title>
 <style>
@@ -2243,7 +2243,7 @@ vertical-align: -.125em;
   </ul></li>
   <li><a href="#where-the-analysis-is-currently-blind" id="toc-where-the-analysis-is-currently-blind" class="nav-link" data-scroll-target="#where-the-analysis-is-currently-blind"><span class="header-section-number">9</span> Where the analysis is currently blind</a>
   <ul class="collapse">
-  <li><a href="#what-replication-can-possibly-look-like-the-same-sample-ceiling" id="toc-what-replication-can-possibly-look-like-the-same-sample-ceiling" class="nav-link" data-scroll-target="#what-replication-can-possibly-look-like-the-same-sample-ceiling"><span class="header-section-number">9.1</span> What replication can possibly look like: the same-sample ceiling</a></li>
+  <li><a href="#what-replication-can-possibly-look-like-the-same-sample-comparison" id="toc-what-replication-can-possibly-look-like-the-same-sample-comparison" class="nav-link" data-scroll-target="#what-replication-can-possibly-look-like-the-same-sample-comparison"><span class="header-section-number">9.1</span> What replication can possibly look like: the same-sample comparison</a></li>
   <li><a href="#q1s-cross-genotype-comparison-now-with-a-proper-denominator" id="toc-q1s-cross-genotype-comparison-now-with-a-proper-denominator" class="nav-link" data-scroll-target="#q1s-cross-genotype-comparison-now-with-a-proper-denominator"><span class="header-section-number">9.2</span> Q1’s cross-genotype comparison, now with a proper denominator</a></li>
   <li><a href="#statistics-that-did-not-survive-scrutiny" id="toc-statistics-that-did-not-survive-scrutiny" class="nav-link" data-scroll-target="#statistics-that-did-not-survive-scrutiny"><span class="header-section-number">9.3</span> Statistics that did not survive scrutiny</a></li>
   </ul></li>
@@ -2277,7 +2277,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 7, 2026</p>
+      <p class="date">August 22, 2026</p>
     </div>
   </div>
   
@@ -2289,6 +2289,21 @@ vertical-align: -.125em;
 </header>
 
 
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Scope of this document
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This report covers scripts <code>00</code>–<code>07</code>. It <strong>predates</strong> the layer-decoupling, hidden-layer and GFF3 event-structure work (scripts <code>08</code>–<code>10</code> and <code>docs/external_review/</code>), and does not include those results.</p>
+<p>Claims corrected since the first version, now reflected in the text below: the Q2 response-magnitude stratification conditions on a <strong>mediator</strong> and does not explain the deficit away; the 35% same-sample figure is a reference point, <strong>not</strong> a reproducibility ceiling; the H-vs-T switching contrast is <strong>retired</strong> (<code>H_HT</code> alone is batch-corrected).</p>
+<p>Retracted elsewhere and never quoted here — the 64%/38% expression-vs-splicing layer asymmetry and its mediation split (an estimator artefact, <code>scripts/10_layer_estimator_calibration.R</code>), and the ISG “sparing” reading (a ratio-scale artefact). Full ledger: <code>docs/AGENT_CONTEXT.md</code> §“Retracted — do not cite” and <code>docs/external_review/HANDOFF.md</code>.</p>
+</div>
+</div>
 <section id="the-question" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> The question</h1>
 <p>Macrophages responding to LPS reprogram their transcriptome through TLR4 signalling. Most analyses of that response ask <strong>which genes change in abundance</strong>. This project asks a different question: <strong>which genes change <em>which isoform</em> they use</strong>, independent of whether total gene output goes up or down.</p>
@@ -2918,16 +2933,16 @@ Table 8: Switching rate within strata of each gene’s own LPS response magnitu
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>The Q2 deficit does not survive its confounder
+<span class="screen-reader-only">Important</span>This stratification cannot settle Q2 — it conditions on a mediator
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Crude odds ratio for switching, KO vs WT: <strong>0.508</strong>. Adjusted for response magnitude (Mantel–Haenszel): <strong>0.773, 95% CI 0.565–1.058, p = 0.114</strong> — not significant. In the two highest-response strata the knockout switches slightly <em>more</em>.</p>
-<p>The supported claim is therefore: <strong>UBL5 loss blunts the LPS response globally by roughly half, and reduced isoform switching follows from that.</strong> That is still a real and interesting phenotype, but it is a different claim from “UBL5 shapes isoform selection”.</p>
-<p><strong>One caveat in the other direction.</strong> Response magnitude is plausibly a <em>mediator</em> rather than a confounder — if UBL5 loss causes the blunting, adjusting for it removes part of the effect being measured. A non-significant adjusted OR shows this design cannot separate the two, not that no splicing-specific effect exists.</p>
+<p>Crude odds ratio for switching, KO vs WT: <strong>0.508</strong>. Adjusted for response magnitude (Mantel–Haenszel): <strong>0.773, 95% CI 0.565–1.058, p = 0.114</strong>.</p>
+<p><strong>An earlier version of this document read that as the deficit being explained away. That reading is withdrawn.</strong> UBL5/Hub1 is a spliceosome-associated modifier. If splicing regulation is upstream of the LPS response, then response magnitude is a <strong>mediator</strong>, not a confounder — and conditioning on a mediator removes the very effect being measured. The arithmetic is correct; the causal interpretation was not.</p>
+<p>Both causal models — “blunted response reduces switching” and “impaired splicing blunts the response” — predict this same correlation. <strong>With two conditions and n = 3 there is no design-based way to separate them.</strong> The numbers stay on the record; they are not evidence that the deficit is an artefact.</p>
 </div>
 </div>
-<p>The same control run on the HT pair behaves differently, which is reassuring about the method: there the difference <em>strengthens</em> on adjustment (crude OR 2.29, MH OR 2.49, p = 5.8e-13). Stratification is not mechanically flattening every contrast.</p>
+<p>The HT arm of this control (crude OR 2.29, MH 2.49) is <strong>not shown here and should not be cited</strong>. <code>H_HT</code> is the one dataset that had a batch correction applied, so its switching rate is not on the same scale as <code>T_HT</code>’s; and its three-donor, three-day design means its rate answers a different question from <code>T_HT</code>’s one-genotype, one-day rate. That contrast is retired rather than recomputed — see <code>docs/REVIEW_CHANGES.md</code> §0g.</p>
 </section>
 </section>
 <section id="switching-genes-strongly-co-occur-between-genotypes" class="level2" data-number="6.2">
@@ -4143,9 +4158,10 @@ Figure 11: ISG switching by pair. In the UT arm every knockout ISG switch is sh
 </section>
 <section id="where-the-analysis-is-currently-blind" class="level1" data-number="9">
 <h1 data-number="9"><span class="header-section-number">9</span> Where the analysis is currently blind</h1>
-<section id="what-replication-can-possibly-look-like-the-same-sample-ceiling" class="level2" data-number="9.1">
-<h2 data-number="9.1" class="anchored" data-anchor-id="what-replication-can-possibly-look-like-the-same-sample-ceiling"><span class="header-section-number">9.1</span> What replication can possibly look like: the same-sample ceiling</h2>
+<section id="what-replication-can-possibly-look-like-the-same-sample-comparison" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="what-replication-can-possibly-look-like-the-same-sample-comparison"><span class="header-section-number">9.1</span> What replication can possibly look like: the same-sample comparison</h2>
 <p><code>T_HT</code> and <code>T_UT</code> are <strong>the same six sequencing libraries</strong> quantified against two different reference transcriptomes — identical replicate sample names including S-numbers, and gene-level expression correlating at r ≈ 0.99 for matched samples. Biological variability between them is zero, so every disagreement is annotation plus thresholding. Nothing in the project had noted this; it is the best technical control available.</p>
+<p><strong>One limit on how far this generalises.</strong> The two references are not the same transcript space viewed twice: HT merges the T and H PacBio transcripts, UT merges T and U. So part of the disagreement below is a genuine difference in annotation space, not measurement noise — which is why the number that follows is a useful reference point but <strong>not</strong> a “reproducibility ceiling”, as an earlier version of this document called it.</p>
 <div class="cell">
 <div id="tbl-refconc" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
@@ -4235,11 +4251,11 @@ Table 22: Why the same libraries disagree
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Judge every replication rate against ~35%, not against 100%
+<span class="screen-reader-only">Important</span>Judge every replication rate against this number, not against 100%
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This reframes numbers reported elsewhere in this document. The 6.1% T→H replication below is low against a ceiling of 100%; against a same-sample ceiling of 35% it is still low, but the gap is far smaller than it first appears.</p>
+<p>This reframes numbers reported elsewhere in this document. The 6.1% T→H replication below is low against 100%; against the same-sample figure of 35% it is still low, but the gap is far smaller than it first appears. Read it as a reference point, not a ceiling: some of that 65% disagreement is annotation-space difference between the two references rather than irreducible noise.</p>
 </div>
 </div>
 </section>
@@ -4458,7 +4474,7 @@ Table 25: Both directions, each conditioned on significance once
 </ol>
 <hr>
 <div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -4467,7 +4483,7 @@ Table 25: Both directions, each conditioned on significance once
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>All numbers and figures in this report are read from <code>results/</code> at render time; none are typed in. Regenerate with:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> scripts/01_load_data.R</span>

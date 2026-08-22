@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Project">
-<meta name="dcterms.date" content="2026-08-07">
+<meta name="dcterms.date" content="2026-08-22">
 
 <title>UT comparison: T (WT) vs U (UBL5 knockout)</title>
 <style>
@@ -2260,7 +2260,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 7, 2026</p>
+      <p class="date">August 22, 2026</p>
     </div>
   </div>
   
@@ -2303,8 +2303,8 @@ vertical-align: -.125em;
 <p>Read this before the numbers.</p>
 <ul>
 <li><strong>Effect sizes are the interpretable quantities.</strong> With thousands of matched isoforms, the Wilcoxon p-values below are driven by sample size; the median ΔdIF is what says whether knockout shifts isoform usage, and by how much.</li>
-<li><strong>The switching deficit in the knockout does not survive its confounder.</strong> The KO’s whole LPS response runs at roughly half amplitude (regression slope 0.52, Spearman 0.73 on 8,595 genes tested in both). Stratified on each gene’s own response magnitude, the crude odds ratio of 0.51 becomes a Mantel–Haenszel OR of 0.77 (95% CI 0.57–1.06, p = 0.11). The supported claim is that <strong>UBL5 loss blunts the LPS response globally and reduced switching follows</strong>, not that UBL5 shapes isoform selection directly. See <code>results/tables/ut_response_magnitude_control.csv</code> and the seminar summary. Note the reverse caveat: response magnitude may be a mediator, so this cannot exclude an additional splicing-specific effect.</li>
-<li><strong>Replication has a technical ceiling of ~35%.</strong> <code>T_HT</code> and <code>T_UT</code> are the same libraries under two references; their switching-gene Jaccard is 0.35. Judge the concordance numbers below against that, not against 100%.</li>
+<li><strong>The knockout’s whole LPS response runs at roughly half amplitude</strong> (regression slope 0.52, Spearman 0.73 on 8,595 genes tested in both). Stratified on each gene’s own response magnitude, the crude switching odds ratio of 0.51 becomes a Mantel–Haenszel OR of 0.77 (95% CI 0.57–1.06, p = 0.11) — <code>results/tables/ut_response_magnitude_control.csv</code>. <strong>An earlier version of this report read that as the deficit not surviving its confounder; that reading is withdrawn.</strong> UBL5 is a spliceosome-associated modifier, so response magnitude is plausibly a <em>mediator</em>, and conditioning on a mediator subtracts the effect being measured. Both causal orderings predict the same correlation and this design cannot separate them, so the adjusted OR is not evidence that the deficit is an artefact.</li>
+<li><strong>The same-sample comparison sits at ~35%.</strong> <code>T_HT</code> and <code>T_UT</code> are the same libraries under two references; their switching-gene Jaccard is 0.35. Judge the concordance numbers below against that rather than against 100% — but not as a hard ceiling, since HT and UT merge different PacBio transcript sets, so some of the disagreement is annotation space rather than noise.</li>
 <li><strong>Enrichment is now tested against a real background.</strong> The unfiltered UT objects supply every quantified isoform, so the co-occurrence test below runs over the ~11k genes measured in both datasets rather than the 25 already-significant ones available from the reduced objects. The earlier version of this report reported a Fisher odds ratio computed inside a set selected on the outcome; that statistic was removed, and this one replaces it on a proper denominator.</li>
 <li><strong>“T-only” no longer means “absent from U”.</strong> With the context layer, an isoform significant in T can be classified as <em>tested in U and not switching</em> versus <em>not detected in U</em> — a distinction the reduced objects could not express.</li>
 <li><strong>Statistics prefixed <code>selconf_</code> are conditioned on significance in both datasets.</strong> Selecting on the outcome in both and then measuring agreement manufactures agreement; treat them as descriptions of the shared set, not as evidence of concordance.</li>

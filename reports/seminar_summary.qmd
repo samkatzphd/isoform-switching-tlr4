@@ -47,6 +47,23 @@ fht <- make_fig("ht_top_switch_plots")
 pc <- function(x) sprintf("%.1f%%", x)
 ```
 
+::: {.callout-warning}
+## Scope of this document
+This report covers scripts `00`–`07`. It **predates** the layer-decoupling, hidden-layer and
+GFF3 event-structure work (scripts `08`–`10` and `docs/external_review/`), and does not
+include those results.
+
+Claims corrected since the first version, now reflected in the text below: the Q2
+response-magnitude stratification conditions on a **mediator** and does not explain the
+deficit away; the 35% same-sample figure is a reference point, **not** a reproducibility
+ceiling; the H-vs-T switching contrast is **retired** (`H_HT` alone is batch-corrected).
+
+Retracted elsewhere and never quoted here — the 64%/38% expression-vs-splicing layer
+asymmetry and its mediation split (an estimator artefact, `scripts/10_layer_estimator_calibration.R`),
+and the ISG "sparing" reading (a ratio-scale artefact). Full ledger:
+`docs/AGENT_CONTEXT.md` §"Retracted — do not cite" and `docs/external_review/HANDOFF.md`.
+:::
+
 # The question
 
 Macrophages responding to LPS reprogram their transcriptome through TLR4 signalling. Most
@@ -305,29 +322,29 @@ kable(
 ```
 
 ::: {.callout-important}
-## The Q2 deficit does not survive its confounder
+## This stratification cannot settle Q2 — it conditions on a mediator
 Crude odds ratio for switching, KO vs WT: **`r sprintf("%.3f", ut_r$crude_odds_ratio)`**.
 Adjusted for response magnitude (Mantel–Haenszel):
 **`r sprintf("%.3f", ut_r$mh_odds_ratio)`, 95% CI `r sprintf("%.3f–%.3f", ut_r$mh_conf_low, ut_r$mh_conf_high)`,
-p = `r sprintf("%.3f", ut_r$mh_p)`** — not significant. In the two highest-response strata the
-knockout switches slightly *more*.
+p = `r sprintf("%.3f", ut_r$mh_p)`**.
 
-The supported claim is therefore: **UBL5 loss blunts the LPS response globally by roughly
-half, and reduced isoform switching follows from that.** That is still a real and
-interesting phenotype, but it is a different claim from "UBL5 shapes isoform selection".
+**An earlier version of this document read that as the deficit being explained away. That
+reading is withdrawn.** UBL5/Hub1 is a spliceosome-associated modifier. If splicing
+regulation is upstream of the LPS response, then response magnitude is a **mediator**, not a
+confounder — and conditioning on a mediator removes the very effect being measured. The
+arithmetic is correct; the causal interpretation was not.
 
-**One caveat in the other direction.** Response magnitude is plausibly a *mediator* rather
-than a confounder — if UBL5 loss causes the blunting, adjusting for it removes part of the
-effect being measured. A non-significant adjusted OR shows this design cannot separate the
-two, not that no splicing-specific effect exists.
+Both causal models — "blunted response reduces switching" and "impaired splicing blunts the
+response" — predict this same correlation. **With two conditions and n = 3 there is no
+design-based way to separate them.** The numbers stay on the record; they are not evidence
+that the deficit is an artefact.
 :::
 
-The same control run on the HT pair behaves differently, which is reassuring about the
-method: there the difference *strengthens* on adjustment
-(crude OR `r sprintf("%.2f", rmc$crude_odds_ratio[grepl("^HT", rmc$pair)])`,
-MH OR `r sprintf("%.2f", rmc$mh_odds_ratio[grepl("^HT", rmc$pair)])`,
-p = `r sprintf("%.2g", rmc$mh_p[grepl("^HT", rmc$pair)])`). Stratification is not
-mechanically flattening every contrast.
+The HT arm of this control (crude OR 2.29, MH 2.49) is **not shown here and should not be
+cited**. `H_HT` is the one dataset that had a batch correction applied, so its switching rate
+is not on the same scale as `T_HT`'s; and its three-donor, three-day design means its rate
+answers a different question from `T_HT`'s one-genotype, one-day rate. That contrast is
+retired rather than recomputed — see `docs/REVIEW_CHANGES.md` §0g.
 
 ## Switching genes strongly co-occur between genotypes
 
@@ -738,13 +755,19 @@ or Interferome — is a tighter definition of an ISG and would likely raise the 
 
 # Where the analysis is currently blind
 
-## What replication can possibly look like: the same-sample ceiling
+## What replication can possibly look like: the same-sample comparison
 
 `T_HT` and `T_UT` are **the same six sequencing libraries** quantified against two different
 reference transcriptomes — identical replicate sample names including S-numbers, and
 gene-level expression correlating at r ≈ 0.99 for matched samples. Biological variability
 between them is zero, so every disagreement is annotation plus thresholding. Nothing in the
 project had noted this; it is the best technical control available.
+
+**One limit on how far this generalises.** The two references are not the same transcript
+space viewed twice: HT merges the T and H PacBio transcripts, UT merges T and U. So part of
+the disagreement below is a genuine difference in annotation space, not measurement noise —
+which is why the number that follows is a useful reference point but **not** a "reproducibility
+ceiling", as an earlier version of this document called it.
 
 ```{r}
 #| label: tbl-refconc
@@ -783,11 +806,13 @@ least 0.10. So this is threshold brittleness rather than contradiction — but i
 under re-annotation alone.**
 
 ::: {.callout-important}
-## Judge every replication rate against ~35%, not against 100%
+## Judge every replication rate against this number, not against 100%
 This reframes numbers reported elsewhere in this document. The 6.1% T→H replication below is
-low against a ceiling of 100%; against a same-sample ceiling of
+low against 100%; against the same-sample figure of
 `r sprintf("%.0f%%", 100*refc$jaccard)` it is still low, but the gap is far smaller than it
-first appears.
+first appears. Read it as a reference point, not a ceiling: some of that
+`r sprintf("%.0f%%", 100*(1-refc$jaccard))` disagreement is annotation-space difference
+between the two references rather than irreducible noise.
 :::
 
 ## Q1's cross-genotype comparison, now with a proper denominator
