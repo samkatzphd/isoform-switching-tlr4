@@ -110,7 +110,8 @@ cand_iso <- scored |>
   mutate(abs_dIF = abs(.data$dIF_n)) |>
   filter(.data$is_switching %in% TRUE | .data$abs_dIF > cand_min_abs_dif) |>
   filter(is.finite(.data$abs_dIF)) |>
-  select("isoform_id", "gene_id", "gene_name", "dIF_n", "abs_dIF", "is_switching") |>
+  select("isoform_id", "gene_id", "gene_name", "dIF_n", "abs_dIF", "is_switching",
+         "class_code", "oId", "is_novel_pacbio") |>
   left_join(cand_genes, by = "gene_name")
 
 message("Candidate isoforms to screen: ", nrow(cand_iso),
@@ -258,6 +259,36 @@ res <- cand_iso |>
 
 write_table_pair(res, results_tables, "q1_assayability", cfg = cfg)
 
+# ---- Class code vs assayability -----------------------------------------------------------
+# gffcompare class codes, and why they belong in this table:
+#   =  matches a reference transcript end to end
+#   c  CONTAINED in a reference transcript -- i.e. nested, structurally
+#   j  novel junction combination, shares at least one junction
+#
+# `c` is the one to watch. It is the expected code for a genuine alternative internal
+# promoter, but it is EQUALLY the code a 5'-incomplete assembly lands in -- a PacBio read
+# that never reached the 5' end, or degraded input. Without cap selection those are produced
+# in quantity. So a `c`-class candidate is either a real truncated isoform or an artefact of
+# assembly, and this data cannot tell which.
+#
+# The correspondence with the screen is total and not a coincidence: "contained in another
+# transcript" is nearly the definition of nested, so `c` predicts undesignable without
+# running any of the interval algebra above.
+cc <- res |>
+  mutate(cls = ifelse(.data$assayable, "designable", "not designable")) |>
+  count(.data$class_code, .data$cls) |>
+  tidyr::pivot_wider(names_from = "cls", values_from = "n", values_fill = 0)
+write_table_pair(cc, results_tables, "q1_assayability_by_class_code", cfg = cfg)
+message("\n---- class code vs assayability ----")
+print(as.data.frame(cc))
+n_c <- sum(res$class_code == "c", na.rm = TRUE)
+if (n_c) {
+  message("NOTE: ", n_c, " candidate isoforms are class `c` (contained). All are nested by ",
+          "construction.\n  These are either real internal-promoter isoforms or ",
+          "5'-incomplete assemblies;\n  distinguishing them needs cap-selection status for ",
+          "the PacBio library.")
+}
+
 # ---- Gene-level verdict -------------------------------------------------------------------
 # A gene is assayable if at least one side of its switch can be measured. Being able to
 # measure both sides is better, so it is counted separately.
@@ -268,6 +299,8 @@ gene_res <- res |>
     n_designable = sum(.data$assayable, na.rm = TRUE),
     n_nested = sum(.data$is_nested %in% TRUE),
     max_unique_bp = suppressWarnings(max(.data$longest_unique_bp, na.rm = TRUE)),
+    class_codes = paste(sort(unique(.data$class_code)), collapse = ","),
+    n_contained = sum(.data$class_code == "c", na.rm = TRUE),
     .groups = "drop"
   ) |>
   mutate(

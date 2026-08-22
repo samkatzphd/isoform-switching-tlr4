@@ -95,6 +95,11 @@ gene_table <- function(k) {
       switching = any(.data$is_switching, na.rm = TRUE),
       max_abs_dif = max_abs_finite(.data$dIF_n[.data$is_switching]),
       n_switching_isoforms = sum(.data$is_switching, na.rm = TRUE),
+      # gffcompare class codes of the SWITCHING isoforms only -- the ones the call rests on.
+      # `c` (contained) is the one to read carefully: see the caveat below.
+      class_codes = paste(sort(unique(.data$class_code[.data$is_switching])), collapse = ","),
+      n_switching_contained = sum(.data$is_switching & .data$class_code == "c", na.rm = TRUE),
+      n_switching_novel_pb = sum(.data$is_switching & .data$is_novel_pacbio, na.rm = TRUE),
       gene_lfc = dplyr::first(.data$gene_lfc),
       gene_expression = dplyr::first(.data$gene_expression),
       .groups = "drop"
@@ -177,6 +182,25 @@ cand <- cand |>
       summarize(across(where(is.numeric), ~ suppressWarnings(max(.x, na.rm = TRUE))),
                 .groups = "drop"),
     by = "gene_name"
+  ) |>
+  # Class codes come from the arm the ranking effect came from, so they describe the same
+  # call. Preferring the anchor keeps them consistent with dif_anchor where it exists.
+  left_join(
+    bind_rows(
+      if (!is.null(reannot_sw)) reannot_sw |>
+        transmute(gene_name = .data$gene_name, cc = .data$class_codes,
+                  n_c = .data$n_switching_contained, n_pb = .data$n_switching_novel_pb,
+                  pri = 2L) else NULL,
+      anchor_sw |> transmute(gene_name = .data$gene_name, cc = .data$class_codes,
+                             n_c = .data$n_switching_contained,
+                             n_pb = .data$n_switching_novel_pb, pri = 1L)
+    ) |>
+      arrange(.data$gene_name, .data$pri) |>
+      group_by(.data$gene_name) |>
+      summarize(class_codes = dplyr::first(.data$cc),
+                n_switching_contained = dplyr::first(.data$n_c),
+                n_switching_novel_pb = dplyr::first(.data$n_pb), .groups = "drop"),
+    by = "gene_name"
   )
 
 cand <- cand |>
@@ -226,6 +250,7 @@ cand <- cand |>
          "called_in", "annotation_robust", "annotation_status", "cross_genotype_support",
          "dif_anchor", "dif_reannot", "dif_cross",
          "lfc_anchor", "lfc_reannot",
+         "class_codes", "n_switching_contained", "n_switching_novel_pb",
          "expr_anchor", "n_iso_anchor",
          "switches_anchor", "testable_anchor", "switches_reannot", "testable_reannot",
          "switches_cross", "testable_cross")
