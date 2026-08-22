@@ -1,0 +1,13 @@
+"scale","model","contrast","min_q_bh","min_q_emp","n_iso_bh","n_iso_emp","empirical_null_usable"
+"expected_count","primary (~0+group)","KO_LPS",0.00197284121393314,0.167325040515205,56,0,FALSE
+"expected_count","primary (~0+group)","WT_LPS",9.19851419555536e-05,0.243973237202887,397,0,FALSE
+"expected_count","primary (~0+group)","interaction",0.0275758658488171,0.170639111313674,4,0,FALSE
+"expected_count","sensitivity (+rep3)","KO_LPS",0.0204591980172312,0.978777488590428,37,0,FALSE
+"expected_count","sensitivity (+rep3)","WT_LPS",0.000683918962942686,0.772159489539613,373,0,FALSE
+"expected_count","sensitivity (+rep3)","interaction",0.0854123373743085,0.913637621983912,0,0,FALSE
+"scaledTPM","primary (~0+group)","KO_LPS",0.00602747158354245,0.545645172748148,46,0,FALSE
+"scaledTPM","primary (~0+group)","WT_LPS",0.000484687936014395,0.297982900436288,238,0,FALSE
+"scaledTPM","primary (~0+group)","interaction",0.0202820291425649,0.2047108058489,2,0,FALSE
+"scaledTPM","sensitivity (+rep3)","KO_LPS",0.0188140916616852,0.999967333625432,30,0,FALSE
+"scaledTPM","sensitivity (+rep3)","WT_LPS",0.00117846801456422,0.806955406986851,205,0,FALSE
+"scaledTPM","sensitivity (+rep3)","interaction",0.102560601129958,0.99989949391273,0,0,FALSE

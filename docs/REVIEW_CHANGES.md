@@ -636,6 +636,106 @@ should be retired rather than recomputed.
 
 ---
 
+## 0h. The model-based 2x2 refit, and what it says about UBL5 (2026-08-22)
+
+`scripts/12_dtu_refit_2x2.R`. The blocking step from `OPEN_QUESTIONS.md` #1 is done. Because
+the U-T RSEM matrix carries **all twelve libraries** (T1-T3 and U1-U3, each ± LPS), the layer
+question was fitted as **one `genotype x treatment` interaction** in satuRn rather than as a
+comparison of two separately-fit ISA runs — removing the cross-run normalisation problem and
+the estimator problem (§0f) together.
+
+### The headline: the interaction is almost empty
+
+| contrast | what it asks | genes called (scaledTPM) | (expected_count) |
+|---|---|---|---|
+| `WT_LPS` | does LPS remodel isoform usage in wildtype? | **174** | 290 |
+| `KO_LPS` | does it in the knockout? | **37** | 47 |
+| **`interaction`** | **does the LPS effect DIFFER between genotypes?** | **2** | **4** |
+
+Out of ~13,000 genes tested. The two scaledTPM interaction genes are **ATF5** and
+`ENSG00000288684`, both at q = 0.020.
+
+**This is the first direct test of the Q2 claim.** Every previous version compared two
+separately-fit arms and read the gap between them; none tested the difference itself. The
+174-vs-37 marginal gap looks dramatic and is the source of the "the KO switches less"
+framing — but it is the textbook trap of treating a **difference of significance as the
+significance of a difference**. Tested directly, almost nothing separates the arms.
+
+**Do not over-read this as proof of no effect.** The interaction is intrinsically the least
+powered contrast: it is a difference of differences, so variance adds, and the median
+standard error is 0.655 against 0.470 for the WT main effect — roughly 1.4x. At n = 3 per
+group, a real but modest interaction would not be detected. The honest reading is that the
+data **cannot support** a transcriptome-wide claim that UBL5 loss reshapes LPS-driven isoform
+selection, not that it has been ruled out.
+
+### Retention, finally on one scale
+
+Both arms now come from the same model and the same estimator, so a KO/WT ratio is
+like-for-like — which §0f's retracted 64%/38% never was. Slope through the origin,
+KO = beta x WT, on WT-significant isoforms:
+
+| scale | model | retention (lower bound) | 95% CI |
+|---|---|---|---|
+| scaledTPM | primary | **0.557** | 0.487-0.627 |
+| scaledTPM | + rep3 | 0.551 | 0.464-0.638 |
+| expected_count | primary | 0.471 | 0.420-0.521 |
+| expected_count | + rep3 | 0.414 | 0.352-0.476 |
+
+It is a **lower bound**: selecting isoforms on WT significance gives the WT estimates a
+winner's curse, inflating the denominator and biasing the slope down. The KO estimates for
+those isoforms are not selected on and stay unbiased.
+
+So retention is **at least ~56%** on the primary scale — consistent with the old *expression*
+figure (~64%) and **not** with the retracted *splicing* figure (38%). On a single estimator
+the two layers degrade at similar rates, which is what §0f predicted once the calibration was
+inverted and the ordering disappeared.
+
+**The unselected, transcriptome-wide slope is not usable and is kept only as a diagnostic.**
+Regressing across all 127,315 isoforms returns 0.068, but that is regression dilution, not
+biology: the reliability of the WT estimate — the share of its observed variance that is
+signal rather than measurement error — is **0.0066**. About 99% of the transcriptome-wide
+spread is noise, because most isoforms have no LPS effect at n = 3. The standard correction
+(divide by reliability) is unstable at that magnitude and returns beta > 10. Any future
+transcriptome-wide ratio must report its reliability alongside it.
+
+### Two method findings worth carrying
+
+**satuRn's empirical FDR fails at this sample size.** satuRn offers BH on the theoretical
+null (`regular_FDR`) and an empirically re-estimated null (`empirical_FDR`, via locfdr).
+The empirical version emits `f(z) misfit` warnings on every contrast and never drops below
+q ≈ 0.30 — it returns **zero** genes even for the wildtype LPS effect, the least
+controversial signal in the dataset, which ISA independently calls for 118 genes. A
+correction that finds nothing where the positive control is strongest is broken, not
+conservative: with n = 3 there are too few informative z-statistics to estimate a null, so
+locfdr inflates it and absorbs the signal. **BH is reported**; both are written to
+`dtu_refit_fdr_comparison.csv` so the failure stays on the record.
+
+**The paired design cannot be blocked in this model.** A 6-level pair factor is rank
+deficient in the 2x2 (ncol 9, rank 8) because pair nests entirely inside genotype. The
+primary model is therefore unblocked `~ 0 + group`; a `~ 0 + group + rep3` sensitivity fit
+assumes T1 and U1 were processed as matched batches, which has not been confirmed. The two
+agree on every qualitative conclusion (interaction 2 vs 0, retention 0.557 vs 0.551).
+
+### The count-scale decision, recorded
+
+`OPEN_QUESTIONS.md` #1 asked for this to be chosen deliberately. **scaledTPM is primary**
+(`config: dtu.count_scale`), because raw expected counts are biased by effective-length
+differences between isoforms of the *same* gene — precisely the comparison DTU makes.
+`expected_count` is fitted alongside every time as a sensitivity check. It is uniformly more
+liberal (290 vs 174 WT genes) but changes no conclusion.
+
+### What this does and does not settle
+
+Settled: the retention comparison is no longer estimator-dependent, and the layers degrade
+at similar rates. The blunted **expression** response (§0e, slope 0.52) is untouched and
+still the best-supported Q2 phenotype.
+
+Not settled: whether UBL5 has a splicing-specific role. The direct test is near-empty but
+underpowered, so the verdict stays **unresolved** rather than moving to rejected. What would
+resolve it is more replicates or a perturbation with a larger effect — not another estimator.
+
+---
+
 ## 1. Statistics that were not interpretable as reported
 
 ### 1.1 Fisher test removed, not caveated

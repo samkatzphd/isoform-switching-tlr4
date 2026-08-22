@@ -138,6 +138,20 @@ isg:
   # Interferome), point this at a CSV with a `gene_name` column and optional `set` column.
   custom_set_path: null
 
+# Model-based DTU refit (12). Reads the RSEM matrices directly, NOT the ISA objects.
+dtu:
+  counts_dir: "/Volumes/Expansion/IsoformSwitchAnalyzer/Counts"
+  # scaledTPM (TPM * libsize / 1e6) is the DTU-appropriate scale: raw RSEM expected counts
+  # are biased by effective-length differences between isoforms of the SAME gene, which is
+  # precisely the comparison DTU makes. `expected_count` is fitted alongside as a
+  # sensitivity check either way. This resolves OPEN_QUESTIONS #1's "pick one on purpose".
+  count_scale: "scaledTPM"
+  min_count: 10        # a transcript needs this many counts...
+  min_samples: 3       # ...in at least this many libraries (= one group)
+  min_gene_count: 20   # and its gene needs this much total support
+  fdr: 0.05
+  workers: 2
+
 # Output policy. Every table is written as .rds; the .csv twin is for spreadsheets.
 output:
   csv_twin: true

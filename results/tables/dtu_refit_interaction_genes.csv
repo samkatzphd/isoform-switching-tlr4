@@ -1,0 +1,3 @@
+"scale","model","contrast","gene_id","gene_name","min_q","min_q_emp","max_abs_estimate","n_iso","n_sig_iso","significant"
+"scaledTPM","primary (~0+group)","interaction","XLOC_026657","ATF5",0.0202820291425649,0.2047108058489,1.64974004899786,6,1,TRUE
+"scaledTPM","primary (~0+group)","interaction","XLOC_054002","ENSG00000288684",0.0202820291425649,0.2047108058489,4.74611804014539,27,1,TRUE

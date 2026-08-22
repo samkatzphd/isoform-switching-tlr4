@@ -10,10 +10,27 @@ Companion documents: `STATISTICAL_METHODS.md` (why each method was chosen),
 
 ## Tier 1 — would change a stated conclusion
 
-### 1. Re-fit both layers from raw counts
+### 1. Re-fit both layers from raw counts — DONE 2026-08-22, see §0h
 
 **Question.** Is the LPS response reduced more in one layer than the other in the UBL5
 knockout?
+
+**Answer: no ordering survives, and the direct test of a UBL5 splicing effect is nearly
+empty.** `scripts/12_dtu_refit_2x2.R` fits all twelve U-T libraries as one
+`genotype x treatment` interaction in satuRn. Results:
+
+- **Interaction: 2 genes** (scaledTPM) / 4 (expected_count) out of ~13,000. The 174-vs-37
+  marginal gap between arms does **not** survive being tested directly — it was a difference
+  of significance, not a significance of difference.
+- **Retention ≥ 56%** (95% CI 0.49–0.63) on a single estimator, consistent with the old
+  expression figure (~64%), not the retracted splicing figure (38%).
+- The interaction is the least powered contrast (median SE 0.655 vs 0.470), so this is
+  "cannot support", **not** "ruled out". The verdict stays *unresolved*.
+- Count scale chosen deliberately: **scaledTPM** primary, `expected_count` as a standing
+  sensitivity check. See §0h.
+
+What would move this further is more replicates or a larger perturbation — not another
+estimator. Everything below this line is the pre-refit framing, kept for the record.
 
 **No longer blocked (2026-08-10).** The counts arrived at
 `/Volumes/Expansion/IsoformSwitchAnalyzer/Counts/{H-T,U-T}/Isoforms/` — RSEM expected counts
@@ -237,3 +254,6 @@ writeup needs its reproduction flag checked first.
 | Is baseline composition abnormal in the KO? | No, and the positive control works | §0e, §0f |
 | Do the ISA objects match the raw counts? | Yes for `T_HT`/`T_UT`/`U_UT` (dIF r = 1.0000); `H_HT` only after its batch correction is reapplied | §0g |
 | Why is `H_HT` an outlier? | sva confounder correction applied to it alone | §0g, #6 |
+| Does the KO differ from WT in how LPS remodels isoform usage? | 2 genes of ~13,000 on a direct interaction test — cannot support it, but underpowered | §0h |
+| Is retention layer-dependent on one estimator? | No: ≥56%, matching the expression figure, not the retracted splicing one | §0h |
+| Which count scale for DTU? | scaledTPM primary, expected_count as sensitivity | §0h |
