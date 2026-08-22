@@ -138,6 +138,12 @@ isg:
   # Interferome), point this at a CSV with a `gene_name` column and optional `set` column.
   custom_set_path: null
 
+# Assayability screen (13). Reads the local merged GFF3; gitignored but not on the drive.
+assayability:
+  gff3_path: "gff3/U_T.gff3"
+  min_unique_bp: 60          # shortest stretch a primer pair can be designed into
+  candidate_min_abs_dif: 0.15  # admit a switch's rising partner on effect size alone
+
 # Model-based DTU refit (12). Reads the RSEM matrices directly, NOT the ISA objects.
 dtu:
   counts_dir: "/Volumes/Expansion/IsoformSwitchAnalyzer/Counts"

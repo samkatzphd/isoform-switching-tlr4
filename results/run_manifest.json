@@ -553,6 +553,48 @@
         "gene_panels_per_class": 12,
         "switch_plots_per_class": 6,
         "explorer_max_isoforms": 12,
+        "threshold_scan": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+        "expression_floor_snr": 3,
+        "response_strata": [0.1, 0.25, 0.5, 1],
+        "near_miss_floor": 0.1,
+        "cryptic_max_abs_lfc": 0.25,
+        "rescue_min_gene_drop": 0.3,
+        "dominant_min_if": 0.3,
+        "calibration_n_genes": 4000,
+        "calibration_n_isoforms": 6,
+        "calibration_n_replicates": 3,
+        "calibration_if_noise_sd": 0.05,
+        "calibration_expr_noise_sd": 0.35,
+        "calibration_seed": 42,
+        "calibration_ratio_grid": [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
+      },
+      "dtu": {
+        "count_scale": "scaledTPM",
+        "fdr": 0.05,
+        "min_count": 10,
+        "min_samples": 3
+      }
+    },
+    {
+      "script": "13_assayability_screen.R",
+      "run_at": "2026-08-22T18:26:37+0200",
+      "git_sha": "d78fb182ded4c15787f70d8e1581fb440e69ef3c",
+      "r_version": "R version 4.4.1 (2024-06-14)",
+      "platform": "aarch64-apple-darwin20",
+      "key_packages": ["1.1.4", "3.3.0", "4.0.0", "2.3.10", "2.4.0"],
+      "significance": {
+        "isoform_q": 0.05,
+        "gene_q": 0.05,
+        "min_abs_dif": 0.15,
+        "require_finite_dif": true,
+        "min_gene_expression": 12
+      },
+      "analysis": {
+        "top_n_genes": 30,
+        "plot_top_n": 30,
+        "gene_panels_per_class": 12,
+        "switch_plots_per_class": 6,
+        "explorer_max_isoforms": 12,
         "threshold_scan": [
           0,
           0.05,
@@ -591,11 +633,9 @@
           0.2
         ]
       },
-      "dtu": {
-        "count_scale": "scaledTPM",
-        "fdr": 0.05,
-        "min_count": 10,
-        "min_samples": 3
+      "assayability": {
+        "min_unique_bp": 60,
+        "gff3": "gff3/U_T.gff3"
       }
     }
   ]

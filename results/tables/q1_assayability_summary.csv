@@ -1,0 +1,10 @@
+"metric","n"
+"candidate isoforms screened",63
+"  designable",25
+"  nested (undiscriminable)",13
+"  tiled over (<min unique bp)",25
+"  absent from GFF3",0
+"candidate genes",40
+"  both sides designable",5
+"  one side designable",15
+"  no designable isoform",20
