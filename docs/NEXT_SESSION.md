@@ -53,26 +53,23 @@ way `13` guards the GFF3: warn and skip, do not fail.
 - External drive was mounted for this pass; `99_verify_inputs.R` exits 0 on all 12 inputs.
   Primer design needs only local `fa/` and `gff3/`, so it runs without the drive.
 
-## Queued: PTC / IR annotation of the hidden-layer sets — NO DRIVE NEEDED
+## Done 2026-08-23: PTC / IR annotation (script 14)
 
-Deferred by request 2026-08-23. Reading the upstream scripts (`NCBR-40-main`, §0i) showed
-`analyzeORF` **was** run, and its output is already in committed files:
-`isoformFeatures_T_UT.rds` carries `PTC` (192 TRUE / 1,465 FALSE / 112 NA) and `IR` (293
-isoforms with at least one retained intron). Nothing needs the external drive.
+Ran without the drive, as expected. Results in `consequence_*` tables and
+`OPEN_QUESTIONS.md` #4:
 
-This is the annotation Tier-2 open question #4 asks for. The informative version, per
-`HANDOFF.md` §"Open work": annotate the **isoforms**, not the genes — are the lost minor
-isoforms NMD targets (`PTC == TRUE`) or intron-retaining, and are the retained dominant ones
-full-length coding? That converts Class B "purification" from a pattern into a mechanism.
+- Intron retention does **not** track switch direction — null in all four datasets.
+- NMD status **may**, but it is not established: direction consistent 4/4, significant only
+  in `T_UT` (21 vs 6, p = 0.006), and dropping `T_UT` from the pool collapses it to p = 0.47.
+  Novelty confound cleared. Do not report without an independent dataset.
+- Cryptic switchers are functionally indistinguishable from other switchers.
 
-Apply to: `hidden_layer_cryptic_switchers`, `hidden_layer_compositional_rescue`, and the
-Class B set. Watch the 112 NAs — `PTC` is undefined where no ORF was called, which is not the
-same as "not a target".
-
-**Separately, and this one DOES need the drive:** `analyzeAlternativeSplicing` was never run
-(gated behind `--run_extra_analysis`, which none of the four README commands pass). Re-running
-with that flag gives ISA's native ATSS classification — an independent cross-check on the
-21.7% pure-promoter figure from the GFF3 work.
+**Class B was NOT analysable** and remains open. PTC/IR live only in the reduced objects, and
+Class B genes need not switch, so coverage is 5–21%. To unblock: carry PTC/IR from the
+*unfiltered* exports into `isoformContext_<label>.rds` in `01_load_data.R` — `analyzeORF` ran
+on those too, the values were just never extracted. **Needs the drive.** This is the part of
+open question #4 that would actually convert Class B "purification" into a mechanism, so it
+is worth doing.
 
 ## New question for the experimentalist, added 2026-08-23
 

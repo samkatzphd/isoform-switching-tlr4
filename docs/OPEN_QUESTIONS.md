@@ -105,17 +105,40 @@ design-based way to break that symmetry.
 
 ## Tier 2 — would strengthen or qualify a result
 
-### 4. Isoform-level functional consequence
+### 4. Isoform-level functional consequence — PARTLY ANSWERED 2026-08-23, see §0i and script 14
 
 **Question.** Do these switches change what protein is made, or only which transcript
 carries it?
 
-**Blocked on.** The pipeline carries no CDS, NMD or protein-domain annotation.
+**Was blocked on** the belief that the pipeline carries no CDS or NMD annotation. That was
+wrong: `analyzeORF` runs unconditionally upstream (§0i), and `PTC` (NMD target) and `IR`
+(retained introns) have been sitting in `data/processed/isoformFeatures_*.rds` all along.
+`scripts/14_isoform_consequence.R` uses them.
 
-**What would answer it.** ISA's `analyzeORF` / `analyzeNMD` outputs, or re-deriving from the
-GFF3. Then ask, for the compositional-rescue class specifically: are the lost minor isoforms
-NMD targets or truncated, and the retained dominant one full-length coding? That converts
-"purification" from a pattern into a mechanism.
+**Answers so far:**
+
+- **Intron retention does not track switch direction.** Null in all four datasets, paired and
+  unpaired, with effect sizes within a point or two of zero.
+- **NMD status may, but it is not established.** Within a gene, the isoform gaining usage is
+  more often PTC+ than the one losing it, consistently in all four datasets — but only `T_UT`
+  reaches significance (21 vs 6, p = 0.006). Sign test across four is p = 0.125; pooling the
+  three biological units gives 1.78x (p = 0.020), and dropping `T_UT` collapses it to 1.29x
+  (p = 0.47). `T_HT`, the same libraries re-annotated, leans the same way without reaching
+  significance, so it is not annotation-robust either. The novelty confound is cleared —
+  risers are not more PacBio-novel than fallers (p = 0.14–0.46). **Do not report as a finding
+  without an independent dataset.**
+- **Cryptic switchers are not functionally distinct** on either marker, in any dataset.
+
+**Still open, and this is the part that matters.** The compositional-rescue / Class B
+question — are the lost minor isoforms NMD targets while the retained dominant one is
+full-length coding — **cannot be tested from what is loaded**. PTC/IR exist only in the
+*reduced* objects, and Class B genes need not switch, so those objects cover just **5–21%** of
+them (`consequence_annotation_coverage.csv`). Analysing that subset would describe the
+switching minority, not the class.
+
+**What would unblock it.** Carry PTC/IR from the *unfiltered* exports into
+`isoformContext_<label>.rds` in `01_load_data.R`. `analyzeORF` ran on those too, so the values
+exist and were simply never extracted. Needs the external drive.
 
 **Matters because.** Gene-level enrichment is structurally blind here — both isoforms of a
 switching gene sit in the same GO terms. This is the analysis that would say what switching
@@ -257,3 +280,6 @@ writeup needs its reproduction flag checked first.
 | Does the KO differ from WT in how LPS remodels isoform usage? | 2 genes of ~13,000 on a direct interaction test — cannot support it, but underpowered | §0h |
 | Is retention layer-dependent on one estimator? | No: ≥56%, matching the expression figure, not the retracted splicing one | §0h |
 | Which count scale for DTU? | scaledTPM primary, expected_count as sensitivity | §0h |
+| Do switches move toward intron-retaining isoforms? | No — null in all four, paired and unpaired | #4, script 14 |
+| Do switches move toward NMD targets? | Direction consistent 4/4 but significant only in `T_UT`; not established | #4, script 14 |
+| Are cryptic switchers functionally distinct? | No — indistinguishable on PTC and IR | #4, script 14 |
