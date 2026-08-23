@@ -24,7 +24,11 @@ Run from the project root. Every script takes an optional config path as `argv[1
 1. **The primary ISA objects are pre-reduced.** They were saved after
    `isoformSwitchTestDEXSeq(reduceToSwitchingGenes = TRUE)`, so every gene in them already
    passes the gene-level q cutoff. "Genes present" ≠ "genes tested". Recorded per run in
-   `results/tables/input_object_reduction_check.csv`.
+   `results/tables/input_object_reduction_check.csv`. The upstream reduction used
+   **|dIF| >= 0.1**, while `significance.min_abs_dif` here is **0.15** — stricter, so safe,
+   but the objects hold genes our own scoring discards. The unfiltered context exports also
+   carry a hardcoded upstream `geneExpressionCutoff = 1`, so the enrichment universe is
+   "quantified above 1", not literally everything. `REVIEW_CHANGES.md` §0i.
 
 2. **Significance comes from the unfiltered context layer**, via `load_scoring_table()`.
    `isa_unfiltered_path` in config points each dataset at an unreduced export; `01` turns it

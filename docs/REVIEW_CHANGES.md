@@ -614,6 +614,13 @@ fit `~ donor + condition` for `H` (a paired donor design, which is what the expe
 actually is) rather than letting `sva` rediscover it latently. That removes the same
 variation, is reproducible, and eliminates the collinearity hazard `sv1` exhibits.
 
+> **Scope correction (2026-08-23, §0i).** This is not a change to how the upstream script is
+> *called*. `NCBR-40-main/data/sample_sheet_isa_*.tsv` carries **only `sampleID` and
+> `condition`** — there is no donor, batch, or replicate column anywhere, so the design matrix
+> handed to `importRdata` is `~ condition` and sva had no declarable alternative. Implementing
+> this needs a new column in the sample sheet **and** a covariate threaded through
+> `isa_import()`. Do not plan it as a one-line edit.
+
 Apply the analogous term uniformly — `~ replicate + condition` for `T` and `U`. Their
 replicates are independent through maturation, treatment and extraction, and the design is
 paired (§0e), so replicate is a legitimate blocking factor there too, not a formality. `sva`
@@ -724,6 +731,15 @@ differences between isoforms of the *same* gene — precisely the comparison DTU
 `expected_count` is fitted alongside every time as a sensitivity check. It is uniformly more
 liberal (290 vs 174 WT genes) but changes no conclusion.
 
+> **Incomplete as written — see §0i item 5.** Reading the upstream script confirms ISA's
+> counts are abundance-derived, as claimed above, but they are also **TMM-normalised**
+> (`importIsoformExpression(normalizationMethod = 'TMM', calculateCountsFromAbundance = TRUE)`).
+> `12_dtu_refit_2x2.R` builds its scaledTPM from raw `colSums(expected_count)` library sizes,
+> with no TMM, so the refit's primary scale is **not identical** to ISA's `isoformCountMatrix`.
+> This is untested — the drive was unmounted before it could be checked. The conclusions are
+> unlikely to move (the interaction is empty by a wide margin and `expected_count` agrees
+> qualitatively), but the correspondence should be measured rather than assumed.
+
 ### What this does and does not settle
 
 Settled: the retention comparison is no longer estimator-dependent, and the layers degrade
@@ -733,6 +749,150 @@ still the best-supported Q2 phenotype.
 Not settled: whether UBL5 has a splicing-specific role. The direct test is near-empty but
 underpowered, so the verdict stays **unresolved** rather than moving to rejected. What would
 resolve it is more replicates or a perturbation with a larger effect — not another estimator.
+
+---
+
+## 0i. The upstream ISA scripts, read against ours (2026-08-23)
+
+`NCBR-40-main/` was added to the project folder: the code that *produced* the four `.Rdata`
+objects. It is one CLI script, `scripts/IsoformSwitchAnalyzeR.R`, plus three sample sheets.
+This repo starts where that script stops, so the two do not overlap in scope — but the
+boundary between them carries assumptions that had never been checked against the source.
+They are recorded here.
+
+### The pipeline, end to end
+
+```
+NCBR-40-main                                   this repo
+  RSEM per-sample isoform quant
+  importIsoformExpression(TMM, countsFromAbundance)
+  importRdata(gtf, fasta, designMatrix)         01_load_data.R
+  preFilter(geneExpr>1, IF>=0.01, ...)          02..07  summaries, QC, comparisons
+  isoformSwitchTestDEXSeq(reduce=TRUE)          08..10  layers, hidden layer, calibration
+  analyzeORF                                    11,13   candidates, assayability
+  [analyzeAlternativeSplicing]  <- NOT run      12      model-based 2x2 refit
+  extractTopSwitches -> TSV
+  save.image() -> .Rdata                        (reads the .Rdata)
+```
+
+One invocation per contrast, driven by `-c1`/`-c2`. Four runs for our datasets, each repeated
+with `-p 1.0 -f 0.0 -u 0.0` to produce the unfiltered context exports.
+
+### 1. The dIF threshold does not match, and ours is stricter
+
+Upstream filters at **|dIF| >= 0.1** — both in `preFilter` and in `isoformSwitchTestDEXSeq`,
+and stated in the README ("abs(dIF) >= 0.1"). `config/config.yml` uses
+`significance.min_abs_dif: 0.15`.
+
+Stricter downstream is safe and nothing needs to change numerically. What needs correcting is
+how the pre-reduction caveat is phrased: the reduced objects were reduced against **q < 0.05
+AND |dIF| >= 0.1**, not against the gene-level q alone. Genes whose best isoform sits between
+0.1 and 0.15 are present in the objects and are discarded by our own scoring. So "every gene
+in the object already passes the cutoff" is true of *their* cutoff, not ours, and the two
+differ.
+
+### 2. `geneExpressionCutoff = 1` is hardcoded, and it applies to the context layer too
+
+`isa_import()` calls `preFilter` with `geneExpressionCutoff = 1` and
+`isoformExpressionCutoff = 0` as literals. Neither is exposed as a CLI argument, so the
+`-p 1.0 -f 0.0 -u 0.0` "unfiltered" runs **still have them applied**.
+
+Consequence for the rule that pathway enrichment uses the context layer as its universe: that
+universe is *genes quantified with expression above 1*, not every quantified gene. The cutoff
+is low enough that no conclusion is likely to move, but the claim as written is slightly
+stronger than the data supports and should be qualified.
+
+### 3. Why sva had no alternative — the sample sheets have no batch column
+
+`importRdata` is called with no `detectUnwantedEffects` argument, so it takes the package
+default and sva runs. That confirms §0g's mechanism. The sample sheets add the reason:
+
+```
+sampleID        condition
+H1_minus_S21    H_minus
+H1_plus_S22     H_plus
+...
+```
+
+**`sampleID` and `condition` are the only columns.** There is nowhere to declare donor, prep
+day, or replicate. H's donor structure could only ever have been discovered latently, because
+the design matrix passed to `importRdata` is `~ condition` and nothing else.
+
+This enlarges §0g's fix. "Refit with an explicit donor blocking factor" is not a change to how
+the script is *called* — it needs a new column in the sample sheet **and** a covariate threaded
+through `isa_import()` into the design matrix. Recorded so nobody plans that work as a
+one-line edit.
+
+The same sheets independently confirm that `T_HT` and `T_UT` are the same six libraries:
+`T1_minus_S15` through `T3_plus_S20` appear identically in `sample_sheet_isa_H-T.tsv` and
+`sample_sheet_isa_U-T.tsv`. That was previously inferred from filenames; it is now confirmed
+from the inputs the runs actually consumed.
+
+### 4. Each contrast was fitted on six libraries, separately
+
+The design matrix is subset to `condition_1`/`condition_2` before import, so every run sees
+exactly 6 libraries. `T_UT` and `U_UT` were never in one model, which is what
+`12_dtu_refit_2x2.R` changed — the refit is doing something new, not repeating existing work.
+
+It also means **H's two surrogate variables were estimated from 6 samples**. That is a small
+basis for a latent-variable correction, and an additional reason to prefer an explicit term.
+
+### 5. The count scale: §0h is right in mechanism, incomplete in detail
+
+`importIsoformExpression(calculateCountsFromAbundance = TRUE, normalizationMethod = 'TMM')`
+confirms §0h's claim that ISA's `isoformCountMatrix` is abundance-derived rather than RSEM
+expected counts.
+
+But it is also **TMM-normalised**, and `12_dtu_refit_2x2.R` builds its scaledTPM as
+`TPM * colSums(expected_count) / 1e6` — raw library sums, no TMM. So the refit's primary scale
+is *not* identical to ISA's counts, and §0h implies a closer correspondence than holds.
+
+**Unverified:** the drive was unmounted before this could be tested. The check to run when it
+is back is a per-library correlation of `isa_list$isoformCountMatrix` against both the raw and
+TMM-scaled versions. The refit's conclusions are unlikely to move — the interaction is empty
+by a wide margin and `expected_count` already agrees qualitatively — but the discrepancy is
+real and should be closed rather than assumed away.
+
+### 6. `analyzeORF` ran; `analyzeAlternativeSplicing` did not
+
+**ORF analysis was run on every dataset**, and its output reached our committed files.
+`isoformFeatures_T_UT.rds` carries `PTC` (192 TRUE, 1,465 FALSE, 112 NA) and `IR` (293
+isoforms with at least one retained intron). This is the annotation Tier-2 open question #4
+asks for — "are the lost minor isoforms NMD targets or truncated, and the retained dominant
+ones full-length coding" — and it is already on disk. **No drive needed.**
+
+**Alternative-splicing analysis was NOT run.** `analyzeAlternativeSplicing` is gated behind
+`--run_extra_analysis`, and none of the four commands in the README pass that flag. Two
+consequences: the GFF3 event-structure work in the external review was necessary rather than
+duplicative, and ISA's native ATSS classification — an independent check on the 21.7%
+pure-promoter figure — is one flag and one rerun away. That one does need the drive.
+
+### 7. Reproducibility posture differs sharply
+
+Upstream: `module load R/4.4`, `packages.R` installs whatever BiocManager currently serves with
+no version pin, and `save.image()` dumps the entire workspace. The absence of pinning explains
+the ISA version inconsistency §0g found across the archived objects (2.4.0 for the `H_HT`
+filtered run, 2.6.0 elsewhere) — the runs happened at different times and picked up whatever
+was current. The `save.image()` habit is why `args` was recoverable from inside the `.Rdata`
+at all, which is what made §0g diagnosable.
+
+Downstream records git SHA, R version, key package versions and thresholds per script in
+`results/run_manifest.json`.
+
+### What agrees, and is worth stating
+
+- **Direction convention.** `dIF = condition_2 - condition_1` with `c1 = X_minus`, so positive
+  dIF means increased usage after LPS. Downstream treats it the same way. No sign inversion.
+- **The unfiltered exports really are unreduced.** `reduceToSwitchingGenes = TRUE` still runs,
+  but at `alpha = 1.0` and `dIFcutoff = 0.0` it retains everything (subject to item 2).
+- **q-value columns.** `score_isoforms()` reads `isoform_switch_q_value` /
+  `gene_switch_q_value`, the same DEXSeq outputs `extractTopSwitches` sorts on upstream.
+
+### Not ours
+
+`data/sample_sheet_isa_NCBR-390_H-T.tsv` belongs to a different project: 48 samples in groups
+`grpA`-`grpP`, patient/healthy, sharing only the H-T transcriptome. It is not part of this
+analysis and should not be mistaken for a fifth dataset.
 
 ---
 
