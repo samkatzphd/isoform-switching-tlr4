@@ -1,0 +1,5 @@
+"subset","datasets","riser_only","faller_only","ratio","p","sign_test_datasets_leaning_riser","sign_test_p"
+"all three units","H_HT+U_UT+T_UT",48,27,1.77777777777778,0.0202984069901074,"4/4",0.125
+"drop H_HT","U_UT+T_UT",28,10,2.8,0.0050976432976313,"4/4",0.125
+"drop U_UT","H_HT+T_UT",41,23,1.78260869565217,0.0327657590988234,"4/4",0.125
+"drop T_UT","H_HT+U_UT",27,21,1.28571428571429,0.470879013621712,"4/4",0.125

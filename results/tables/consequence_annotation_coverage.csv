@@ -1,0 +1,9 @@
+"set","dataset","n_genes","n_with_annotation","pct_covered","usable"
+"cryptic","T_HT",25,19,76,TRUE
+"cryptic","H_HT",54,47,87,TRUE
+"cryptic","U_UT",18,10,55.6,TRUE
+"cryptic","T_UT",23,14,60.9,TRUE
+"rescue","T_HT",20,1,5,FALSE
+"rescue","H_HT",38,8,21.1,FALSE
+"rescue","U_UT",21,1,4.8,FALSE
+"rescue","T_UT",19,2,10.5,FALSE
