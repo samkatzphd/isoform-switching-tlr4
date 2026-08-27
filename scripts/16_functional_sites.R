@@ -305,6 +305,11 @@ for (g in genes) {
         status = status
       )
     }
+    # The extent each isoform covers, not just how much of it -- two isoforms can cover 35% of
+    # the canonical and mean completely different things depending on WHICH 35%. The first and
+    # last covered residue are what a domain track has to be drawn from.
+    rng <- function(v) if (any(v)) range(which(v)) else c(NA_integer_, NA_integer_)
+    rg <- rng(cov_gain); rl <- rng(cov_lose)
     site_rows[[length(site_rows) + 1L]] <- tibble(
       gene_name = g, uniprot_accession = acc,
       rising_isoform = gain_id, falling_isoform = lose_id,
@@ -312,7 +317,9 @@ for (g in genes) {
       feature_start = 1L, feature_end = nchar(canon),
       pct_present_rising = round(100 * mean(cov_gain), 1),
       pct_present_falling = round(100 * mean(cov_lose), 1),
-      status = "coverage reference"
+      status = "coverage reference",
+      rising_first_residue = rg[1], rising_last_residue = rg[2],
+      falling_first_residue = rl[1], falling_last_residue = rl[2]
     )
   }
 }
