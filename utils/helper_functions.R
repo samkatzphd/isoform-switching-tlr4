@@ -734,3 +734,416 @@ write_run_manifest <- function(script, cfg, root, extra = list()) {
   message("Run manifest: ", path)
   invisible(path)
 }
+
+# ---- Isoform structure: exons, pairwise splicing events, reading frame ------------------
+# Used by 15_isoform_characterization.R. Everything here is PAIRWISE and directional -- an
+# event describes how isoform A differs FROM isoform B -- which is deliberately not the same
+# question IsoformSwitchAnalyzeR's analyzeAlternativeSplicing answers (each isoform against
+# the gene's hypothetical pre-RNA). See the header of 15 for why the bench question is the
+# pairwise one.
+
+#' @description
+#' Exon records for a set of gene ids, pulled out of a GTF/GFF3 with grep before parsing.
+#'
+#' The merged annotations here are ~600 MB with ~2.1M exon records, so reading the whole file
+#' to keep 40 genes costs minutes and gigabytes. Matching `gene_id=<id>;` first turns that
+#' into seconds. 13_assayability_screen.R carries an inline copy of this from before it was
+#' factored out; do not add a third.
+#'
+#' @return tibble(gene_id, isoform_id, chr, start, end, strand), sorted by isoform and start
+parse_gff3_exons <- function(gff_path, gene_ids) {
+  if (!file.exists(gff_path)) {
+    stop("GFF3 not found: ", gff_path)
+  }
+  gene_ids <- unique(as.character(gene_ids))
+  if (!length(gene_ids)) {
+    stop("parse_gff3_exons: no gene ids requested.")
+  }
+  pat <- paste0("gene_id=(", paste(gene_ids, collapse = "|"), ");")
+  tmp <- tempfile(fileext = ".tsv")
+  on.exit(unlink(tmp), add = TRUE)
+  system2("grep", c("-E", shQuote(pat), shQuote(gff_path)), stdout = tmp, stderr = FALSE)
+  if (!file.exists(tmp) || file.info(tmp)$size == 0) {
+    stop("No GFF3 records matched the requested gene ids.")
+  }
+  g <- utils::read.delim(tmp, header = FALSE, comment.char = "#", quote = "",
+                         stringsAsFactors = FALSE)
+  names(g)[c(1, 3, 4, 5, 7, 9)] <- c("chr", "feature", "start", "end", "strand", "attr")
+  tibble::as_tibble(g) |>
+    dplyr::filter(.data$feature == "exon") |>
+    dplyr::mutate(
+      isoform_id = sub("^.*Parent=([^;]+).*$", "\\1", .data$attr),
+      gene_id = sub("^.*gene_id=([^;]+).*$", "\\1", .data$attr)
+    ) |>
+    dplyr::filter(.data$gene_id %in% gene_ids) |>
+    dplyr::select("gene_id", "isoform_id", "chr", "start", "end", "strand") |>
+    dplyr::arrange(.data$isoform_id, .data$start)
+}
+
+#' Introns implied by a sorted 2-column exon matrix (start, end). Zero rows for single exons.
+exons_to_introns <- function(e) {
+  if (!is.matrix(e)) e <- as.matrix(e)
+  if (nrow(e) < 2L) return(matrix(numeric(0), ncol = 2L, dimnames = list(NULL, c("start", "end"))))
+  o <- order(e[, 1L])
+  e <- e[o, , drop = FALSE]
+  cbind(start = e[-nrow(e), 2L] + 1L, end = e[-1L, 1L] - 1L)
+}
+
+#' @description
+#' Classify how isoform A differs from isoform B, both given as sorted (start, end) exon
+#' matrices on the same strand.
+#'
+#' EVERY INTERNAL EVENT IS RESTRICTED TO THE SPAN THE TWO TRANSCRIPTS SHARE. Without that,
+#' an isoform that simply starts 40 kb downstream is scored as "skipping" every upstream exon
+#' of its partner, and the skipping count becomes a restatement of the TSS difference. Only
+#' the overlapping interval can distinguish a real internal event from a boundary effect;
+#' differences outside it are reported as alt_TSS / alt_TTS and nothing else.
+#'
+#' @return list of logical event flags, a printable `summary`, bp unique to each side, and
+#'   `diff_introns` -- the introns present in exactly one of the two, for splice-site lookup
+pairwise_as_events <- function(ea, eb, strand, end_tolerance = 50L) {
+  ea <- as.matrix(ea); eb <- as.matrix(eb)
+  ea <- ea[order(ea[, 1L]), , drop = FALSE]
+  eb <- eb[order(eb[, 1L]), , drop = FALSE]
+  plus <- !identical(as.character(strand)[1L], "-")
+
+  ia <- exons_to_introns(ea)
+  ib <- exons_to_introns(eb)
+
+  # Transcript ends, strand-aware: the 5' end is the low coordinate on +, the high one on -.
+  a_five <- if (plus) min(ea[, 1L]) else max(ea[, 2L])
+  b_five <- if (plus) min(eb[, 1L]) else max(eb[, 2L])
+  a_three <- if (plus) max(ea[, 2L]) else min(ea[, 1L])
+  b_three <- if (plus) max(eb[, 2L]) else min(eb[, 1L])
+
+  ov_start <- max(min(ea[, 1L]), min(eb[, 1L]))
+  ov_end <- min(max(ea[, 2L]), max(eb[, 2L]))
+  inside <- function(m) {
+    if (!nrow(m)) return(m)
+    m[m[, 1L] >= ov_start & m[, 2L] <= ov_end, , drop = FALSE]
+  }
+  ia_in <- inside(ia); ib_in <- inside(ib)
+  ea_in <- inside(ea); eb_in <- inside(eb)
+
+  contained_in <- function(x, box) {
+    # rows of x fully inside any row of box
+    if (!nrow(x) || !nrow(box)) return(logical(nrow(x)))
+    vapply(seq_len(nrow(x)), function(i) {
+      any(box[, 1L] <= x[i, 1L] & box[, 2L] >= x[i, 2L])
+    }, NA)
+  }
+  # A retains an intron that B splices out: B's intron sits inside one of A's exons.
+  ir <- any(contained_in(ib_in, ea))
+  # A skips an exon B has: B's exon sits inside one of A's introns.
+  es <- any(contained_in(eb_in, ia))
+  # ...and the mirror image, needed for mutually-exclusive detection.
+  es_rev <- any(contained_in(ea_in, ib))
+  mxe <- es && es_rev
+
+  # Alternative donor / acceptor: two introns that overlap and agree on exactly one end.
+  # Which end is the donor depends on strand -- on the minus strand the intron's high
+  # coordinate is the 5' splice site.
+  alt_d <- alt_a <- FALSE
+  if (nrow(ia_in) && nrow(ib_in)) {
+    for (p in seq_len(nrow(ia_in))) {
+      for (q in seq_len(nrow(ib_in))) {
+        if (ia_in[p, 2L] < ib_in[q, 1L] || ia_in[p, 1L] > ib_in[q, 2L]) next
+        same_lo <- ia_in[p, 1L] == ib_in[q, 1L]
+        same_hi <- ia_in[p, 2L] == ib_in[q, 2L]
+        if (same_lo && !same_hi) {
+          if (plus) alt_a <- TRUE else alt_d <- TRUE
+        } else if (same_hi && !same_lo) {
+          if (plus) alt_d <- TRUE else alt_a <- TRUE
+        }
+      }
+    }
+  }
+
+  key <- function(m) if (nrow(m)) paste(m[, 1L], m[, 2L], sep = "_") else character(0)
+  ka <- key(ia); kb <- key(ib)
+  only_a <- ia[!(ka %in% kb), , drop = FALSE]
+  only_b <- ib[!(kb %in% ka), , drop = FALSE]
+  diff_introns <- rbind(
+    if (nrow(only_a)) cbind(only_a, in_a = 1L) else NULL,
+    if (nrow(only_b)) cbind(only_b, in_a = 0L) else NULL
+  )
+  if (is.null(diff_introns)) {
+    diff_introns <- matrix(numeric(0), ncol = 3L,
+                           dimnames = list(NULL, c("start", "end", "in_a")))
+  }
+
+  exonic_bp <- function(m) {
+    if (!nrow(m)) return(0L)
+    n <- norm_intervals(m)
+    sum(n[, 2L] - n[, 1L] + 1L)
+  }
+  bp_unique_a <- exonic_bp(interval_subtract(norm_intervals(ea), norm_intervals(eb)))
+  bp_unique_b <- exonic_bp(interval_subtract(norm_intervals(eb), norm_intervals(ea)))
+
+  # TSS/TTS DIFFERENCES NEED A TOLERANCE, or the flag means nothing. Assembled transcript ends
+  # are almost never identical to the base, so "start coordinate differs" fires on essentially
+  # every pair and stops discriminating a different PROMOTER from a ragged end. Three
+  # quantities are reported instead of one flag:
+  #   *_distance_bp    how far apart the two ends are
+  #   alt_TSS/alt_TTS  that distance exceeds `end_tolerance` (default 50 bp)
+  #   alt_first_exon   the two terminal exons do not overlap AT ALL -- the strong form, and
+  #                    the only one that implies a distinct promoter or polyA site
+  tss_dist <- abs(a_five - b_five)
+  tts_dist <- abs(a_three - b_three)
+  term_exon <- function(e, five) {
+    if (plus == five) e[1L, , drop = FALSE] else e[nrow(e), , drop = FALSE]
+  }
+  no_overlap <- function(x, y) x[1L, 2L] < y[1L, 1L] || x[1L, 1L] > y[1L, 2L]
+  alt_first <- no_overlap(term_exon(ea, TRUE), term_exon(eb, TRUE))
+  alt_last <- no_overlap(term_exon(ea, FALSE), term_exon(eb, FALSE))
+
+  flags <- c(
+    alt_TSS = tss_dist > end_tolerance, alt_TTS = tts_dist > end_tolerance,
+    exon_skipping = es, intron_retention = ir,
+    alt_donor = alt_d, alt_acceptor = alt_a, mutually_exclusive = mxe
+  )
+  list(
+    alt_TSS = unname(flags[["alt_TSS"]]), alt_TTS = unname(flags[["alt_TTS"]]),
+    tss_distance_bp = tss_dist, tts_distance_bp = tts_dist,
+    alt_first_exon = alt_first, alt_last_exon = alt_last,
+    exon_skipping = es, intron_retention = ir,
+    alt_donor = alt_d, alt_acceptor = alt_a, mutually_exclusive = mxe,
+    n_events = sum(flags),
+    summary = if (any(flags)) paste(names(flags)[flags], collapse = "+") else "no difference",
+    bp_unique_a = bp_unique_a, bp_unique_b = bp_unique_b,
+    diff_introns = diff_introns
+  )
+}
+
+#' Merge overlapping/abutting closed intervals in a 2-column matrix.
+norm_intervals <- function(m) {
+  if (!is.matrix(m)) m <- as.matrix(m)
+  if (!nrow(m)) return(matrix(numeric(0), ncol = 2L))
+  m <- m[order(m[, 1L]), , drop = FALSE]
+  s <- m[1L, 1L]; e <- m[1L, 2L]; out <- list()
+  for (i in seq_len(nrow(m))[-1L]) {
+    if (m[i, 1L] <= e + 1L) {
+      e <- max(e, m[i, 2L])
+    } else {
+      out[[length(out) + 1L]] <- c(s, e); s <- m[i, 1L]; e <- m[i, 2L]
+    }
+  }
+  out[[length(out) + 1L]] <- c(s, e)
+  do.call(rbind, out)
+}
+
+#' a minus b, for 2-column closed-interval matrices.
+interval_subtract <- function(a, b) {
+  if (!nrow(a) || !nrow(b)) return(a)
+  out <- list()
+  for (i in seq_len(nrow(a))) {
+    seg <- list(c(a[i, 1L], a[i, 2L]))
+    for (j in seq_len(nrow(b))) {
+      nxt <- list()
+      for (s in seg) {
+        if (b[j, 2L] < s[1L] || b[j, 1L] > s[2L]) { nxt[[length(nxt) + 1L]] <- s; next }
+        if (b[j, 1L] > s[1L]) nxt[[length(nxt) + 1L]] <- c(s[1L], b[j, 1L] - 1L)
+        if (b[j, 2L] < s[2L]) nxt[[length(nxt) + 1L]] <- c(b[j, 2L] + 1L, s[2L])
+      }
+      seg <- nxt
+      if (!length(seg)) break
+    }
+    if (length(seg)) out <- c(out, seg)
+  }
+  if (!length(out)) return(matrix(numeric(0), ncol = 2L))
+  do.call(rbind, out)
+}
+
+#' @description
+#' Coding blocks of one isoform in GENOMIC coordinates, each tagged with how many coding
+#' bases precede it. The tag is what makes a reading-frame comparison possible: two isoforms
+#' share a genomic position but not necessarily the same codon boundary at it.
+#'
+#' @return matrix(gstart, gend, off) or NULL when no ORF was called
+orf_genomic_blocks <- function(e, strand, orf_start, orf_end) {
+  if (is.na(orf_start) || is.na(orf_end) || orf_end < orf_start) return(NULL)
+  e <- as.matrix(e)
+  plus <- !identical(as.character(strand)[1L], "-")
+  # Exons in TRANSCRIPT order: 5' to 3', which is descending genomic start on the minus strand.
+  e <- e[order(e[, 1L], decreasing = !plus), , drop = FALSE]
+  out <- list()
+  tpos <- 1L
+  for (i in seq_len(nrow(e))) {
+    len <- e[i, 2L] - e[i, 1L] + 1L
+    t1 <- tpos; t2 <- tpos + len - 1L
+    tpos <- t2 + 1L
+    s <- max(t1, orf_start); en <- min(t2, orf_end)
+    if (s > en) next
+    if (plus) {
+      gstart <- e[i, 1L] + (s - t1); gend <- e[i, 1L] + (en - t1)
+    } else {
+      gend <- e[i, 2L] - (s - t1); gstart <- e[i, 2L] - (en - t1)
+    }
+    # unname(): indexing a matrix that carries dimnames leaves the column name attached to
+    # the scalar, and c(gstart = <named>) then builds "gstart.start" instead of "gstart".
+    out[[length(out) + 1L]] <- c(gstart = unname(gstart), gend = unname(gend),
+                                 off = unname(s - orf_start))
+  }
+  if (!length(out)) return(NULL)
+  do.call(rbind, out)
+}
+
+#' @description
+#' Do two isoforms read their SHARED coding sequence in the same frame, and where does their
+#' coding sequence differ?
+#'
+#' This is the step that turns a structural difference into a protein claim. Two isoforms can
+#' share most of their exons and still encode unrelated C-termini if an indel upstream shifted
+#' the frame; conversely a large structural difference confined to UTR changes no protein at
+#' all. Neither case is visible from exon overlap.
+#'
+#' @return list(shared_coding_bp, relationship, coding_change)
+frame_relationship <- function(ea, eb, strand, oa, ob) {
+  unknown <- list(shared_coding_bp = NA_integer_,
+                  relationship = "unknown (ORF not called)",
+                  coding_change = "unknown (ORF not called)",
+                  coding_change_detail = "unknown (ORF not called)",
+                  coding_bp_unique_candidate = NA_integer_,
+                  coding_bp_unique_partner = NA_integer_)
+  if (is.null(oa) || is.null(ob)) return(unknown)
+  ba <- orf_genomic_blocks(ea, strand, oa$start, oa$end)
+  bb <- orf_genomic_blocks(eb, strand, ob$start, ob$end)
+  if (is.null(ba) || is.null(bb)) return(unknown)
+  plus <- !identical(as.character(strand)[1L], "-")
+
+  shared <- 0L; shifted <- FALSE; agreed <- FALSE
+  for (p in seq_len(nrow(ba))) {
+    for (q in seq_len(nrow(bb))) {
+      x1 <- max(ba[p, "gstart"], bb[q, "gstart"])
+      x2 <- min(ba[p, "gend"], bb[q, "gend"])
+      if (x1 > x2) next
+      shared <- shared + (x2 - x1 + 1L)
+      # Codon offset at the 5'-most base of the shared block, in each isoform's own ORF.
+      oa_off <- if (plus) ba[p, "off"] + (x1 - ba[p, "gstart"]) else
+        ba[p, "off"] + (ba[p, "gend"] - x2)
+      ob_off <- if (plus) bb[q, "off"] + (x1 - bb[q, "gstart"]) else
+        bb[q, "off"] + (bb[q, "gend"] - x2)
+      if ((oa_off - ob_off) %% 3 == 0) agreed <- TRUE else shifted <- TRUE
+    }
+  }
+  if (shared == 0L) {
+    return(list(shared_coding_bp = 0L, relationship = "no shared coding sequence",
+                coding_change = "no shared coding sequence",
+                coding_change_detail = "no shared coding sequence",
+                coding_bp_unique_candidate = NA_integer_,
+                coding_bp_unique_partner = NA_integer_))
+  }
+  rel <- if (shifted && agreed) {
+    "partly frameshifted"
+  } else if (shifted) {
+    "frameshifted"
+  } else {
+    "same frame throughout"
+  }
+
+  cds_a <- norm_intervals(ba[, c("gstart", "gend"), drop = FALSE])
+  cds_b <- norm_intervals(bb[, c("gstart", "gend"), drop = FALSE])
+  only_a <- interval_subtract(cds_a, cds_b)
+  only_b <- interval_subtract(cds_b, cds_a)
+  bp <- function(m) if (nrow(m)) sum(m[, 2L] - m[, 1L] + 1L) else 0L
+
+  # `categ` and `change` are built together and returned as a pair: the category is what you
+  # tally, the detail is what you read. An earlier version set the category with `<<-` inside
+  # the if/else, which assigns in the ENCLOSING environment -- the local stayed NA and every
+  # tallied category came back missing.
+  res <- if (shifted) {
+    list(categ = "frameshift",
+         change = paste0("frameshift -- the shared exons are read in different frames (",
+                         shared, " bp shared)"))
+  } else if (bp(only_a) == 0L && bp(only_b) == 0L) {
+    list(categ = "UTR only",
+         change = "coding sequence identical -- the difference is UTR only")
+  } else {
+    # WHERE the difference sits, judged against the span the two ORFs share rather than by
+    # counting blocks. A pure N-terminal truncation spanning ten exons produces ten unique
+    # blocks, so "more blocks than boundaries" -- the obvious test -- calls it internal every
+    # time. Position relative to the shared coding span is what actually distinguishes them.
+    shared_iv <- interval_subtract(cds_a, only_a)
+    if (!nrow(shared_iv)) shared_iv <- cds_a
+    sh_lo <- min(shared_iv[, 1L]); sh_hi <- max(shared_iv[, 2L])
+    where <- function(m) {
+      if (!nrow(m)) return(character(0))
+      lab <- vapply(seq_len(nrow(m)), function(i) {
+        if (m[i, 2L] < sh_lo) if (plus) "N-terminal" else "C-terminal"
+        else if (m[i, 1L] > sh_hi) if (plus) "C-terminal" else "N-terminal"
+        else "internal"
+      }, NA_character_)
+      unique(lab)
+    }
+    parts <- unique(c(where(only_a), where(only_b)))
+    parts <- parts[order(match(parts, c("N-terminal", "internal", "C-terminal")))]
+    if (!length(parts)) parts <- "internal"
+    list(categ = paste(parts, collapse = " + "),
+         change = paste0(paste(parts, collapse = " + "), " difference (",
+                         bp(only_a), " bp coding unique to candidate, ",
+                         bp(only_b), " bp unique to partner)"))
+  }
+  list(shared_coding_bp = as.integer(shared), relationship = rel,
+       coding_change = res$categ, coding_change_detail = res$change,
+       coding_bp_unique_candidate = bp(only_a), coding_bp_unique_partner = bp(only_b))
+}
+
+#' @description
+#' Splice-site sequence at one intron, in transcript orientation.
+#'
+#' Windows follow the usual maximum-entropy convention: 3 exonic + 6 intronic bases at the
+#' donor, 20 intronic + 3 exonic at the acceptor. The dinucleotides are reported separately
+#' because they carry the spliceosome assignment: GT-AG and GC-AG are U2 introns, AT-AC is
+#' U12 (minor spliceosome), and anything else is either a genuine non-canonical site or --
+#' far more often -- an assembly artefact worth distrusting.
+splice_site_seqs <- function(genome, chrom, istart, iend, strand) {
+  plus <- !identical(as.character(strand)[1L], "-")
+  grab <- function(s, e) {
+    if (s < 1) return(NA_character_)
+    sq <- Biostrings::getSeq(genome, names = chrom, start = s, end = e)
+    if (!plus) sq <- Biostrings::reverseComplement(sq)
+    as.character(sq)
+  }
+  if (plus) {
+    donor <- grab(istart - 3L, istart + 5L)
+    acceptor <- grab(iend - 19L, iend + 3L)
+  } else {
+    donor <- grab(iend - 5L, iend + 3L)
+    acceptor <- grab(istart - 3L, istart + 19L)
+  }
+  # Window arithmetic, spelled out because an off-by-one here silently reports every intron
+  # as non-canonical. Donor window is [istart-3, istart+5], 9 nt: positions 1-3 are exonic, so
+  # the intron's first base is position 4 and the donor dinucleotide is 4-5.
+  # Acceptor window is [iend-19, iend+3], 23 nt: positions 1-20 are intronic and 21-23 exonic,
+  # so the intron's LAST base is position 20 and the acceptor dinucleotide is 19-20.
+  d2 <- if (is.na(donor)) NA_character_ else substr(donor, 4L, 5L)
+  a2 <- if (is.na(acceptor)) NA_character_ else substr(acceptor, 19L, 20L)
+  cls <- if (is.na(d2) || is.na(a2)) {
+    NA_character_
+  } else if (d2 == "GT" && a2 == "AG") {
+    "GT-AG (U2, canonical)"
+  } else if (d2 == "GC" && a2 == "AG") {
+    "GC-AG (U2, minor variant)"
+  } else if (d2 == "AT" && a2 == "AC") {
+    "AT-AC (U12, minor spliceosome)"
+  } else {
+    paste0("non-canonical (", d2, "-", a2, ")")
+  }
+  list(donor = donor, acceptor = acceptor, donor_di = d2, acceptor_di = a2, intron_class = cls)
+}
+
+#' Translate an ORF given transcript coordinates. Returns a character scalar, or NULL.
+translate_orf <- function(dna, orf_start, orf_end) {
+  if (is.na(orf_start) || is.na(orf_end)) return(NULL)
+  n <- length(dna)
+  if (orf_start < 1L || orf_end > n || orf_end <= orf_start) return(NULL)
+  sub <- Biostrings::subseq(dna, start = orf_start, end = orf_end)
+  # Trim to a whole number of codons; ISA's ORF end includes the stop codon.
+  keep <- (length(sub) %/% 3L) * 3L
+  if (keep < 3L) return(NULL)
+  sub <- Biostrings::subseq(sub, start = 1L, end = keep)
+  aa <- suppressWarnings(
+    as.character(Biostrings::translate(sub, if.fuzzy.codon = "solve"))
+  )
+  sub("\\*$", "", aa)
+}

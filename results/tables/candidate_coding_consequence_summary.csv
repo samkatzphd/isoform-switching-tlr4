@@ -1,0 +1,9 @@
+"frame_relationship","coding_change","n_pairs"
+"frameshifted","frameshift",5
+"no shared coding sequence","no shared coding sequence",16
+"same frame throughout","C-terminal",6
+"same frame throughout","N-terminal",15
+"same frame throughout","N-terminal + C-terminal",1
+"same frame throughout","UTR only",14
+"same frame throughout","internal + C-terminal",2
+"unknown (ORF not called)","unknown (ORF not called)",4
