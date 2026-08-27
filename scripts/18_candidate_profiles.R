@@ -178,18 +178,102 @@ if (!is.null(lit)) {
   )
 }
 
+# ---- Confirm or clear the locus-fusion suspects ---------------------------------------------
+# 15 flags a pair whose two transcripts share NO exonic sequence. That is not something two
+# isoforms of one gene can do, so either the assembler merged two neighbouring genes into one
+# XLOC or the pair is a genuine alternative-promoter product that skips the whole upstream
+# structure. The two are distinguished by asking Ensembl which GENE each side's cmp_ref
+# transcript belongs to: different genes means a fused locus and the "switch" is really the
+# relative expression of two genes; the same gene means a real, if dramatic, isoform pair.
+#
+# Cached under data/external/ensembl/ and committed, so this is a one-time network cost.
+ens_dir <- ensure_dir(resolve_path("data/external/ensembl", root = root))
+ens_gene <- function(enst) {
+  if (is.na(enst) || !nzchar(enst)) return(NA_character_)
+  id <- sub("\\..*$", "", enst)
+  if (!grepl("^ENST", id)) return(NA_character_)
+  f <- file.path(ens_dir, paste0(id, ".json"))
+  if (!file.exists(f)) {
+    if (!requireNamespace("jsonlite", quietly = TRUE)) return(NA_character_)
+    url <- paste0("https://rest.ensembl.org/lookup/id/", id,
+                  "?content-type=application/json;expand=0")
+    ok <- tryCatch({
+      utils::download.file(url, f, quiet = TRUE, method = "libcurl"); TRUE
+    }, error = function(e) FALSE, warning = function(w) FALSE)
+    Sys.sleep(0.15)
+    if (!ok || !file.exists(f)) return(NA_character_)
+  }
+  j <- tryCatch(jsonlite::fromJSON(f, simplifyVector = FALSE), error = function(e) NULL)
+  if (is.null(j)) return(NA_character_)
+  paste0(j$Parent %||% NA_character_, "|", j$display_name %||% "")
+}
+
+susp <- pairs |> filter(.data$locus_fusion_suspect %in% TRUE)
+fusion <- NULL
+if (nrow(susp)) {
+  message("  ", dplyr::n_distinct(susp$gene_name),
+          " genes have a pair sharing no exonic sequence; checking Ensembl parent genes")
+  fusion <- susp |>
+    distinct(.data$gene_name, .data$cmp_ref_candidate, .data$cmp_ref_partner) |>
+    rowwise() |>
+    mutate(
+      ens_candidate = ens_gene(.data$cmp_ref_candidate),
+      ens_partner = ens_gene(.data$cmp_ref_partner)
+    ) |>
+    ungroup() |>
+    mutate(
+      gene_candidate = sub("^.*\\|", "", .data$ens_candidate),
+      gene_partner = sub("^.*\\|", "", .data$ens_partner),
+      ensg_candidate = sub("\\|.*$", "", .data$ens_candidate),
+      ensg_partner = sub("\\|.*$", "", .data$ens_partner),
+      # A retired transcript id fails to resolve, and a pair where only ONE side resolves would
+      # otherwise sit in "unresolved" forever. When the resolved side names a gene that is not
+      # the locus symbol, that alone settles it -- an isoform of MREG cannot be a PECR
+      # transcript. Only a pair where NEITHER side resolves stays unresolved.
+      resolved_symbol = sub("-[0-9]+$", "", ifelse(!is.na(.data$ensg_candidate),
+                                                   .data$gene_candidate, .data$gene_partner)),
+      verdict = dplyr::case_when(
+        is.na(.data$ensg_candidate) & is.na(.data$ensg_partner) ~
+          "unresolved (neither cmp_ref resolved in Ensembl)",
+        !is.na(.data$ensg_candidate) & !is.na(.data$ensg_partner) &
+          .data$ensg_candidate == .data$ensg_partner ~
+          "SAME gene -- a genuine alternative-promoter isoform pair",
+        !is.na(.data$ensg_candidate) & !is.na(.data$ensg_partner) ~
+          "DIFFERENT genes -- assembled locus merges two genes; not an isoform switch",
+        .data$resolved_symbol != .data$gene_name ~
+          "DIFFERENT genes -- one side resolved, and it is not this gene; fused locus",
+        TRUE ~ "unresolved (only one cmp_ref resolved, and it matches this gene)"
+      )
+    ) |>
+    select("gene_name", "cmp_ref_candidate", "cmp_ref_partner", "gene_candidate",
+           "gene_partner", "ensg_candidate", "ensg_partner", "resolved_symbol", "verdict")
+  write_table_pair(fusion, results_tables, "candidate_locus_fusion_check", cfg = cfg)
+  message("\n---- transcripts sharing no exonic sequence: fused locus, or real? ----")
+  print(as.data.frame(fusion |> select("gene_name", "gene_candidate", "gene_partner", "verdict")),
+        row.names = FALSE)
+}
+
+fused_genes <- if (is.null(fusion)) character(0) else {
+  unique(fusion$gene_name[grepl("^DIFFERENT", fusion$verdict)])
+}
+
 # ---- Priority score ---------------------------------------------------------------------------
 prof <- prof |>
   mutate(
     protein_changing = !.data$coding_change %in% c("UTR only", "unknown (ORF not called)"),
     changes_annotated_site = !is.na(.data$n_features_changed) & .data$n_features_changed > 0,
     structurally_ambiguous = grepl("^c-class AND differs only", .data$contained_caveat),
+    # A fused locus is not a weak candidate, it is not a candidate: the measured dIF is the
+    # relative expression of two neighbouring genes. Scored to the bottom rather than dropped,
+    # so it stays visible and nobody rediscovers it.
+    locus_fusion = .data$gene_name %in% fused_genes,
     priority_score =
       2L * as.integer(.data$assayable %in% TRUE) +
       1L * as.integer(.data$both_sides_candidates %in% TRUE) +
       2L * as.integer(.data$protein_changing %in% TRUE) +
       2L * as.integer(.data$changes_annotated_site %in% TRUE) -
-      2L * as.integer(.data$structurally_ambiguous %in% TRUE)
+      2L * as.integer(.data$structurally_ambiguous %in% TRUE) -
+      20L * as.integer(.data$locus_fusion %in% TRUE)
   ) |>
   arrange(desc(.data$priority_score), desc(.data$max_abs_dIF))
 
@@ -207,7 +291,8 @@ print(as.data.frame(
       consequence = .data$coding_change,
       sites = ifelse(is.na(.data$n_features_changed), 0L, .data$n_features_changed),
       iso_lit = .data$n_isoform_papers,
-      ambiguous = .data$structurally_ambiguous
+      ambiguous = .data$structurally_ambiguous,
+      fused = .data$locus_fusion
     )
 ), row.names = FALSE)
 
@@ -222,6 +307,9 @@ message("  structurally ambiguous (c-class, 5'):    ",
         sum(prof$structurally_ambiguous %in% TRUE))
 message("  no isoform-level prior art at all:       ",
         sum(prof$n_isoform_papers %in% 0L, na.rm = TRUE))
+message("  DISQUALIFIED, assembled locus fuses two genes: ",
+        sum(prof$locus_fusion %in% TRUE),
+        if (length(fused_genes)) paste0(" (", paste(sort(fused_genes), collapse = ", "), ")") else "")
 
 write_run_manifest(script = "18_candidate_profiles.R", cfg = cfg, root = root)
 message("\n18_candidate_profiles.R: done")

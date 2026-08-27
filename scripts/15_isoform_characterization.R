@@ -247,6 +247,13 @@ for (i in seq_len(nrow(pairs))) {
     mutually_exclusive = ev$mutually_exclusive,
     bp_unique_to_candidate = ev$bp_unique_a,
     bp_unique_to_partner = ev$bp_unique_b,
+    shared_exonic_bp = a_meta$transcript_length[1] - ev$bp_unique_a,
+    # TWO TRANSCRIPTS OF ONE GENE ALWAYS SHARE SOME EXONIC SEQUENCE. When they share NONE,
+    # the more likely explanation is that the assembler merged two neighbouring genes into one
+    # XLOC locus, and the "switch" is really the relative expression of two different genes.
+    # Confirmed downstream in 18 by looking up whether the two cmp_ref transcripts belong to
+    # the same Ensembl gene -- this flag is the cheap local screen that decides what to look up.
+    locus_fusion_suspect = (a_meta$transcript_length[1] - ev$bp_unique_a) <= 0,
     orf_aa_candidate = a_meta$orf_length_aa[1], orf_aa_partner = b_meta$orf_length_aa[1],
     PTC_candidate = a_meta$PTC[1], PTC_partner = b_meta$PTC[1],
     shared_coding_bp = fr$shared_coding_bp,
