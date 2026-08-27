@@ -231,9 +231,26 @@ for (g in genes) {
     aa_lose <- if (lose_id %in% names(prot)) as.character(prot[[lose_id]]) else NULL
     cov_gain <- covered_residues(aa_gain, canon)
     cov_lose <- covered_residues(aa_lose, canon)
-    if (is.null(cov_gain) && is.null(cov_lose)) next
-    if (is.null(cov_gain)) cov_gain <- logical(nchar(canon))
-    if (is.null(cov_lose)) cov_lose <- logical(nchar(canon))
+    # A side with no ORF called has no protein to align, and treating that as "no residues
+    # present" makes every feature read as LOST -- which is how KDM6B and CD86 first came
+    # back with 36 and 17 "changed" sites while their coding consequence was
+    # "unknown (ORF not called)". Missing is not absent. Such a pair is recorded once, with
+    # the reason, and contributes no feature rows.
+    if (is.null(cov_gain) || is.null(cov_lose)) {
+      site_rows[[length(site_rows) + 1L]] <- tibble(
+        gene_name = g, uniprot_accession = acc,
+        rising_isoform = gain_id, falling_isoform = lose_id,
+        feature_type = "(not assessable)",
+        feature_description = paste0(
+          "no ORF called for the ",
+          if (is.null(cov_gain)) "rising" else "falling",
+          " isoform, so no protein could be aligned"),
+        feature_start = NA_integer_, feature_end = NA_integer_,
+        pct_present_rising = NA_real_, pct_present_falling = NA_real_,
+        status = "not assessable (no ORF called)"
+      )
+      next
+    }
 
     if (!nrow(fts)) next
     for (j in seq_len(nrow(fts))) {
