@@ -97,6 +97,8 @@ tr.dq td.gene{color:var(--bad)}
 figure{margin:0;overflow-x:auto}
 svg{display:block}
 .legend-txt{font-size:.78rem;color:var(--muted)}
+.ticks{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ticks-lab{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:2px}
 ul{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:7px}
 li::marker{color:var(--muted)}
 footer{padding:38px 0 60px;color:var(--muted);font-size:.83rem}
@@ -278,49 +280,88 @@ function statusColor(st){
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
 function track(g){
-  const W=880,L=118,R=18,inner=W-L-R;
-  const x=v=>L+(inner*(v-1)/Math.max(1,g.len-1));
-  const rows=[];
-  // stagger feature labels across lanes so they do not collide
+  const W=900, L=104, R=76, inner=W-L-R;
+  const x=v=>L+(inner*(Math.max(1,v)-1)/Math.max(1,g.len-1));
+  const CH=5.72;                        // IBM Plex Mono advance at 9.5px
   const feats=(g.feats||[]).slice().sort((a,b)=>a.s-b.s);
+
+  // A "Binding site" one residue wide cannot carry a label, and RBKS has fourteen of them.
+  // Split: extended features get a labelled block, point features get a tick on the backbone
+  // and are summarised in prose beneath the figure.
+  const WIDE=12;
+  const wide=feats.filter(f=>(f.e-f.s)>=WIDE);
+  const pts =feats.filter(f=>(f.e-f.s)<WIDE);
+
+  // Lane-pack on the LABEL extent, not the block extent. Blocks that do not overlap can still
+  // have labels that do, which is what turned this into mush the first time.
   const lanes=[];
-  feats.forEach(f=>{
-    let li=0; while(lanes[li]!==undefined && lanes[li] > f.s) li++;
-    lanes[li]=f.e; f._lane=li;
+  wide.forEach(f=>{
+    const x1=x(f.s), x2=x(f.e);
+    const inside=(x2-x1) > (f.nm.length*CH+10);
+    f._inside=inside;
+    const hi=inside?x2:Math.max(x2, x1+f.nm.length*CH+10);
+    let li=0; while(lanes[li]!==undefined && lanes[li]>x1-8) li++;
+    lanes[li]=hi; f._lane=li;
   });
-  const nLane=Math.max(1,lanes.length);
-  const featTop=16, laneH=15, featH=11;
-  const barY=featTop+nLane*laneH+10;
-  const H=barY+74;
-  let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Domain track for '+esc(g.gene)+'">';
-  // feature blocks
-  feats.forEach(f=>{
+  const nLane=lanes.length;
+  const laneH=15, featTop=6;
+  const barY=featTop+nLane*laneH+(nLane?4:0), barH=11;
+  const tickH=6;
+  const c1=barY+barH+tickH+20, c2=c1+34, H=c2+26;
+
+  let out='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Feature map for '+esc(g.gene)+'">';
+
+  wide.forEach(f=>{
     const y=featTop+f._lane*laneH;
-    const x1=x(f.s), x2=Math.max(x(f.e),x(f.s)+2.5);
-    s+='<rect x="'+x1.toFixed(1)+'" y="'+y+'" width="'+(x2-x1).toFixed(1)+'" height="'+featH+'" rx="1.5" fill="'+statusColor(f.st)+'" opacity="'+(statusColor(f.st)==='var(--neutral-block)'?0.85:0.92)+'"/>';
-    if((x2-x1)>34 || f.nm.length<16){
-      s+='<text x="'+(x2+5).toFixed(1)+'" y="'+(y+featH-2)+'" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+esc(f.nm)+'</text>';
+    const x1=x(f.s), x2=Math.max(x(f.e),x1+3);
+    out+='<rect x="'+x1.toFixed(1)+'" y="'+y+'" width="'+(x2-x1).toFixed(1)+'" height="11" rx="2" fill="'+statusColor(f.st)+'"/>';
+    if(f._inside){
+      out+='<text x="'+((x1+x2)/2).toFixed(1)+'" y="'+(y+8.5)+'" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono, monospace" fill="var(--surface)">'+esc(f.nm)+'</text>';
+    }else{
+      out+='<text x="'+(x2+6).toFixed(1)+'" y="'+(y+9)+'" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+esc(f.nm)+'</text>';
     }
   });
-  // canonical backbone
-  s+='<rect x="'+L+'" y="'+barY+'" width="'+inner+'" height="7" rx="2" fill="var(--rule)"/>';
-  s+='<text x="0" y="'+(barY+6)+'" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--muted)">canonical</text>';
-  s+='<text x="'+(L+inner)+'" y="'+(barY-6)+'" font-size="9.5" text-anchor="end" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+g.len+' aa</text>';
-  // coverage bars
-  function cov(y,from,to,color,label,aa,extra){
-    s+='<text x="0" y="'+(y+9)+'" font-size="10" font-family="IBM Plex Mono, monospace" fill="'+color+'">'+label+'</text>';
-    s+='<rect x="'+L+'" y="'+(y+2)+'" width="'+inner+'" height="9" rx="2" fill="var(--surface-2)"/>';
+
+  out+='<text x="'+(L-10)+'" y="'+(barY+9)+'" font-size="10" text-anchor="end" font-family="IBM Plex Mono, monospace" fill="var(--muted)">canonical</text>';
+  out+='<rect x="'+L+'" y="'+barY+'" width="'+inner+'" height="'+barH+'" rx="2" fill="var(--surface-2)" stroke="var(--rule)"/>';
+  out+='<text x="'+(L+inner+8)+'" y="'+(barY+9)+'" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+g.len+' aa</text>';
+  pts.forEach(f=>{
+    const x1=x(f.s), w=Math.max(2,x(f.e)-x1);
+    out+='<rect x="'+x1.toFixed(1)+'" y="'+(barY+barH)+'" width="'+w.toFixed(1)+'" height="'+tickH+'" fill="'+statusColor(f.st)+'"/>';
+  });
+
+  function cov(y,from,to,color,label,sub){
+    out+='<text x="'+(L-10)+'" y="'+(y+9)+'" font-size="10" text-anchor="end" font-family="IBM Plex Mono, monospace" fill="'+color+'">'+label+'</text>';
+    out+='<text x="'+(L-10)+'" y="'+(y+21)+'" font-size="9" text-anchor="end" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+esc(sub)+'</text>';
+    out+='<rect x="'+L+'" y="'+y+'" width="'+inner+'" height="11" rx="2" fill="var(--surface-2)"/>';
     if(from!=null&&to!=null){
-      const x1=x(from),x2=Math.max(x(to),x1+2);
-      s+='<rect x="'+x1.toFixed(1)+'" y="'+(y+2)+'" width="'+(x2-x1).toFixed(1)+'" height="9" rx="2" fill="'+color+'"/>';
-      s+='<text x="'+(L+inner+2)+'" y="'+(y+10)+'" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)" text-anchor="end" dx="-4">'+from+'\u2013'+to+'</text>';
+      const x1=x(from), x2=Math.max(x(to),x1+3);
+      out+='<rect x="'+x1.toFixed(1)+'" y="'+y+'" width="'+(x2-x1).toFixed(1)+'" height="11" rx="2" fill="'+color+'"/>';
+      out+='<text x="'+(L+inner+8)+'" y="'+(y+9)+'" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+from+'–'+to+'</text>';
+    }else{
+      out+='<text x="'+(L+inner+8)+'" y="'+(y+9)+'" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)">—</text>';
     }
-    s+='<text x="0" y="'+(y+21)+'" font-size="9" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+(aa==null?'no ORF':aa+' aa')+(extra||'')+'</text>';
   }
-  cov(barY+22,g.fallFrom,g.fallTo,'var(--loss)','falling',g.fallAA,'');
-  cov(barY+50,g.riseFrom,g.riseTo,'var(--gain)','rising',g.riseAA,g.risePTC===true?' \u00b7 PTC+':'');
-  s+='</svg>';
-  return s;
+  cov(c1,g.fallFrom,g.fallTo,'var(--loss)','falling',g.fallAA==null?'no ORF':g.fallAA+' aa');
+  cov(c2,g.riseFrom,g.riseTo,'var(--gain)','rising',(g.riseAA==null?'no ORF':g.riseAA+' aa')+(g.risePTC===true?' · PTC+':''));
+  out+='</svg>';
+
+  // Prose summary of the tick features, grouped: "Binding site x13 lost" beats 13 labels.
+  const groups={};
+  pts.forEach(f=>{
+    const st=(f.st.indexOf('LOST')===0||f.st.indexOf('partially lost')===0)?'lost'
+            :(f.st.indexOf('GAINED')===0||f.st.indexOf('partially gained')===0)?'gained':'retained';
+    const k=f.nm+'|~|'+st;
+    groups[k]=(groups[k]||0)+1;
+  });
+  const parts=Object.keys(groups).map(k=>{
+    const bits=k.split('|~|'), nm=bits[0], st=bits[1], n=groups[k];
+    const cls=st==='lost'?'t-loss':st==='gained'?'t-gain':'t-mute';
+    return '<span class="tag '+cls+'">'+esc(nm)+(n>1?' ×'+n:'')+' '+st+'</span>';
+  });
+  const caption = parts.length
+    ? '<div class="ticks"><span class="ticks-lab">point features</span>'+parts.join(' ')+'</div>' : '';
+  return {svg:out, caption:caption};
 }
 
 const VERDICT={
@@ -331,13 +372,14 @@ const VERDICT={
  ATRN:"Attractin loses its transmembrane helix (1280\u20131300) and nothing else &mdash; a membrane-to-secreted switch in a protein UniProt describes as mediating initial immune-cell clustering during inflammation. The secreted/membrane isoform pair was described in 2000 (PMID 10811918); this is that pair, moving under LPS.",
  NCOA7:"An internal-promoter product that gains the TLDc domain and drops everything upstream &mdash; the interferon-inducible NCOA7-B (PMID 30478388, PMID 25330068). The largest effect in the whole candidate set, and the one with the strongest independent prior.",
  LIG1:"A frameshifted 115-aa PTC+ transcript rises against full-length DNA ligase 1. Only 37 bp of coding is shared, and it is read in a different frame on each side.",
- PRKAR1B:"The rising isoform starts at residue 236, discarding the dimerization-and-phosphorylation region, the interchain disulfides and the inhibitor sequence &mdash; the parts that make a PKA regulatory subunit a regulatory subunit.",
+ PRKAR1B:"The rising isoform starts at residue 236, discarding the dimerization-and-phosphorylation region (2&ndash;136), both interchain disulfides, the pseudophosphorylation motif at 96&ndash;100 and six cAMP-binding contacts &mdash; the parts that make a PKA regulatory subunit a regulatory subunit.",
  WDR33:"The 3\u2032-end processing factor is truncated to its first 362 residues, losing the entire disordered C-terminal half. Non-canonical WDR33 isoforms were reported in 2024 to regulate STING responses (PMID 38430516).",
  ACP3:"The rising isoform gains the signal peptide, the catalytic nucleophile and the substrate-specificity site that the falling one lacks &mdash; a shift toward functional, secreted acid phosphatase.",
  RPUSD2:"The rising isoform is full-length; the falling one begins at residue 282 and has no active site. Zero isoform-level prior art on this gene."
 };
 
 document.getElementById('cards').innerHTML = TRACKS.map(g=>{
+  const T = track(g);
   const dir = g.dIFsign>0 ? 'rising isoform gains usage' : 'falling isoform loses usage';
   const lit = g.lit||[];
   return '<article class="card">'+
@@ -349,7 +391,7 @@ document.getElementById('cards').innerHTML = TRACKS.map(g=>{
     '</div>'+
     '<div class="card-body">'+
       '<p class="verdict">'+esc(VERDICT[g.gene]||'')+'</p>'+
-      '<figure>'+track(g)+'</figure>'+
+      '<figure>'+T.svg+'</figure>'+T.caption+
       '<dl class="kv">'+
         '<dt>Usage</dt><dd><span class="mono">IF '+g.if1+' &rarr; '+g.if2+'</span> &middot; |d<span class="mono">IF</span>| '+g.dIF+'</dd>'+
         '<dt>Isoforms</dt><dd><span class="mono">'+esc(g.riseId)+'</span> rising vs <span class="mono">'+esc(g.fallId)+'</span> falling</dd>'+
