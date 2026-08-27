@@ -104,7 +104,7 @@ message("16_functional_sites.R: mapping switch consequences onto UniProt feature
 # run. A stale cache is a real risk with a live database, so the fetch date is recorded in
 # each file and reported in the output table.
 UNIPROT_FIELDS <- paste(
-  c("accession", "id", "protein_name", "sequence", "cc_function", "cc_subcellular_location",
+  c("accession", "id", "protein_name", "sequence", "gene_primary", "gene_names", "cc_function", "cc_subcellular_location",
     "ft_domain", "ft_region", "ft_motif", "ft_binding", "ft_act_site", "ft_site",
     "ft_transmem", "ft_signal", "ft_coiled", "ft_zn_fing", "ft_dna_bind", "ft_mod_res",
     "ft_lipid", "ft_carbohyd", "ft_disulfid", "ft_compbias"),
@@ -119,7 +119,7 @@ fetch_uniprot <- function(gene) {
     "https://rest.uniprot.org/uniprotkb/search?query=",
     utils::URLencode(paste0("gene_exact:", gene, " AND organism_id:9606 AND reviewed:true"),
                      reserved = TRUE),
-    "&format=json&size=1&fields=", UNIPROT_FIELDS
+    "&format=json&size=10&fields=", UNIPROT_FIELDS
   )
   ok <- tryCatch({
     utils::download.file(url, f, quiet = TRUE, method = "libcurl")
@@ -203,13 +203,41 @@ for (g in genes) {
     message("  ", g, ": no reviewed human UniProt entry; skipped")
     next
   }
-  entry <- res[[1]]
+  # PICK THE ENTRY WHOSE PRIMARY GENE NAME IS ACTUALLY THIS SYMBOL. `gene_exact` also matches
+  # SYNONYMS, and a symbol that is another gene's legacy name silently returns the wrong
+  # protein: querying LIG1 returns Q96JA1 (LRIG1, 1093 aa), which lists LIG1 as an old
+  # alternative name, instead of DNA ligase 1 (919 aa). Every feature assignment downstream of
+  # that is meaningless, and nothing about the output looks wrong.
+  primary_name <- function(e) {
+    g <- e$genes
+    if (is.null(g) || !length(g)) return(NA_character_)
+    as.character(g[[1]]$geneName$value %||% NA_character_)
+  }
+  hit <- Filter(function(e) identical(primary_name(e), g), res)
+  if (length(hit)) {
+    entry <- hit[[1]]
+    symbol_match <- "primary"
+  } else if (length(res) == 1L) {
+    # No entry carries this symbol as its primary name, and exactly one came back. That is the
+    # signature of a RENAME (DDX58 -> RIGI, CBWD3 -> ZNG1C) rather than a synonym collision:
+    # a collision like LIG1 -> LRIG1 is caught above, because a correctly-primary LIG1 entry
+    # also exists and the filter finds it. Accepted, but the rename is recorded in the output
+    # rather than silently absorbed.
+    entry <- res[[1]]
+    symbol_match <- paste0("renamed: UniProt primary symbol is ", primary_name(entry))
+    message("  ", g, ": UniProt primary symbol is ", primary_name(entry), " (rename; accepted)")
+  } else {
+    message("  ", g, ": ", length(res), " UniProt entries, none primary for this symbol ",
+            "and no unambiguous rename; skipped")
+    next
+  }
   canon <- entry$sequence$value
   acc <- entry$primaryAccession %||% NA_character_
   fts <- feature_rows(entry)
 
   gene_rows[[length(gene_rows) + 1L]] <- tibble(
     gene_name = g, uniprot_accession = acc,
+    uniprot_primary_symbol = primary_name(entry), symbol_match = symbol_match,
     protein_name = first_text(entry$proteinDescription$recommendedName$fullName$value),
     canonical_length_aa = nchar(canon),
     n_annotated_features = nrow(fts),

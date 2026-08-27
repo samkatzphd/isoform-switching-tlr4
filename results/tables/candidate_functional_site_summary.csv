@@ -1,4 +1,5 @@
 "gene_name","n_features_changed","lost","gained","features"
+"LIG1",38,38,0,"Region (Disordered); Compositional bias (Basic and acidic residues); Modified residue (Phosphoserine); Compositional bias (Polar residues); Compositional bias (Basic residues); Compositional bias (Acidic residues); Modified residue (Phosphothreonine); Modified residue (N6-acetyllysine); Compositional bias (Low complexity); Site (Interaction with target DNA); Region (Interaction with target DNA); Binding site; Active site (N6-AMP-lysine intermediate)"
 "WDR33",29,29,0,"Region (Disordered); Compositional bias (Pro residues); Compositional bias (Polar residues); Compositional bias (Low complexity); Domain (Collagen-like); Modified residue (Omega-N-methylarginine); Modified residue (Asymmetric dimethylarginine); Compositional bias (Basic and acidic residues); Compositional bias (Acidic residues); Compositional bias (Basic residues); Modified residue (Phosphoserine); Modified residue (Asymmetric dimethylarginine; alternate); Modified residue (Omega-N-methylarginine; alternate)"
 "IPCEF1",27,27,0,"Domain (PH); Region (Disordered); Compositional bias (Acidic residues); Compositional bias (Low complexity); Compositional bias (Polar residues); Region (Required for interaction with CYTH2); Modified residue (Phosphoserine)"
 "PRKAR1B",17,17,0,"Region (Dimerization and phosphorylation); Modified residue (Phosphoserine); Disulfide bond (Interchain (with C-39)); Modified residue (3'-nitrotyrosine); Disulfide bond (Interchain (with C-18)); Region (Disordered); Modified residue (Phosphothreonine); Motif (Pseudophosphorylation motif); Modified residue (Omega-N-methylarginine); Binding site"
@@ -18,7 +19,6 @@
 "DCUN1D4",2,2,0,"Region (Disordered); Compositional bias (Polar residues)"
 "IFITM2",2,2,0,"Modified residue (N-acetylmethionine); Modified residue (Phosphotyrosine)"
 "KITLG",2,0,2,"Signal; Disulfide bond"
-"LIG1",2,2,0,"Region (Disordered)"
 "RIN3",2,0,2,"Region (Disordered); Domain (SH2)"
 "ATRN",1,1,0,"Transmembrane (Helical)"
 "CD86",1,1,0,"Signal"
