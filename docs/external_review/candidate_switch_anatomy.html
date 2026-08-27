@@ -1,0 +1,386 @@
+<title>Candidate Switch Anatomy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F4F6F4; --surface:#FFFFFF; --surface-2:#EDF1EE;
+  --ink:#131B19; --ink-2:#33433F; --muted:#5C6D68; --rule:#D9E1DB;
+  --gain:#0E7A6C; --gain-soft:#D7EAE6; --loss:#B25A2C; --loss-soft:#F3E1D5;
+  --caution:#8A6912; --caution-soft:#F2E9D2; --bad:#A23B3B; --bad-soft:#F3DDDD;
+  --neutral-block:#C3CFC9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1413; --surface:#151D1B; --surface-2:#1B2523;
+    --ink:#E7EEEA; --ink-2:#C2CFCA; --muted:#8DA09A; --rule:#28332F;
+    --gain:#46BBA9; --gain-soft:#12332E; --loss:#DD8E5E; --loss-soft:#332014;
+    --caution:#C9A83E; --caution-soft:#302913; --bad:#D97A7A; --bad-soft:#331A1A;
+    --neutral-block:#3A4744;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1413; --surface:#151D1B; --surface-2:#1B2523;
+  --ink:#E7EEEA; --ink-2:#C2CFCA; --muted:#8DA09A; --rule:#28332F;
+  --gain:#46BBA9; --gain-soft:#12332E; --loss:#DD8E5E; --loss-soft:#332014;
+  --caution:#C9A83E; --caution-soft:#302913; --bad:#D97A7A; --bad-soft:#331A1A;
+  --neutral-block:#3A4744;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  font-size:16px; line-height:1.62; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.col{max-width:68ch}
+h1,h2,h3{font-family:Spectral,Georgia,"Times New Roman",serif;font-weight:600;text-wrap:balance;line-height:1.18;margin:0}
+h1{font-size:clamp(2.1rem,4.6vw,3.15rem);letter-spacing:-.015em}
+h2{font-size:clamp(1.45rem,2.5vw,1.85rem);letter-spacing:-.01em}
+h3{font-size:1.12rem;letter-spacing:-.005em}
+p{margin:0}
+a{color:var(--gain)}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.87em}
+.eyebrow{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+header.mast{border-bottom:1px solid var(--rule);background:var(--surface)}
+.mast-inner{display:flex;flex-direction:column;gap:18px;padding:56px 0 40px}
+.sub{font-size:1.06rem;color:var(--ink-2);max-width:64ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:.74rem;padding:4px 10px;border:1px solid var(--rule);border-radius:2px;color:var(--muted);background:var(--ground)}
+
+section{padding:52px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+.sec-head{display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.stack-lg{display:flex;flex-direction:column;gap:30px}
+
+.callout{border-left:3px solid var(--gain);background:var(--surface);padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+.callout.warn{border-left-color:var(--caution)}
+.callout.bad{border-left-color:var(--bad)}
+.callout .lab{font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+
+.tbl-wrap{overflow-x:auto;border:1px solid var(--rule);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2);position:sticky;top:0}
+tbody tr:last-child td{border-bottom:0}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+td.gene{font-weight:600}
+tr.dq td{color:var(--muted)}
+tr.dq td.gene{color:var(--bad)}
+
+.tag{display:inline-block;font-size:.7rem;font-family:"IBM Plex Mono",monospace;padding:2px 7px;border-radius:2px;white-space:nowrap}
+.t-gain{background:var(--gain-soft);color:var(--gain)}
+.t-loss{background:var(--loss-soft);color:var(--loss)}
+.t-warn{background:var(--caution-soft);color:var(--caution)}
+.t-bad{background:var(--bad-soft);color:var(--bad)}
+.t-mute{background:var(--surface-2);color:var(--muted)}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.stat{background:var(--surface);border:1px solid var(--rule);padding:16px 18px;display:flex;flex-direction:column;gap:5px}
+.stat .n{font-family:"IBM Plex Mono",monospace;font-size:1.75rem;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.stat .k{font-size:.79rem;color:var(--muted);line-height:1.4}
+
+.card{background:var(--surface);border:1px solid var(--rule);display:flex;flex-direction:column}
+.card-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 14px;padding:18px 22px 12px;border-bottom:1px solid var(--rule)}
+.card-top .gname{font-family:Spectral,Georgia,serif;font-size:1.35rem;font-weight:600}
+.card-top .pname{color:var(--muted);font-size:.87rem;flex:1 1 200px}
+.card-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 16px;font-size:.87rem}
+.kv dt{color:var(--muted);white-space:nowrap}
+.kv dd{margin:0;color:var(--ink-2)}
+.verdict{font-size:.95rem;color:var(--ink)}
+.track-note{font-size:.76rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.sw{display:inline-flex;align-items:center;gap:6px}
+.sw i{width:11px;height:11px;display:inline-block;border-radius:1px}
+figure{margin:0;overflow-x:auto}
+svg{display:block}
+.legend-txt{font-size:.78rem;color:var(--muted)}
+ul{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:7px}
+li::marker{color:var(--muted)}
+footer{padding:38px 0 60px;color:var(--muted);font-size:.83rem}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .18s ease}}
+.card:hover{border-color:var(--muted)}
+</style>
+
+<header class="mast">
+  <div class="wrap mast-inner">
+    <div class="eyebrow">Q1 &middot; WT THP-1 &plusmn; LPS &middot; UT reference</div>
+    <h1>Candidate Switch Anatomy</h1>
+    <p class="sub">What the 40 candidate isoform switches actually are &mdash; how the two sides differ structurally, whether the difference reaches the protein, which annotated functional sites it removes, and what the literature already says. Plus seven candidates that turn out not to be switches at all.</p>
+    <div class="chips">
+      <span class="chip">40 genes &middot; 63 isoforms</span>
+      <span class="chip">scripts 15&ndash;18</span>
+      <span class="chip">Class B closed</span>
+      <span class="chip">2026-08-27</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <div class="sec-head col">
+    <div class="eyebrow">The correction that matters most</div>
+    <h2>Seven candidates are fused loci, not isoform switches</h2>
+  </div>
+  <div class="stack col" style="margin-bottom:24px">
+    <p>Two isoforms of one gene always share some exonic sequence. Sixteen candidate pairs share <em>none</em> &mdash; zero exonic bases, with their two sides 5.9&ndash;136&nbsp;kb apart. Asking Ensembl which gene each side&rsquo;s reference transcript belongs to settles it: the assembler merged two neighbouring genes into a single <code>XLOC</code> locus, so the measured d<span class="mono">IF</span> is the relative expression of two different genes.</p>
+    <div class="callout bad">
+      <span class="lab">Affects the bench plan</span>
+      <p><strong>PLD6</strong> was one of the five both-sides priority genes in <code>docs/NEXT_SESSION.md</code>. <strong>MREG</strong> and <strong>THAP2</strong> were in the assayable 25. None of the three should be assayed as a switch.</p>
+    </div>
+  </div>
+  <div class="tbl-wrap" style="margin-bottom:16px">
+    <table>
+      <thead><tr><th>Assembled locus</th><th>Really contains</th><th>Gap between sides</th><th>Was on the bench list?</th></tr></thead>
+      <tbody>
+        <tr class="dq"><td class="gene">PLD6</td><td>PLD6 + <strong>FLCN</strong></td><td class="num">30,835 bp</td><td><span class="tag t-bad">both-sides priority</span></td></tr>
+        <tr class="dq"><td class="gene">DDX58</td><td>TOPORS + <strong>RIGI</strong></td><td class="num">24,686 bp</td><td><span class="tag t-mute">no</span></td></tr>
+        <tr class="dq"><td class="gene">IPCEF1</td><td>IPCEF1 + <strong>CNKSR3</strong></td><td class="num">85,427 bp</td><td><span class="tag t-mute">no</span></td></tr>
+        <tr class="dq"><td class="gene">THAP2</td><td>THAP2 + <strong>TMEM19</strong></td><td class="num">21,601 bp</td><td><span class="tag t-warn">assayable 25</span></td></tr>
+        <tr class="dq"><td class="gene">MREG</td><td><strong>PECR</strong> + MREG</td><td class="num">136,130 bp</td><td><span class="tag t-warn">assayable 25</span></td></tr>
+        <tr class="dq"><td class="gene">IFITM2</td><td>IFITM1 + IFITM2</td><td class="num">5,884 bp</td><td><span class="tag t-mute">no</span></td></tr>
+        <tr class="dq"><td class="gene">CCL3</td><td>CCL3L3 + CCL3</td><td class="num">106,591 bp</td><td><span class="tag t-mute">no</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout col">
+    <span class="lab">The one that clears</span>
+    <p><strong>NCOA7</strong> shares no exons either, but both its transcripts are <code>ENSG00000111912</code>. It is a genuine internal-promoter isoform pair &mdash; and it is the interferon-inducible NCOA7-B already described in PMID&nbsp;30478388, which is about as good a prior as a candidate can have.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head col">
+    <div class="eyebrow">Open question #4, closed</div>
+    <h2>Class B is not NMD-target purification</h2>
+  </div>
+  <div class="stack col">
+    <p>The compositional-rescue class &mdash; genes whose total output falls while the baseline-dominant isoform holds &mdash; had one appealing explanation: the gene is shedding non-productive transcripts and concentrating its functional output. Testing it needed PTC status for <em>non-switching</em> isoforms, which lived only in the reduced objects at 5&ndash;21% coverage. Carrying <code>PTC</code> and the whole <code>orfAnalysis</code> slot across from the unfiltered exports raises that to <strong>86&ndash;93%</strong>. Three readings, none supporting purification:</p>
+    <ul>
+      <li><strong>Minor isoforms are more often PTC+ than the dominant one</strong> &mdash; in Class B genes <em>and</em> in background genes, at odds ratios of 75&ndash;319. That is a property of being a minor isoform, not of Class B.</li>
+      <li><strong>No enrichment between gene sets.</strong> Minor-isoform PTC rate in Class B vs background: 14.4% vs 20.8% in <code>T_HT</code> and 14.9% vs 20.3% in <code>T_UT</code> &mdash; <em>depleted</em>, if anything &mdash; and null in <code>H_HT</code> and <code>U_UT</code>. And <code>T_HT</code>/<code>T_UT</code> are the same six libraries re-annotated, so that is one observation, not two.</li>
+      <li><strong>PTC does not predict which minor isoforms are shed.</strong> Null in all four datasets, p&nbsp;=&nbsp;0.27&ndash;0.98.</li>
+    </ul>
+    <div class="callout warn">
+      <span class="lab">Worth knowing about that last test</span>
+      <p>Written first against <code>iso_lfc</code> it gave a clean four-of-four result in the <em>opposite</em> direction, p&nbsp;=&nbsp;0.002&ndash;0.07 &mdash; and would have been reported. Class B minor isoforms sit at 0.07&ndash;0.45 expression units, and the PTC+ ones are 1.5&ndash;4.1&times; less abundant than the PTC&minus; ones, so the <code>+1</code> pseudocount pins their fold-changes near zero by construction. Re-run on d<span class="mono">IF</span>/<span class="mono">IF1</span> &mdash; a difference of ratios computed without a pseudocount &mdash; with baseline abundance in the model and gene as a fixed effect, it is null. The confound is written out as <code>consequence_class_b_abundance_confound.csv</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head col">
+    <div class="eyebrow">Across all 63 candidate pairs</div>
+    <h2>These are promoter switches, not splicing switches</h2>
+  </div>
+  <div class="stack col" style="margin-bottom:26px">
+    <p>Typing each pair directionally &mdash; how the candidate differs from the isoform it is replacing &mdash; the structural signature is lopsided. Fifty-four of 63 pairs have terminal exons that do not overlap at all, meaning a distinct promoter or polyA site. Internal splicing events are the minority.</p>
+  </div>
+  <div class="grid2" style="margin-bottom:26px">
+    <div class="stat"><span class="n">54<span style="font-size:1rem;color:var(--muted)">/63</span></span><span class="k">Different first exon &mdash; a distinct promoter, not a ragged end</span></div>
+    <div class="stat"><span class="n">14<span style="font-size:1rem;color:var(--muted)">/63</span></span><span class="k">Exon skipping</span></div>
+    <div class="stat"><span class="n">5<span style="font-size:1rem;color:var(--muted)">/63</span></span><span class="k">Alternative donor &middot; 5 alternative acceptor</span></div>
+    <div class="stat"><span class="n">1<span style="font-size:1rem;color:var(--muted)">/63</span></span><span class="k">Intron retention</span></div>
+  </div>
+  <div class="stack col" style="margin-bottom:26px">
+    <p>That sharpens rather than settles the cap-selection question already logged for the experimentalist: without 5&prime;-cap verification, incomplete assemblies produce exactly this signature. Twelve candidates are <code>c</code>-class (contained within another transcript) <em>and</em> differ from their partner only at the 5&prime; end &mdash; structurally indistinguishable from a truncated assembly. They are flagged per row rather than dropped.</p>
+    <p>Where the difference lands on the protein, once both sides are translated and the reading frame is compared position by position:</p>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Consequence for the protein</th><th class="num">Pairs</th><th>Reading</th></tr></thead>
+      <tbody>
+        <tr><td>N-terminal difference, same frame</td><td class="num">15</td><td>Truncated or extended product; domains at the N-terminus at risk</td></tr>
+        <tr><td><strong>UTR only &mdash; coding sequence identical</strong></td><td class="num">14</td><td>No protein change at all. Regulatory, if anything</td></tr>
+        <tr><td>No shared coding sequence</td><td class="num">16</td><td>Mostly the fused loci above; NCOA7 is the real one</td></tr>
+        <tr><td>C-terminal difference, same frame</td><td class="num">6</td><td>Anchors, tails and localization signals at risk</td></tr>
+        <tr><td>Frameshift</td><td class="num">5</td><td>Shared exons encode different protein in each isoform</td></tr>
+        <tr><td>Both termini / internal</td><td class="num">3</td><td></td></tr>
+        <tr><td>No ORF called for one side</td><td class="num">4</td><td>Not assessable &mdash; missing, not absent</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="legend-txt col" style="margin-top:14px">All 458 differential junctions came back <code>GT-AG</code> (452) or <code>GC-AG</code> (6). No non-canonical splice sites anywhere in the candidate set &mdash; which is also the check that confirms the strand handling and both window offsets are right.</p>
+</section>
+
+<section>
+  <div class="sec-head col">
+    <div class="eyebrow">Eleven profiles</div>
+    <h2>What each switch does to the protein</h2>
+  </div>
+  <div class="stack col" style="margin-bottom:28px">
+    <p>Every candidate that survives the fused-locus check, changes the protein, and is measurable at the bench. The track shows the canonical protein with its annotated features, then the span each isoform actually covers &mdash; the rising one in teal, the falling one in sienna.</p>
+    <div class="track-note">
+      <span class="sw"><i style="background:var(--loss)"></i>lost on switching</span>
+      <span class="sw"><i style="background:var(--gain)"></i>gained on switching</span>
+      <span class="sw"><i style="background:var(--neutral-block)"></i>retained</span>
+    </div>
+  </div>
+  <div class="stack-lg" id="cards"></div>
+</section>
+
+<section>
+  <div class="sec-head col">
+    <div class="eyebrow">Reference</div>
+    <h2>All 40 candidates</h2>
+  </div>
+  <p class="col legend-txt" style="margin-bottom:18px">Sorted by a priority score that adds up four things the project already treats as evidence &mdash; measurable at the bench, changes the protein, changes an annotated site, and is not resting on a contained isoform &mdash; minus a large penalty for a fused locus. The weights are a judgement, not a measurement: use it to order the table and read the columns to decide.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>Gene</th><th class="num">Score</th><th class="num">|dIF|</th><th>Dir</th><th>Consequence</th>
+        <th class="num">Sites &darr;</th><th class="num">&uarr;</th><th>Rising ORF</th><th>Falling ORF</th>
+        <th class="num">Iso lit</th><th class="num">Imm lit</th><th>Flags</th>
+      </tr></thead>
+      <tbody id="all40"></tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head col">
+    <div class="eyebrow">Before anyone orders primers</div>
+    <h2>What these profiles do and do not establish</h2>
+  </div>
+  <div class="stack col">
+    <ul>
+      <li><strong>UniProt features describe the canonical protein.</strong> A region absent from the canonical &mdash; a novel exon, an extended terminus, anything a PacBio-only transcript contributes &mdash; has no annotation to lose or gain and simply does not appear. No listed feature change is not evidence of a silent switch.</li>
+      <li><strong>Event typing here is pairwise and directional,</strong> not IsoformSwitchAnalyzeR&rsquo;s each-isoform-against-the-pre-RNA scheme. The two will not agree isoform-for-isoform, and are not meant to.</li>
+      <li><strong>Coding consequence is a prediction from ORF calls,</strong> not evidence a protein is made. <code>analyzeORF</code> ran upstream; nothing has confirmed translation, and the <code>orf_origin</code> for these is <code>Predicted</code>.</li>
+      <li><strong>The 12 <code>c</code>-class 5&prime;-only candidates stay open</strong> until the cap-selection question is answered. That question is for the experimentalist, not for more analysis.</li>
+      <li><strong>Everything here is <code>T_UT</code>, one arm, n&nbsp;=&nbsp;3.</strong> These are candidate descriptions to prioritise a validation experiment, not results.</li>
+    </ul>
+    <div class="callout">
+      <span class="lab">Suggested order</span>
+      <p><strong>RBKS</strong> first &mdash; the largest effect among the both-sides genes, an unambiguous catalytic-site loss, an NMD-targeted rising isoform, and no isoform-level prior art to be scooped by. Then <strong>ATRN</strong> and <strong>IRAK3</strong>, both of which have a literature-predicted answer to check against. <strong>NCOA7</strong> is the strongest single-sided candidate for the same reason.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p>Generated from <code>results/tables/candidate_profiles.csv</code> and its inputs &mdash; scripts <code>15_isoform_characterization.R</code>, <code>16_functional_sites.R</code>, <code>17_candidate_literature.R</code>, <code>18_candidate_profiles.R</code>. Class B result from <code>14_isoform_consequence.R</code> &sect;4. Structure from <code>gff3/U_T.gff3</code> and <code>fa/transcripts_U-T.fa</code>; features from UniProt; splice sites from hg38.</p>
+</footer>
+</div>
+
+<script>
+const TRACKS = [{"gene":"RBKS","len":322,"acc":"Q9H477","prot":"Ribokinase","riseId":"TCONS_00170566","fallId":"TCONS_00170563","riseAA":35,"fallAA":321,"risePTC":true,"riseFrom":1,"riseTo":29,"fallFrom":1,"fallTo":322,"dIF":0.441,"if1":0.127,"if2":0.568,"dIFsign":1,"events":"alt_TSS+alt_TTS+alt_donor+alt_acceptor","frame":"same frame throughout","cons":"C-terminal difference (19 bp coding unique to candidate, 877 bp unique to partner)","assay":true,"uniq":273,"sides":2,"junc":18,"canon":true,"lit":[18,0,4,0],"feats":[{"nm":"Binding site","s":25,"e":27,"st":"retained through the switch"},{"nm":"Binding site","s":53,"e":57,"st":"LOST on switching"},{"nm":"Binding site","s":154,"e":154,"st":"LOST on switching"},{"nm":"Binding site","s":199,"e":199,"st":"LOST on switching"},{"nm":"Binding site","s":235,"e":240,"st":"LOST on switching"},{"nm":"Binding site","s":256,"e":256,"st":"LOST on switching"},{"nm":"Binding site","s":263,"e":263,"st":"LOST on switching"},{"nm":"Binding site","s":265,"e":265,"st":"LOST on switching"},{"nm":"Binding site","s":268,"e":269,"st":"LOST on switching"},{"nm":"Proton acceptor","s":269,"e":269,"st":"LOST on switching"},{"nm":"Binding site","s":269,"e":269,"st":"LOST on switching"},{"nm":"Binding site","s":295,"e":295,"st":"LOST on switching"},{"nm":"Binding site","s":301,"e":301,"st":"LOST on switching"},{"nm":"Binding site","s":304,"e":304,"st":"LOST on switching"},{"nm":"Binding site","s":306,"e":306,"st":"LOST on switching"},{"nm":"Binding site","s":310,"e":310,"st":"LOST on switching"}]},{"gene":"IL23A","len":189,"acc":"Q9NPF7","prot":"Interleukin-23 subunit alpha","riseId":"TCONS_00064570","fallId":"TCONS_00078058","riseAA":188,"fallAA":52,"risePTC":false,"riseFrom":1,"riseTo":189,"fallFrom":148,"fallTo":155,"dIF":0.314,"if1":0.498,"if2":0.811,"dIFsign":1,"events":"alt_TSS","frame":"frameshifted","cons":"frameshift -- the shared exons are read in different frames (103 bp shared)","assay":true,"uniq":75,"sides":2,"junc":4,"canon":true,"lit":[459,4,225,2],"feats":[{"nm":"Signal","s":1,"e":19,"st":"GAINED on switching"}]},{"gene":"KITLG","len":273,"acc":"P21583","prot":"Kit ligand","riseId":"TCONS_00072398","fallId":"TCONS_00072397","riseAA":272,"fallAA":237,"risePTC":false,"riseFrom":1,"riseTo":273,"fallFrom":44,"fallTo":273,"dIF":0.3,"if1":0.51,"if2":0.809,"dIFsign":1,"events":"alt_TSS+exon_skipping","frame":"same frame throughout","cons":"N-terminal difference (129 bp coding unique to candidate, 24 bp unique to partner)","assay":true,"uniq":72,"sides":2,"junc":6,"canon":true,"lit":[377,8,26,0],"feats":[{"nm":"Signal","s":1,"e":25,"st":"GAINED on switching"},{"nm":"Helical","s":215,"e":237,"st":"retained through the switch"}]},{"gene":"IRAK3","len":596,"acc":"Q9Y616","prot":"Interleukin-1 receptor-associated kinase 3","riseId":"TCONS_00078099","fallId":"TCONS_00065141","riseAA":205,"fallAA":595,"risePTC":false,"riseFrom":391,"riseTo":596,"fallFrom":1,"fallTo":596,"dIF":0.238,"if1":0.846,"if2":0.608,"dIFsign":-1,"events":"alt_TSS+alt_TTS","frame":"same frame throughout","cons":"N-terminal difference (1170 bp coding unique to candidate, 0 bp unique to partner)","assay":true,"uniq":3465,"sides":2,"junc":18,"canon":true,"lit":[194,3,96,3],"feats":[{"nm":"Death","s":41,"e":106,"st":"LOST on switching"},{"nm":"Protein kinase","s":165,"e":452,"st":"partially lost on switching"},{"nm":"Binding site","s":171,"e":179,"st":"LOST on switching"},{"nm":"Binding site","s":192,"e":192,"st":"LOST on switching"},{"nm":"Binding site","s":295,"e":298,"st":"LOST on switching"},{"nm":"Binding site","s":311,"e":311,"st":"LOST on switching"},{"nm":"Disordered","s":560,"e":596,"st":"retained through the switch"}]},{"gene":"ATRN","len":1429,"acc":"O75882","prot":"Attractin","riseId":"TCONS_00184508","fallId":"TCONS_00184507","riseAA":1271,"fallAA":1428,"risePTC":false,"riseFrom":1,"riseTo":1272,"fallFrom":1,"fallTo":1429,"dIF":0.208,"if1":0.714,"if2":0.506,"dIFsign":-1,"events":"alt_TSS+alt_TTS+exon_skipping","frame":"same frame throughout","cons":"C-terminal difference (486 bp coding unique to candidate, 15 bp unique to partner)","assay":true,"uniq":4396,"sides":2,"junc":12,"canon":true,"lit":[101,5,5,0],"feats":[{"nm":"Signal","s":1,"e":28,"st":"retained through the switch"},{"nm":"EGF-like","s":101,"e":129,"st":"retained through the switch"},{"nm":"CUB","s":132,"e":248,"st":"retained through the switch"},{"nm":"PSI 1","s":703,"e":748,"st":"retained through the switch"},{"nm":"PSI 2","s":755,"e":794,"st":"retained through the switch"},{"nm":"C-type lectin","s":795,"e":919,"st":"retained through the switch"},{"nm":"PSI 3","s":932,"e":983,"st":"retained through the switch"},{"nm":"PSI 4","s":986,"e":1061,"st":"retained through the switch"},{"nm":"Laminin EGF-like 1","s":1063,"e":1108,"st":"retained through the switch"},{"nm":"Laminin EGF-like 2","s":1109,"e":1157,"st":"retained through the switch"},{"nm":"Helical","s":1280,"e":1300,"st":"LOST on switching"}]},{"gene":"NCOA7","len":942,"acc":"Q8NI08","prot":"Nuclear receptor coactivator 7","riseId":"TCONS_00254331","fallId":"TCONS_00263872","riseAA":218,"fallAA":49,"risePTC":false,"riseFrom":740,"riseTo":942,"fallFrom":577,"fallTo":614,"dIF":0.673,"if1":0.183,"if2":0.856,"dIFsign":1,"events":"alt_TSS+alt_TTS","frame":"no shared coding sequence","cons":"no shared coding sequence","assay":true,"uniq":81,"sides":1,"junc":6,"canon":true,"lit":[53,11,6,2],"feats":[{"nm":"TLDc","s":781,"e":942,"st":"GAINED on switching"}]},{"gene":"LIG1","len":919,"acc":"P18858","prot":"DNA ligase 1","riseId":"TCONS_00156374","fallId":"TCONS_00156371","riseAA":115,"fallAA":918,"risePTC":true,"riseFrom":339,"riseTo":359,"fallFrom":1,"fallTo":919,"dIF":0.219,"if1":0.039,"if2":0.257,"dIFsign":1,"events":"alt_TSS","frame":"frameshifted","cons":"frameshift -- the shared exons are read in different frames (37 bp shared)","assay":true,"uniq":439,"sides":1,"junc":25,"canon":true,"lit":[291,13,7,0],"feats":[{"nm":"Disordered","s":1,"e":270,"st":"LOST on switching"},{"nm":"Interaction with target ","s":449,"e":458,"st":"LOST on switching"},{"nm":"Binding site","s":566,"e":566,"st":"LOST on switching"},{"nm":"N6-AMP-lysine intermedia","s":568,"e":568,"st":"LOST on switching"},{"nm":"Binding site","s":573,"e":573,"st":"LOST on switching"},{"nm":"Binding site","s":621,"e":621,"st":"LOST on switching"},{"nm":"Interaction with target ","s":642,"e":644,"st":"LOST on switching"},{"nm":"Binding site","s":720,"e":720,"st":"LOST on switching"},{"nm":"Binding site","s":725,"e":725,"st":"LOST on switching"},{"nm":"Binding site","s":744,"e":744,"st":"LOST on switching"}]},{"gene":"PRKAR1B","len":381,"acc":"P31321","prot":"cAMP-dependent protein kinase type I-beta regulatory subunit","riseId":"TCONS_00271463","fallId":"TCONS_00271460","riseAA":145,"fallAA":380,"risePTC":false,"riseFrom":236,"riseTo":381,"fallFrom":1,"fallTo":381,"dIF":0.169,"if1":0.362,"if2":0.531,"dIFsign":1,"events":"alt_TSS+alt_TTS","frame":"same frame throughout","cons":"N-terminal difference (0 bp coding unique to candidate, 705 bp unique to partner)","assay":true,"uniq":131,"sides":1,"junc":7,"canon":true,"lit":[48,6,1,0],"feats":[{"nm":"Dimerization and phospho","s":2,"e":136,"st":"LOST on switching"},{"nm":"Disordered","s":67,"e":98,"st":"LOST on switching"},{"nm":"Pseudophosphorylation mo","s":96,"e":100,"st":"LOST on switching"},{"nm":"Binding site","s":201,"e":201,"st":"LOST on switching"},{"nm":"Binding site","s":202,"e":202,"st":"LOST on switching"},{"nm":"Binding site","s":203,"e":203,"st":"LOST on switching"},{"nm":"Binding site","s":204,"e":204,"st":"LOST on switching"},{"nm":"Binding site","s":211,"e":211,"st":"LOST on switching"},{"nm":"Binding site","s":212,"e":212,"st":"LOST on switching"},{"nm":"Binding site","s":260,"e":260,"st":"retained through the switch"},{"nm":"Binding site","s":262,"e":262,"st":"retained through the switch"},{"nm":"Binding site","s":325,"e":325,"st":"retained through the switch"},{"nm":"Binding site","s":326,"e":326,"st":"retained through the switch"},{"nm":"Binding site","s":327,"e":327,"st":"retained through the switch"},{"nm":"Binding site","s":328,"e":328,"st":"retained through the switch"},{"nm":"Binding site","s":335,"e":335,"st":"retained through the switch"},{"nm":"Binding site","s":336,"e":336,"st":"retained through the switch"},{"nm":"Binding site","s":373,"e":373,"st":"retained through the switch"},{"nm":"Binding site","s":374,"e":374,"st":"retained through the switch"}]},{"gene":"WDR33","len":1336,"acc":"Q9C0J8","prot":"pre-mRNA 3' end processing protein WDR33","riseId":"TCONS_00184096","fallId":"TCONS_00174442","riseAA":366,"fallAA":1335,"risePTC":false,"riseFrom":1,"riseTo":362,"fallFrom":1,"fallTo":1336,"dIF":0.162,"if1":0.388,"if2":0.225,"dIFsign":-1,"events":"alt_TTS","frame":"same frame throughout","cons":"C-terminal difference (2923 bp coding unique to candidate, 16 bp unique to partner)","assay":true,"uniq":5526,"sides":1,"junc":12,"canon":true,"lit":[31,6,3,2],"feats":[{"nm":"Disordered","s":568,"e":1336,"st":"LOST on switching"},{"nm":"Collagen-like","s":618,"e":770,"st":"LOST on switching"}]},{"gene":"ACP3","len":386,"acc":"P15309","prot":"Prostatic acid phosphatase","riseId":"TCONS_00207094","fallId":"TCONS_00207095","riseAA":385,"fallAA":343,"risePTC":false,"riseFrom":1,"riseTo":386,"fallFrom":75,"fallTo":379,"dIF":0.154,"if1":0.226,"if2":0.073,"dIFsign":-1,"events":"alt_TSS+alt_TTS","frame":"same frame throughout","cons":"N-terminal + C-terminal difference (116 bp coding unique to candidate, 242 bp unique to partner)","assay":true,"uniq":2670,"sides":1,"junc":1,"canon":true,"lit":[53,3,1,0],"feats":[{"nm":"Signal","s":1,"e":32,"st":"GAINED on switching"},{"nm":"Binding site","s":43,"e":43,"st":"GAINED on switching"},{"nm":"Nucleophile","s":44,"e":44,"st":"GAINED on switching"},{"nm":"Binding site","s":44,"e":44,"st":"GAINED on switching"},{"nm":"Binding site","s":47,"e":47,"st":"GAINED on switching"},{"nm":"Binding site","s":111,"e":111,"st":"retained through the switch"},{"nm":"Important for peptide PA","s":260,"e":265,"st":"retained through the switch"},{"nm":"Binding site","s":260,"e":260,"st":"retained through the switch"},{"nm":"Binding site","s":289,"e":289,"st":"retained through the switch"},{"nm":"Proton donor","s":290,"e":290,"st":"retained through the switch"},{"nm":"Binding site","s":290,"e":290,"st":"retained through the switch"},{"nm":"Helical","s":382,"e":404,"st":"GAINED on switching"}]},{"gene":"RPUSD2","len":545,"acc":"Q8IZ73","prot":"Pseudouridylate synthase RPUSD2","riseId":"TCONS_00097387","fallId":"TCONS_00107098","riseAA":544,"fallAA":263,"risePTC":false,"riseFrom":1,"riseTo":545,"fallFrom":282,"fallTo":545,"dIF":0.152,"if1":0.486,"if2":0.638,"dIFsign":1,"events":"alt_TSS+alt_TTS","frame":"same frame throughout","cons":"N-terminal difference (843 bp coding unique to candidate, 0 bp unique to partner)","assay":true,"uniq":494,"sides":1,"junc":1,"canon":true,"lit":[6,0,0,0],"feats":[{"nm":"Disordered","s":48,"e":121,"st":"GAINED on switching"},{"nm":"Active site","s":274,"e":274,"st":"GAINED on switching"}]}];
+const ALL40 = [{"g":"RBKS","sc":7,"dIF":0.441,"dir":"up","assay":true,"sides":2,"cons":"C-terminal","ev":"alt_TSS+alt_TTS+alt_donor+alt_acceptor","sites":15,"lost":15,"gained":0,"isoLit":0,"immLit":4,"amb":false,"fused":false,"riseAA":35,"fallAA":321,"canonAA":322,"prot":"Ribokinase","uniq":273,"junc":18,"canonJ":true,"ptc":true},{"g":"IL23A","sc":7,"dIF":0.314,"dir":"up","assay":true,"sides":2,"cons":"frameshift","ev":"alt_TSS","sites":3,"lost":0,"gained":3,"isoLit":4,"immLit":225,"amb":false,"fused":false,"riseAA":188,"fallAA":52,"canonAA":189,"prot":"Interleukin-23 subunit alpha","uniq":75,"junc":4,"canonJ":true,"ptc":false},{"g":"KITLG","sc":7,"dIF":0.3,"dir":"up","assay":true,"sides":2,"cons":"N-terminal","ev":"alt_TSS+exon_skipping","sites":2,"lost":0,"gained":2,"isoLit":8,"immLit":26,"amb":false,"fused":false,"riseAA":272,"fallAA":237,"canonAA":273,"prot":"Kit ligand","uniq":72,"junc":6,"canonJ":true,"ptc":false},{"g":"IRAK3","sc":7,"dIF":0.238,"dir":"down","assay":true,"sides":2,"cons":"N-terminal","ev":"alt_TSS+alt_TTS","sites":10,"lost":10,"gained":0,"isoLit":3,"immLit":96,"amb":false,"fused":false,"riseAA":205,"fallAA":595,"canonAA":596,"prot":"Interleukin-1 receptor-associated kinase 3","uniq":3465,"junc":18,"canonJ":true,"ptc":false},{"g":"ATRN","sc":7,"dIF":0.208,"dir":"down","assay":true,"sides":2,"cons":"C-terminal","ev":"alt_TSS+alt_TTS+exon_skipping","sites":1,"lost":1,"gained":0,"isoLit":5,"immLit":5,"amb":false,"fused":false,"riseAA":1271,"fallAA":1428,"canonAA":1429,"prot":"Attractin","uniq":4396,"junc":12,"canonJ":true,"ptc":false},{"g":"NCOA7","sc":6,"dIF":0.673,"dir":"up","assay":true,"sides":1,"cons":"no shared coding sequence","ev":"alt_TSS+alt_TTS","sites":1,"lost":0,"gained":1,"isoLit":11,"immLit":6,"amb":false,"fused":false,"riseAA":218,"fallAA":49,"canonAA":942,"prot":"Nuclear receptor coactivator 7","uniq":81,"junc":6,"canonJ":true,"ptc":false},{"g":"LIG1","sc":6,"dIF":0.219,"dir":"up","assay":true,"sides":1,"cons":"frameshift","ev":"alt_TSS","sites":38,"lost":38,"gained":0,"isoLit":13,"immLit":7,"amb":false,"fused":false,"riseAA":115,"fallAA":918,"canonAA":919,"prot":"DNA ligase 1","uniq":439,"junc":25,"canonJ":true,"ptc":true},{"g":"PRKAR1B","sc":6,"dIF":0.169,"dir":"up","assay":true,"sides":1,"cons":"N-terminal","ev":"alt_TSS+alt_TTS","sites":17,"lost":17,"gained":0,"isoLit":6,"immLit":1,"amb":false,"fused":false,"riseAA":145,"fallAA":380,"canonAA":381,"prot":"cAMP-dependent protein kinase type I-beta regulatory subunit","uniq":131,"junc":7,"canonJ":true,"ptc":false},{"g":"WDR33","sc":6,"dIF":0.162,"dir":"down","assay":true,"sides":1,"cons":"C-terminal","ev":"alt_TTS","sites":29,"lost":29,"gained":0,"isoLit":6,"immLit":3,"amb":false,"fused":false,"riseAA":366,"fallAA":1335,"canonAA":1336,"prot":"pre-mRNA 3' end processing protein WDR33","uniq":5526,"junc":12,"canonJ":true,"ptc":false},{"g":"ACP3","sc":6,"dIF":0.154,"dir":"down","assay":true,"sides":1,"cons":"N-terminal + C-terminal","ev":"alt_TSS+alt_TTS","sites":7,"lost":0,"gained":7,"isoLit":3,"immLit":1,"amb":false,"fused":false,"riseAA":385,"fallAA":343,"canonAA":386,"prot":"Prostatic acid phosphatase","uniq":2670,"junc":1,"canonJ":true,"ptc":false},{"g":"RPUSD2","sc":6,"dIF":0.152,"dir":"up","assay":true,"sides":1,"cons":"N-terminal","ev":"alt_TSS+alt_TTS","sites":3,"lost":0,"gained":3,"isoLit":0,"immLit":0,"amb":false,"fused":false,"riseAA":544,"fallAA":263,"canonAA":545,"prot":"Pseudouridylate synthase RPUSD2","uniq":494,"junc":1,"canonJ":true,"ptc":false},{"g":"RIN3","sc":5,"dIF":0.261,"dir":"up","assay":false,"sides":2,"cons":"N-terminal","ev":"alt_TSS+exon_skipping","sites":2,"lost":0,"gained":2,"isoLit":3,"immLit":5,"amb":false,"fused":false,"riseAA":984,"fallAA":909,"canonAA":985,"prot":"Ras and Rab interactor 3","uniq":12,"junc":6,"canonJ":true,"ptc":false},{"g":"ARHGAP26","sc":4,"dIF":0.246,"dir":"down","assay":false,"sides":1,"cons":"frameshift","ev":"alt_TSS+alt_TTS+exon_skipping","sites":12,"lost":12,"gained":0,"isoLit":3,"immLit":8,"amb":false,"fused":false,"riseAA":83,"fallAA":758,"canonAA":814,"prot":"Rho GTPase-activating protein 26","uniq":0,"junc":21,"canonJ":true,"ptc":false},{"g":"CBWD3","sc":4,"dIF":0.218,"dir":"down","assay":false,"sides":1,"cons":"internal + C-terminal","ev":"alt_TSS+alt_TTS+alt_donor+alt_acceptor","sites":2,"lost":0,"gained":2,"isoLit":0,"immLit":0,"amb":false,"fused":false,"riseAA":374,"fallAA":179,"canonAA":395,"prot":"Zinc-regulated GTPase metalloprotein activator 1C","uniq":35,"junc":13,"canonJ":true,"ptc":false},{"g":"GBP1","sc":4,"dIF":0.185,"dir":"down","assay":false,"sides":1,"cons":"N-terminal","ev":"alt_TSS","sites":7,"lost":7,"gained":0,"isoLit":3,"immLit":167,"amb":false,"fused":false,"riseAA":537,"fallAA":591,"canonAA":592,"prot":"Guanylate-binding protein 1","uniq":0,"junc":1,"canonJ":true,"ptc":false},{"g":"ITSN1","sc":4,"dIF":0.16,"dir":"down","assay":false,"sides":1,"cons":"internal + C-terminal","ev":"alt_TSS+alt_TTS+exon_skipping+alt_donor+alt_acceptor","sites":9,"lost":8,"gained":1,"isoLit":27,"immLit":15,"amb":false,"fused":false,"riseAA":257,"fallAA":447,"canonAA":1721,"prot":"Intersectin-1","uniq":0,"junc":13,"canonJ":true,"ptc":false},{"g":"EHBP1","sc":4,"dIF":0.151,"dir":"down","assay":false,"sides":1,"cons":"frameshift","ev":"alt_TSS","sites":6,"lost":1,"gained":5,"isoLit":0,"immLit":4,"amb":false,"fused":false,"riseAA":110,"fallAA":97,"canonAA":1231,"prot":"EH domain-binding protein 1","uniq":8,"junc":2,"canonJ":true,"ptc":false},{"g":"CD86","sc":3,"dIF":0.436,"dir":"down","assay":false,"sides":3,"cons":"unknown (ORF not called)","ev":"alt_TSS+alt_TTS+exon_skipping","sites":1,"lost":1,"gained":0,"isoLit":62,"immLit":6127,"amb":false,"fused":false,"riseAA":null,"fallAA":328,"canonAA":329,"prot":"T-lymphocyte activation antigen CD86","uniq":22,"junc":8,"canonJ":true,"ptc":null},{"g":"KDM6B","sc":3,"dIF":0.304,"dir":"up","assay":true,"sides":2,"cons":"unknown (ORF not called)","ev":"alt_TSS+alt_TTS","sites":0,"lost":0,"gained":0,"isoLit":8,"immLit":78,"amb":false,"fused":false,"riseAA":null,"fallAA":1642,"canonAA":1643,"prot":"Lysine-specific demethylase 6B","uniq":147,"junc":48,"canonJ":true,"ptc":null},{"g":"RGS19","sc":3,"dIF":0.257,"dir":"up","assay":true,"sides":2,"cons":"UTR only","ev":"alt_TSS+exon_skipping","sites":0,"lost":0,"gained":0,"isoLit":3,"immLit":5,"amb":false,"fused":false,"riseAA":216,"fallAA":216,"canonAA":217,"prot":"Regulator of G protein signaling 19","uniq":116,"junc":4,"canonJ":true,"ptc":false},{"g":"TMEM63B","sc":3,"dIF":0.244,"dir":"down","assay":true,"sides":2,"cons":"UTR only","ev":"alt_TSS","sites":0,"lost":0,"gained":0,"isoLit":2,"immLit":0,"amb":false,"fused":false,"riseAA":831,"fallAA":831,"canonAA":832,"prot":"Mechanosensitive cation channel TMEM63B","uniq":80,"junc":4,"canonJ":true,"ptc":false},{"g":"SAMD14","sc":3,"dIF":0.218,"dir":"down","assay":true,"sides":2,"cons":"UTR only","ev":"alt_TSS","sites":0,"lost":0,"gained":0,"isoLit":0,"immLit":0,"amb":false,"fused":false,"riseAA":204,"fallAA":204,"canonAA":417,"prot":"Sterile alpha motif domain-containing protein 14","uniq":104,"junc":4,"canonJ":true,"ptc":true},{"g":"SORT1","sc":3,"dIF":0.166,"dir":"down","assay":false,"sides":2,"cons":"N-terminal","ev":"alt_TSS+alt_TTS","sites":3,"lost":3,"gained":0,"isoLit":8,"immLit":61,"amb":true,"fused":false,"riseAA":492,"fallAA":513,"canonAA":831,"prot":"Sortilin","uniq":0,"junc":2,"canonJ":true,"ptc":false},{"g":"LINC00278","sc":2,"dIF":0.242,"dir":"down","assay":false,"sides":1,"cons":"C-terminal","ev":"alt_TTS+exon_skipping","sites":0,"lost":0,"gained":0,"isoLit":0,"immLit":1,"amb":false,"fused":false,"riseAA":48,"fallAA":74,"canonAA":null,"prot":null,"uniq":0,"junc":6,"canonJ":true,"ptc":true},{"g":"CTTNBP2NL","sc":2,"dIF":0.194,"dir":"down","assay":false,"sides":1,"cons":"N-terminal","ev":"alt_TSS+alt_TTS+intron_retention","sites":0,"lost":0,"gained":0,"isoLit":0,"immLit":1,"amb":false,"fused":false,"riseAA":584,"fallAA":638,"canonAA":639,"prot":"CTTNBP2 N-terminal-like protein","uniq":2,"junc":4,"canonJ":true,"ptc":true},{"g":"DCUN1D4","sc":2,"dIF":0.171,"dir":"up","assay":false,"sides":1,"cons":"N-terminal","ev":"alt_TSS+alt_TTS","sites":2,"lost":2,"gained":0,"isoLit":0,"immLit":0,"amb":true,"fused":false,"riseAA":231,"fallAA":291,"canonAA":292,"prot":"DCN1-like protein 4","uniq":2,"junc":1,"canonJ":true,"ptc":false},{"g":"ZDHHC21","sc":2,"dIF":0.163,"dir":"down","assay":true,"sides":1,"cons":"UTR only","ev":"alt_TSS+alt_TTS+alt_donor+alt_acceptor","sites":0,"lost":0,"gained":0,"isoLit":2,"immLit":9,"amb":false,"fused":false,"riseAA":264,"fallAA":264,"canonAA":265,"prot":"Palmitoyltransferase ZDHHC21","uniq":4464,"junc":3,"canonJ":true,"ptc":false},{"g":"PCSK7","sc":2,"dIF":0.157,"dir":"down","assay":false,"sides":1,"cons":"N-terminal","ev":"alt_TSS","sites":1,"lost":0,"gained":1,"isoLit":3,"immLit":4,"amb":true,"fused":false,"riseAA":152,"fallAA":102,"canonAA":785,"prot":"Proprotein convertase subtilisin/kexin type 7","uniq":0,"junc":2,"canonJ":true,"ptc":false},{"g":"AGPAT3","sc":2,"dIF":0.155,"dir":"down","assay":true,"sides":1,"cons":"UTR only","ev":"alt_TSS+alt_TTS+exon_skipping","sites":0,"lost":0,"gained":0,"isoLit":3,"immLit":2,"amb":false,"fused":false,"riseAA":375,"fallAA":375,"canonAA":376,"prot":"1-acyl-sn-glycerol-3-phosphate acyltransferase gamma","uniq":1056,"junc":2,"canonJ":true,"ptc":false},{"g":"RSAD2","sc":1,"dIF":0.337,"dir":"up","assay":false,"sides":2,"cons":"UTR only","ev":"alt_TSS+alt_TTS","sites":0,"lost":0,"gained":0,"isoLit":7,"immLit":171,"amb":false,"fused":false,"riseAA":360,"fallAA":360,"canonAA":361,"prot":"S-adenosylmethionine-dependent nucleotide dehydratase RSAD2","uniq":7,"junc":2,"canonJ":true,"ptc":false},{"g":"SOCS4","sc":0,"dIF":0.18,"dir":"up","assay":false,"sides":1,"cons":"UTR only","ev":"alt_TSS+exon_skipping","sites":0,"lost":0,"gained":0,"isoLit":1,"immLit":17,"amb":false,"fused":false,"riseAA":439,"fallAA":439,"canonAA":440,"prot":"Suppressor of cytokine signaling 4","uniq":6,"junc":2,"canonJ":true,"ptc":false},{"g":"R3HCC1L","sc":0,"dIF":0.163,"dir":"up","assay":false,"sides":1,"cons":"UTR only","ev":"alt_TSS","sites":0,"lost":0,"gained":0,"isoLit":0,"immLit":0,"amb":false,"fused":false,"riseAA":777,"fallAA":777,"canonAA":792,"prot":"Coiled-coil domain-containing protein R3HCC1L","uniq":0,"junc":2,"canonJ":true,"ptc":false},{"g":"SPRING1","sc":-1,"dIF":0.284,"dir":"up","assay":false,"sides":2,"cons":"UTR only","ev":"alt_TSS","sites":0,"lost":0,"gained":0,"isoLit":0,"immLit":0,"amb":true,"fused":false,"riseAA":88,"fallAA":88,"canonAA":205,"prot":"SREBP regulating gene protein","uniq":0,"junc":2,"canonJ":true,"ptc":false},{"g":"PLD6","sc":-13,"dIF":0.222,"dir":"up","assay":true,"sides":2,"cons":"no shared coding sequence","ev":"alt_TSS+alt_TTS","sites":4,"lost":0,"gained":4,"isoLit":1,"immLit":1,"amb":false,"fused":true,"riseAA":251,"fallAA":578,"canonAA":252,"prot":"Mitochondrial cardiolipin hydrolase","uniq":1654,"junc":28,"canonJ":true,"ptc":false},{"g":"THAP2","sc":-14,"dIF":0.424,"dir":"up","assay":true,"sides":1,"cons":"no shared coding sequence","ev":"alt_TSS+alt_TTS","sites":1,"lost":1,"gained":0,"isoLit":0,"immLit":0,"amb":false,"fused":true,"riseAA":51,"fallAA":335,"canonAA":228,"prot":"THAP domain-containing protein 2","uniq":572,"junc":6,"canonJ":true,"ptc":false},{"g":"MREG","sc":-15,"dIF":0.333,"dir":"down","assay":true,"sides":2,"cons":"no shared coding sequence","ev":"alt_TSS+alt_TTS","sites":0,"lost":0,"gained":0,"isoLit":0,"immLit":35,"amb":false,"fused":true,"riseAA":72,"fallAA":321,"canonAA":214,"prot":"Melanoregulin","uniq":803,"junc":16,"canonJ":true,"ptc":false},{"g":"IPCEF1","sc":-15,"dIF":0.275,"dir":"down","assay":false,"sides":4,"cons":"no shared coding sequence","ev":"alt_TSS+alt_TTS","sites":27,"lost":27,"gained":0,"isoLit":2,"immLit":3,"amb":false,"fused":true,"riseAA":379,"fallAA":437,"canonAA":437,"prot":"Interactor protein for cytohesin exchange factors 1","uniq":3,"junc":86,"canonJ":true,"ptc":false},{"g":"IFITM2","sc":-16,"dIF":0.289,"dir":"up","assay":false,"sides":1,"cons":"no shared coding sequence","ev":"alt_TSS+alt_TTS","sites":2,"lost":2,"gained":0,"isoLit":5,"immLit":42,"amb":false,"fused":true,"riseAA":124,"fallAA":131,"canonAA":132,"prot":"Interferon-induced transmembrane protein 2","uniq":0,"junc":3,"canonJ":true,"ptc":false},{"g":"DDX58","sc":-17,"dIF":0.285,"dir":"down","assay":false,"sides":3,"cons":"no shared coding sequence","ev":"alt_TSS+alt_TTS","sites":6,"lost":4,"gained":2,"isoLit":10,"immLit":165,"amb":true,"fused":true,"riseAA":53,"fallAA":977,"canonAA":925,"prot":"Antiviral innate immune response receptor RIG-I","uniq":4,"junc":49,"canonJ":true,"ptc":true},{"g":"CCL3","sc":-17,"dIF":0.236,"dir":"up","assay":false,"sides":2,"cons":"no shared coding sequence","ev":"alt_TSS+alt_TTS","sites":0,"lost":0,"gained":0,"isoLit":26,"immLit":2135,"amb":false,"fused":true,"riseAA":92,"fallAA":91,"canonAA":92,"prot":"C-C motif chemokine 3","uniq":6,"junc":8,"canonJ":true,"ptc":false}];
+
+function statusColor(st){
+  if(!st) return 'var(--neutral-block)';
+  if(st.indexOf('LOST')===0||st.indexOf('partially lost')===0) return 'var(--loss)';
+  if(st.indexOf('GAINED')===0||st.indexOf('partially gained')===0) return 'var(--gain)';
+  return 'var(--neutral-block)';
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function track(g){
+  const W=880,L=118,R=18,inner=W-L-R;
+  const x=v=>L+(inner*(v-1)/Math.max(1,g.len-1));
+  const rows=[];
+  // stagger feature labels across lanes so they do not collide
+  const feats=(g.feats||[]).slice().sort((a,b)=>a.s-b.s);
+  const lanes=[];
+  feats.forEach(f=>{
+    let li=0; while(lanes[li]!==undefined && lanes[li] > f.s) li++;
+    lanes[li]=f.e; f._lane=li;
+  });
+  const nLane=Math.max(1,lanes.length);
+  const featTop=16, laneH=15, featH=11;
+  const barY=featTop+nLane*laneH+10;
+  const H=barY+74;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Domain track for '+esc(g.gene)+'">';
+  // feature blocks
+  feats.forEach(f=>{
+    const y=featTop+f._lane*laneH;
+    const x1=x(f.s), x2=Math.max(x(f.e),x(f.s)+2.5);
+    s+='<rect x="'+x1.toFixed(1)+'" y="'+y+'" width="'+(x2-x1).toFixed(1)+'" height="'+featH+'" rx="1.5" fill="'+statusColor(f.st)+'" opacity="'+(statusColor(f.st)==='var(--neutral-block)'?0.85:0.92)+'"/>';
+    if((x2-x1)>34 || f.nm.length<16){
+      s+='<text x="'+(x2+5).toFixed(1)+'" y="'+(y+featH-2)+'" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+esc(f.nm)+'</text>';
+    }
+  });
+  // canonical backbone
+  s+='<rect x="'+L+'" y="'+barY+'" width="'+inner+'" height="7" rx="2" fill="var(--rule)"/>';
+  s+='<text x="0" y="'+(barY+6)+'" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--muted)">canonical</text>';
+  s+='<text x="'+(L+inner)+'" y="'+(barY-6)+'" font-size="9.5" text-anchor="end" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+g.len+' aa</text>';
+  // coverage bars
+  function cov(y,from,to,color,label,aa,extra){
+    s+='<text x="0" y="'+(y+9)+'" font-size="10" font-family="IBM Plex Mono, monospace" fill="'+color+'">'+label+'</text>';
+    s+='<rect x="'+L+'" y="'+(y+2)+'" width="'+inner+'" height="9" rx="2" fill="var(--surface-2)"/>';
+    if(from!=null&&to!=null){
+      const x1=x(from),x2=Math.max(x(to),x1+2);
+      s+='<rect x="'+x1.toFixed(1)+'" y="'+(y+2)+'" width="'+(x2-x1).toFixed(1)+'" height="9" rx="2" fill="'+color+'"/>';
+      s+='<text x="'+(L+inner+2)+'" y="'+(y+10)+'" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)" text-anchor="end" dx="-4">'+from+'\u2013'+to+'</text>';
+    }
+    s+='<text x="0" y="'+(y+21)+'" font-size="9" font-family="IBM Plex Mono, monospace" fill="var(--muted)">'+(aa==null?'no ORF':aa+' aa')+(extra||'')+'</text>';
+  }
+  cov(barY+22,g.fallFrom,g.fallTo,'var(--loss)','falling',g.fallAA,'');
+  cov(barY+50,g.riseFrom,g.riseTo,'var(--gain)','rising',g.riseAA,g.risePTC===true?' \u00b7 PTC+':'');
+  s+='</svg>';
+  return s;
+}
+
+const VERDICT={
+ RBKS:"LPS drives ribokinase transcripts into a 35-aa, NMD-targeted form: the catalytic proton acceptor at Lys269 and thirteen of fourteen substrate-binding sites are gone. Read as post-transcriptional shutdown of ribokinase rather than production of a short protein.",
+ IL23A:"The switch runs toward the productive cytokine. The rising isoform is full-length p19 with its signal peptide and the interchain disulfide that pairs it with IL-12p40; the falling one is a 52-aa frameshifted product that cannot be secreted.",
+ KITLG:"The rising isoform gains the signal peptide and a disulfide the falling one lacks &mdash; a shift toward a secretable KIT ligand.",
+ IRAK3:"IRAK-M loses its entire regulatory front end: the Death domain that docks IRAK1/IRAK4, the IRAK1 phosphosite Ser110, the PIN1 isomerization site, all four binding sites, both interchain disulfides, and 78% of the pseudokinase domain. What rises encodes only the C-terminal fragment.",
+ ATRN:"Attractin loses its transmembrane helix (1280\u20131300) and nothing else &mdash; a membrane-to-secreted switch in a protein UniProt describes as mediating initial immune-cell clustering during inflammation. The secreted/membrane isoform pair was described in 2000 (PMID 10811918); this is that pair, moving under LPS.",
+ NCOA7:"An internal-promoter product that gains the TLDc domain and drops everything upstream &mdash; the interferon-inducible NCOA7-B (PMID 30478388, PMID 25330068). The largest effect in the whole candidate set, and the one with the strongest independent prior.",
+ LIG1:"A frameshifted 115-aa PTC+ transcript rises against full-length DNA ligase 1. Only 37 bp of coding is shared, and it is read in a different frame on each side.",
+ PRKAR1B:"The rising isoform starts at residue 236, discarding the dimerization-and-phosphorylation region, the interchain disulfides and the inhibitor sequence &mdash; the parts that make a PKA regulatory subunit a regulatory subunit.",
+ WDR33:"The 3\u2032-end processing factor is truncated to its first 362 residues, losing the entire disordered C-terminal half. Non-canonical WDR33 isoforms were reported in 2024 to regulate STING responses (PMID 38430516).",
+ ACP3:"The rising isoform gains the signal peptide, the catalytic nucleophile and the substrate-specificity site that the falling one lacks &mdash; a shift toward functional, secreted acid phosphatase.",
+ RPUSD2:"The rising isoform is full-length; the falling one begins at residue 282 and has no active site. Zero isoform-level prior art on this gene."
+};
+
+document.getElementById('cards').innerHTML = TRACKS.map(g=>{
+  const dir = g.dIFsign>0 ? 'rising isoform gains usage' : 'falling isoform loses usage';
+  const lit = g.lit||[];
+  return '<article class="card">'+
+    '<div class="card-top"><span class="gname">'+esc(g.gene)+'</span>'+
+      '<span class="pname">'+esc(g.prot||'')+' &middot; <span class="mono">'+esc(g.acc||'')+'</span></span>'+
+      '<span class="tag '+(g.assay?'t-gain':'t-mute')+'">'+(g.assay?'assayable':'not assayable')+'</span>'+
+      (g.sides>1?'<span class="tag t-gain">both sides</span>':'')+
+      (g.risePTC===true?'<span class="tag t-warn">rising isoform PTC+</span>':'')+
+    '</div>'+
+    '<div class="card-body">'+
+      '<p class="verdict">'+esc(VERDICT[g.gene]||'')+'</p>'+
+      '<figure>'+track(g)+'</figure>'+
+      '<dl class="kv">'+
+        '<dt>Usage</dt><dd><span class="mono">IF '+g.if1+' &rarr; '+g.if2+'</span> &middot; |d<span class="mono">IF</span>| '+g.dIF+'</dd>'+
+        '<dt>Isoforms</dt><dd><span class="mono">'+esc(g.riseId)+'</span> rising vs <span class="mono">'+esc(g.fallId)+'</span> falling</dd>'+
+        '<dt>Structure</dt><dd><span class="mono">'+esc(g.events)+'</span> &middot; '+esc(g.frame)+'</dd>'+
+        '<dt>Coding</dt><dd>'+esc(g.cons)+'</dd>'+
+        '<dt>Junctions</dt><dd>'+g.junc+' differential, '+(g.canon?'all canonical':'NON-CANONICAL PRESENT')+(g.uniq?' &middot; longest unique stretch '+g.uniq+' bp':'')+'</dd>'+
+        '<dt>Literature</dt><dd>'+lit[0]+' papers total &middot; '+lit[1]+' on isoforms &middot; '+lit[2]+' on macrophage/LPS &middot; <strong>'+lit[3]+'</strong> on both</dd>'+
+      '</dl>'+
+    '</div></article>';
+}).join('');
+
+document.getElementById('all40').innerHTML = ALL40.map(r=>{
+  const flags=[];
+  if(r.fused) flags.push('<span class="tag t-bad">fused locus</span>');
+  if(r.amb) flags.push('<span class="tag t-warn">c-class 5&prime;-only</span>');
+  if(r.ptc===true) flags.push('<span class="tag t-warn">PTC+</span>');
+  if(r.cons==='UTR only') flags.push('<span class="tag t-mute">no protein change</span>');
+  if(r.isoLit===0 && !r.fused) flags.push('<span class="tag t-gain">no prior art</span>');
+  return '<tr'+(r.fused?' class="dq"':'')+'>'+
+    '<td class="gene">'+esc(r.g)+'</td>'+
+    '<td class="num">'+r.sc+'</td>'+
+    '<td class="num">'+r.dIF+'</td>'+
+    '<td><span class="tag '+(r.dir==='up'?'t-gain':'t-loss')+'">'+(r.dir==='up'?'&uarr;':'&darr;')+'</span></td>'+
+    '<td>'+esc(r.cons)+'</td>'+
+    '<td class="num">'+(r.lost||0)+'</td>'+
+    '<td class="num">'+(r.gained||0)+'</td>'+
+    '<td class="num">'+(r.riseAA==null?'&mdash;':r.riseAA+' aa')+'</td>'+
+    '<td class="num">'+(r.fallAA==null?'&mdash;':r.fallAA+' aa')+'</td>'+
+    '<td class="num">'+(r.isoLit==null?'&mdash;':r.isoLit)+'</td>'+
+    '<td class="num">'+(r.immLit==null?'&mdash;':r.immLit)+'</td>'+
+    '<td>'+flags.join(' ')+'</td>'+
+  '</tr>';
+}).join('');
+</script>

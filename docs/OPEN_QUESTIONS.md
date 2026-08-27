@@ -105,7 +105,7 @@ design-based way to break that symmetry.
 
 ## Tier 2 — would strengthen or qualify a result
 
-### 4. Isoform-level functional consequence — PARTLY ANSWERED 2026-08-23, see §0i and script 14
+### 4. Isoform-level functional consequence — ANSWERED 2026-08-23 / 2026-08-27, scripts 14–18
 
 **Question.** Do these switches change what protein is made, or only which transcript
 carries it?
@@ -129,16 +129,32 @@ wrong: `analyzeORF` runs unconditionally upstream (§0i), and `PTC` (NMD target)
   without an independent dataset.**
 - **Cryptic switchers are not functionally distinct** on either marker, in any dataset.
 
-**Still open, and this is the part that matters.** The compositional-rescue / Class B
-question — are the lost minor isoforms NMD targets while the retained dominant one is
-full-length coding — **cannot be tested from what is loaded**. PTC/IR exist only in the
-*reduced* objects, and Class B genes need not switch, so those objects cover just **5–21%** of
-them (`consequence_annotation_coverage.csv`). Analysing that subset would describe the
-switching minority, not the class.
+**Class B: ANSWERED 2026-08-27, and the answer is no.** The unblock worked —
+`extract_context_tables()` now carries `PTC` and the whole `orfAnalysis` slot across from the
+unfiltered exports, taking coverage of the Class B genes from 5–21% to **86–93%**. Script 14
+§4 tests the purification reading three ways and none of them supports it:
 
-**What would unblock it.** Carry PTC/IR from the *unfiltered* exports into
-`isoformContext_<label>.rds` in `01_load_data.R`. `analyzeORF` ran on those too, so the values
-exist and were simply never extracted. Needs the external drive.
+- **(a) Within gene, minor vs dominant.** Minor isoforms are more often PTC+ than the
+  dominant one — in Class B genes *and* in background genes, at OR 75–319. That is a property
+  of being a minor isoform, not of Class B, so (a) alone can never isolate the class.
+- **(b) Between gene sets — the test that does isolate it.** Minor-isoform PTC rate, Class B
+  vs background: 14.4% vs 20.8% (`T_HT`, p = 0.012) and 14.9% vs 20.3% (`T_UT`, p = 0.042),
+  i.e. *depleted*; null in `H_HT` (OR 1.04) and `U_UT` (OR 1.21). And `T_HT`/`T_UT` are the
+  same six libraries re-annotated, so that is one observation, not two. **No enrichment.**
+- **(c) Does PTC predict WHICH minors are shed?** Null in all four, p = 0.27–0.98.
+
+**Read the comment on (c) before reusing it.** Written first against `iso_lfc` it produced a
+consistent four-of-four result in the *opposite* direction (p = 0.002–0.07) and would have
+been reported as a finding. Class B minor isoforms sit at 0.07–0.45 expression units and the
+PTC+ ones are 1.5–4.1× less abundant than the PTC− ones, so the `+1` pseudocount pins their
+fold-changes near zero by construction — the test was measuring abundance. Re-run on
+`dIF`/`IF1` (a difference of ratios, no pseudocount) with baseline abundance in the model and
+gene as a fixed effect, it is null. Confound recorded in
+`consequence_class_b_abundance_confound.csv`.
+
+**`IR` remains uncarried** — it is a column of the reduced objects only, and was not
+re-derived for the unfiltered universe. It is null on every switching test, so its absence
+costs the weaker of the two markers.
 
 **Matters because.** Gene-level enrichment is structurally blind here — both isoforms of a
 switching gene sit in the same GO terms. This is the analysis that would say what switching

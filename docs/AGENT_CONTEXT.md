@@ -30,7 +30,13 @@ Run from the project root. Every script takes an optional config path as `argv[1
    carry a hardcoded upstream `geneExpressionCutoff = 1`, so the enrichment universe is
    "quantified above 1", not literally everything. `REVIEW_CHANGES.md` §0i.
 
-2. **Significance comes from the unfiltered context layer**, via `load_scoring_table()`.
+2. **Significance comes from the unfiltered context layer**, via `load_scoring_table()`. The
+   context also carries `PTC` + the `orfAnalysis` columns (added 2026-08-27), which is what
+   makes consequence questions about non-switching isoforms answerable. `IR` is not carried.
+2b. **A "switch" whose two isoforms share NO exonic sequence is a fused locus, not a switch.**
+   Seven Q1 candidates are two neighbouring genes merged into one `XLOC`: PLD6(+FLCN),
+   DDX58(=TOPORS+RIGI), IPCEF1(+CNKSR3), THAP2(+TMEM19), MREG(=PECR+MREG), IFITM2(+IFITM1),
+   CCL3(+CCL3L3). `15` flags, `18` confirms against Ensembl. NCOA7 clears — it is real.
    `isa_unfiltered_path` in config points each dataset at an unreduced export; `01` turns it
    into `data/processed/isoformContext_<label>.rds`. **Never take q-values from one object
    and presence from the other** — they are different FDR universes. Across 966 shared

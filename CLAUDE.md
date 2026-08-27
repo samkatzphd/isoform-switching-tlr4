@@ -26,6 +26,12 @@ Rscript scripts/04_comparison_T_vs_U.R
 Rscript scripts/06_visualization.R
 Rscript scripts/07_isg_analysis.R         # curated interferon gene-set test
 Rscript scripts/11_q1_candidates.R        # Q1 assay candidates: WT LPS switchers, both annotations
+Rscript scripts/13_assayability_screen.R  # where a discriminating primer can sit; needs gff3/ + fa/
+Rscript scripts/14_isoform_consequence.R  # PTC/NMD: switch direction, cryptic switchers, Class B
+Rscript scripts/15_isoform_characterization.R  # structure/coding/splice sites of the candidates
+Rscript scripts/16_functional_sites.R     # map each switch onto UniProt features (cached)
+Rscript scripts/17_candidate_literature.R # isoform-level prior art per candidate (cached)
+Rscript scripts/18_candidate_profiles.R   # join 13/15/16/17 into one row per candidate gene
 Rscript scripts/00_threshold_scan_abs_dif.R   # optional sensitivity scan
 Rscript scripts/05_pathway_enrichment.R  # GO/Reactome/KEGG; needs context tables
 
@@ -81,7 +87,7 @@ All four primary ISA objects were saved after `isoformSwitchTestDEXSeq(reduceToS
 
 **The upstream reduction used `|dIF| >= 0.1`, not our 0.15.** `NCBR-40-main/scripts/IsoformSwitchAnalyzeR.R` filters at alpha 0.05 **and** dIF 0.1; `significance.min_abs_dif` here is 0.15. Stricter downstream is safe, but the objects contain genes whose best isoform sits between 0.1 and 0.15 that our own scoring then discards — so "already passes the cutoff" means *their* cutoff, not ours. See `docs/REVIEW_CHANGES.md` §0i.
 
-`isa_unfiltered_path` in config points a dataset at an unreduced export; `01` turns it into `data/processed/isoformContext_<label>.rds` (+ `isoformContextRepIF_`). **Configured for all four datasets.** Load it with `load_context_table(processed_dir, label, "features"|"rep_if")`, which returns `NULL` when absent — always handle that branch, and prefer using whichever side is available over requiring both.
+`isa_unfiltered_path` in config points a dataset at an unreduced export; `01` turns it into `data/processed/isoformContext_<label>.rds` (+ `isoformContextRepIF_`). **Configured for all four datasets.** Since 2026-08-27 the context also carries **`PTC` and the whole `orfAnalysis` slot** (ORF start/end/length, `stopDistanceToLastJunction`, `orf_origin`) — `analyzeORF` ran upstream on the unfiltered exports too, the values were simply never extracted. That is what makes any consequence question about *non-switching* isoforms answerable; before it, coverage of the Class B genes was 5–21% and is now 86–93%. `IR` is NOT carried: it exists only in the reduced objects. Load it with `load_context_table(processed_dir, label, "features"|"rep_if")`, which returns `NULL` when absent — always handle that branch, and prefer using whichever side is available over requiring both.
 
 Rules that must hold:
 
@@ -93,6 +99,7 @@ Rules that must hold:
 - **An abundance floor applies**: `significance.min_gene_expression` (12), derived in `02d` from replicate IF noise versus gene expression. `score_isoforms()` applies it, flags `low_expression`, and keeps `is_switching_before_expr_floor` so the cost is auditable. The floor is on GENE expression — IF is isoform/gene, so gene abundance sets the precision.
 - **With context**, overlap classes say *tested in X, not switching* vs *not detected in X*. **Without it**, they must say *retained / not retained* — the reduced object cannot distinguish tested-and-negative from dropped.
 - **Pathway enrichment (`05`) uses the context layer as its universe.** Never substitute a whole-genome background or the pre-reduced object — the script skips a dataset without a context rather than falling back. Note the universe is *genes quantified with expression above 1*, not literally every quantified gene: upstream `preFilter` hardcodes `geneExpressionCutoff = 1`, which is **not** exposed as a CLI flag and therefore applies to the "unfiltered" exports too (§0i). The cutoff is low enough not to move a conclusion, but do not describe the context layer as unfiltered without that qualification. Report term counts alongside `pathway_enrichment_driver_summary.csv`: GO/Reactome nesting means a handful of genes can produce ~150 terms.
+- **Two isoforms of one gene always share some exonic sequence. When a "switch" shares none, the locus is fused.** Sixteen of the 63 Q1 candidate pairs share zero exonic bases with their partner, 5.9–136 kb apart, because the assembler merged two neighbouring genes into one `XLOC`. Seven candidate genes are affected — `PLD6` (=PLD6+FLCN), `DDX58` (=TOPORS+RIGI), `IPCEF1` (=IPCEF1+CNKSR3), `THAP2` (=THAP2+TMEM19), `MREG` (=PECR+MREG), `IFITM2` (=IFITM1+IFITM2), `CCL3` (=CCL3L3+CCL3) — and for them dIF measures the relative expression of two genes, not isoform usage. `15` flags it (`locus_fusion_suspect`), `18` confirms it against Ensembl. `NCOA7` is the one suspect that clears: both sides are `ENSG00000111912`, a real internal-promoter pair. Never treat a fused locus as a switch, and check this before adding any new candidate.
 - Two kinds of enrichment statistic exist and mean different things: `ut_T_vs_U_background_enrichment` / `ht_T_vs_H_background_enrichment` (valid — 11,126 and 7,671 tested genes) versus the retention accounting (descriptive, 25 already-significant genes, no test). Don't merge them.
 
 Full detail in `docs/REVIEW_CHANGES.md`. `docs/STATISTICAL_METHODS.md` explains every method and the traps this project has hit; `docs/OPEN_QUESTIONS.md` lists what is unresolved. Read both before proposing a new analysis. `docs/AGENT_CONTEXT.md` holds the
