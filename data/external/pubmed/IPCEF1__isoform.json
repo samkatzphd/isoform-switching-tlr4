@@ -1,0 +1,1 @@
+{"header":{"type":"esearch","version":"0.3"},"esearchresult":{"count":"2","retmax":"2","retstart":"0","idlist":["41661231","25923053"],"translationset":[],"querytranslation":"\"IPCEF1\"[Title/Abstract] AND (\"isoform\"[All Fields] OR \"splicing\"[All Fields] OR \"splice variant\"[All Fields] OR \"alternative promoter\"[All Fields] OR \"transcript variant\"[All Fields])"}}

@@ -1,0 +1,1 @@
+{"header":{"type":"esearch","version":"0.3"},"esearchresult":{"count":"2","retmax":"2","retstart":"0","idlist":["26715683","39726582"],"translationset":[],"querytranslation":"\"ZDHHC21\"[Title/Abstract] AND (\"isoform\"[All Fields] OR \"splicing\"[All Fields] OR \"splice variant\"[All Fields] OR \"alternative promoter\"[All Fields] OR \"transcript variant\"[All Fields])"}}

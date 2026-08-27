@@ -1,0 +1,41 @@
+"gene_name","n_papers_total","n_isoform_papers","n_immunity_papers","n_isoform_and_immunity","query_note"
+"ACP3",53,3,1,0,"short symbol -- counts likely inflated by ambiguous matches"
+"AGPAT3",65,3,2,0,
+"ARHGAP26",100,3,8,0,
+"ATRN",101,5,5,0,"short symbol -- counts likely inflated by ambiguous matches"
+"CBWD3",1,0,0,0,
+"CCL3",3943,26,2135,10,"short symbol -- counts likely inflated by ambiguous matches"
+"CD86",12428,62,6127,23,"short symbol -- counts likely inflated by ambiguous matches"
+"CTTNBP2NL",11,0,1,0,
+"DCUN1D4",5,0,0,0,
+"DDX58",348,10,165,3,
+"EHBP1",67,0,4,0,
+"GBP1",513,3,167,0,"short symbol -- counts likely inflated by ambiguous matches"
+"IFITM2",172,5,42,2,
+"IL23A",459,4,225,2,
+"IPCEF1",22,2,3,0,
+"IRAK3",194,3,96,3,
+"ITSN1",152,27,15,0,
+"KDM6B",502,8,78,0,
+"KITLG",377,8,26,0,
+"LIG1",291,13,7,0,"short symbol -- counts likely inflated by ambiguous matches"
+"LINC00278",6,0,1,0,
+"MREG",126,0,35,0,"short symbol -- counts likely inflated by ambiguous matches"
+"NCOA7",53,11,6,2,
+"PCSK7",62,3,4,0,
+"PLD6",40,1,1,0,"short symbol -- counts likely inflated by ambiguous matches"
+"PRKAR1B",48,6,1,0,
+"R3HCC1L",3,0,0,0,
+"RBKS",18,0,4,0,"short symbol -- counts likely inflated by ambiguous matches"
+"RGS19",77,3,5,0,
+"RIN3",82,3,5,0,"short symbol -- counts likely inflated by ambiguous matches"
+"RPUSD2",6,0,0,0,
+"RSAD2",481,7,171,3,
+"SAMD14",23,0,0,0,
+"SOCS4",97,1,17,0,
+"SORT1",389,8,61,0,
+"SPRING1",13,0,0,0,
+"THAP2",8,0,0,0,
+"TMEM63B",42,2,0,0,
+"WDR33",31,6,3,2,
+"ZDHHC21",33,2,9,0,

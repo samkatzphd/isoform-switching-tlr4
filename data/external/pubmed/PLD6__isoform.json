@@ -1,0 +1,1 @@
+{"header":{"type":"esearch","version":"0.3"},"esearchresult":{"count":"1","retmax":"1","retstart":"0","idlist":["28063496"],"translationset":[],"querytranslation":"\"PLD6\"[Title/Abstract] AND (\"isoform\"[All Fields] OR \"splicing\"[All Fields] OR \"splice variant\"[All Fields] OR \"alternative promoter\"[All Fields] OR \"transcript variant\"[All Fields])"}}
