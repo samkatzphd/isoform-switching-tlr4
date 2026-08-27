@@ -25,15 +25,23 @@
 #   (the standing warning in CLAUDE.md). The covered subset therefore leans toward genes both
 #   universes agree on.
 #
-#   CLASS B / COMPOSITIONAL RESCUE is 5-21% covered and CANNOT be analysed here. Those genes
-#   are defined by falling expression with the dominant isoform held, which does not require
-#   them to switch -- so they are absent from a switching-gene object by construction.
-#   Reporting PTC/IR on 5% of them would describe the switching minority, not the class.
-#   This script measures the coverage, writes it out, and stops. See "TO UNBLOCK" below.
+#   CLASS B / COMPOSITIONAL RESCUE used to be 5-21% covered and was NOT analysable here.
+#   Those genes are defined by falling expression with the dominant isoform held, which does
+#   not require them to switch -- so they were absent from a switching-gene object by
+#   construction. UNBLOCKED 2026-08-27: `extract_context_tables()` now carries PTC and the
+#   whole orfAnalysis slot across from the unfiltered exports, so section 4 below reads the
+#   CONTEXT layer and covers ~92% of every gene set. See §"Class B" in REVIEW_CHANGES.md.
 #
-# TO UNBLOCK CLASS B: re-parse the *unfiltered* exports for PTC/IR in 01_load_data.R and add
-# them to isoformContext_<label>.rds. analyzeORF ran on those too, so the values exist; they
-# were simply never extracted. Needs the external drive.
+# WHICH SOURCE EACH SECTION USES, AND WHY IT DIFFERS
+#
+#   Sections 1-3 ask about SWITCHING isoforms, so the reduced object is the right source:
+#   those isoforms are in it by definition, and it is the only place `IR` exists.
+#
+#   Section 4 (Class B) asks about NON-switching isoforms -- the minor transcripts a gene
+#   sheds while holding its dominant one. Those exist only in the context layer. It therefore
+#   uses PTC alone: `IR` is a column of the reduced objects only, and was not re-derived for
+#   the unfiltered universe. IR is null on every switching test above, so its absence here
+#   costs the weaker of the two markers.
 
 bt <- c("utils/bootstrap.R", file.path("..", "utils", "bootstrap.R"))
 b_file <- if (any(f <- vapply(bt, file.exists, NA))) { bt[which(f)[1L]] } else { NA_character_ }
@@ -45,6 +53,7 @@ source(b_file, local = FALSE, chdir = FALSE)
 suppressPackageStartupMessages({
   library(dplyr)
   library(tibble)
+  library(tidyr)
 })
 has_ggplot <- requireNamespace("ggplot2", quietly = TRUE)
 if (has_ggplot) suppressPackageStartupMessages(library(ggplot2))
@@ -67,6 +76,10 @@ if (has_ggplot) theme_set(theme_bw(base_size = 11))
 
 lab_of <- function(k) sanitize(as.character((cfg$datasets[[k]] %||% list())$label %||% k)[1L])
 DATASETS <- names(cfg$datasets %||% list())
+# Section 4 scores the context layer itself, so it must apply the same abundance floor every
+# other context-scored analysis applies. Sections 1-3 read the reduced objects, which were
+# already filtered upstream.
+expr_floor <- as.numeric((cfg$significance %||% list())$min_gene_expression %||% 0)
 
 features_of <- function(k) {
   f <- file.path(processed_dir, paste0("isoformFeatures_", lab_of(k), ".rds"))
@@ -256,6 +269,220 @@ if (file.exists(cryptic_f)) {
   }
 }
 
+# ---- 4. Class B / compositional rescue: is the gene shedding NMD targets? -----------------
+# THE CLAIM UNDER TEST. A Class B gene's total output falls, but its baseline-dominant isoform
+# holds while the minor isoforms fall harder. One reading is "purification": the transcripts
+# being lost are non-productive -- NMD targets -- so the gene is concentrating its functional
+# output rather than being switched off. The alternative reading is arithmetic: minor isoforms
+# are low-abundance, low-abundance transcripts are noisier and fall more often by chance, and
+# PTC status has nothing to do with which ones go.
+#
+# SOURCE. The context layer, not the reduced objects. Class B genes need not switch, so a
+# switching-gene object covers 5-21% of them; the context covers ~92% and is the only source
+# in which a gene's NON-switching minor isoforms exist at all.
+#
+# THREE TESTS, because "enriched" is ambiguous until you name the comparison:
+#   4a  WITHIN gene, dominant vs minor. Do minor isoforms carry PTC more often than the
+#       dominant one does? Paired, so gene-level composition cancels. But every gene has this
+#       contrast -- dominant isoforms are full-length more often everywhere -- so 4a alone
+#       cannot distinguish Class B from any gene.
+#   4b  BETWEEN gene sets. Is the minor-isoform PTC rate HIGHER in Class B genes than in
+#       matched background genes? This is the one that isolates the class.
+#   4c  WITHIN Class B genes, does PTC status predict WHICH minor isoforms fall? The sharpest
+#       form of the claim: purification requires the NMD targets to be the ones lost, not
+#       merely present. Paired within gene, so gene-level decline cancels.
+message("\n---- 4. Class B (compositional rescue): PTC status of the shed minor isoforms ----")
+
+rescue_f <- hl_files$rescue
+classb <- classb_bg <- classb_fall <- NULL
+if (!file.exists(rescue_f)) {
+  message("  no hidden_layer_compositional_rescue.csv; run 09_hidden_layer.R first")
+} else {
+  hl_r <- utils::read.csv(rescue_f, stringsAsFactors = FALSE)
+
+  # Dominance is defined on the UNSTIMULATED profile, exactly as 09 defines it. Re-deriving it
+  # here from the same rule (max IF1) rather than trusting a column keeps the two in step; if
+  # 09's rule ever changes, this follows it. Baseline dominance is the whole design point --
+  # picking the dominant isoform post-LPS would select on the outcome.
+  classb_one <- function(k) {
+    ctx <- load_scoring_table(processed_dir, lab_of(k), quiet = TRUE)
+    if (is.null(ctx) || !"PTC" %in% names(ctx)) return(NULL)
+    z <- score_isoforms(ctx, cfg, k, lab_of(k)) |>
+      filter(.data$gene_expression >= expr_floor, is.finite(.data$IF1)) |>
+      mutate(iso_lfc = log2((as.numeric(.data$iso_value_2) + 1) /
+                            (as.numeric(.data$iso_value_1) + 1)))
+    if (!nrow(z)) return(NULL)
+    z |>
+      group_by(.data$gene_id) |>
+      # A gene needs at least one minor isoform for "dominant vs minor" to mean anything.
+      filter(dplyr::n() > 1L) |>
+      # which.max returns ONE index, so a tie at max IF1 cannot make two isoforms dominant
+      # -- the same with_ties = FALSE behaviour 09 uses.
+      mutate(is_dominant = seq_len(dplyr::n()) == which.max(.data$IF1)) |>
+      ungroup() |>
+      mutate(
+        dataset = k,
+        class_b = .data$gene_id %in% hl_r$gene_id[hl_r$dataset == k]
+      )
+  }
+  cb <- bind_rows(lapply(names(feats), classb_one))
+
+  if (is.null(cb) || !nrow(cb)) {
+    message("  no context layer carries PTC; run 01_load_data.R with the drive mounted")
+  } else {
+    # Coverage of the class in its new source, reported before any test.
+    cov_b <- cb |>
+      filter(.data$class_b) |>
+      group_by(.data$dataset) |>
+      summarize(n_genes = dplyr::n_distinct(.data$gene_id),
+                n_isoforms = dplyr::n(),
+                pct_isoforms_with_PTC_call = round(100 * mean(!is.na(.data$PTC)), 1),
+                .groups = "drop")
+    message("  context coverage of Class B genes:")
+    print(as.data.frame(cov_b))
+
+    # ---- 4a. within gene: dominant vs minor ------------------------------------------------
+    pair_dom_minor <- function(d, lbl) {
+      g <- d |>
+        group_by(.data$dataset, .data$gene_id) |>
+        summarize(
+          dom_ptc = suppressWarnings(.data$PTC[.data$is_dominant][1]),
+          any_minor_ptc = if (any(!.data$is_dominant & !is.na(.data$PTC))) {
+            any(.data$PTC[!.data$is_dominant], na.rm = TRUE)
+          } else {
+            NA
+          },
+          .groups = "drop"
+        ) |>
+        filter(!is.na(.data$dom_ptc), !is.na(.data$any_minor_ptc))
+      if (!nrow(g)) return(NULL)
+      g |>
+        group_by(.data$dataset) |>
+        summarize(
+          set = lbl, n_genes = dplyr::n(),
+          # Discordant pairs only -- concordant genes carry no information about direction.
+          minor_only = sum(!.data$dom_ptc & .data$any_minor_ptc),
+          dom_only = sum(.data$dom_ptc & !.data$any_minor_ptc),
+          p = stats::binom.test(c(sum(!.data$dom_ptc & .data$any_minor_ptc),
+                                  sum(.data$dom_ptc & !.data$any_minor_ptc)))$p.value,
+          .groups = "drop"
+        )
+    }
+    classb <- bind_rows(
+      pair_dom_minor(cb |> filter(.data$class_b), "Class B"),
+      pair_dom_minor(cb |> filter(!.data$class_b), "background")
+    )
+    if (!is.null(classb) && nrow(classb)) {
+      classb <- classb |>
+        mutate(ratio_minor_over_dom = ifelse(.data$dom_only > 0,
+                                             .data$minor_only / .data$dom_only, NA_real_)) |>
+        arrange(.data$dataset, .data$set)
+      write_table_pair(classb, results_tables, "consequence_class_b_dominant_vs_minor", cfg = cfg)
+      message("\n  4a. within gene -- is the minor side more often PTC+ than the dominant one?")
+      print(as.data.frame(classb |> mutate(across(where(is.numeric), ~ round(.x, 4)))))
+    }
+
+    # ---- 4b. between gene sets: minor-isoform PTC rate --------------------------------------
+    # The comparison that actually isolates the class. Restricted to MINOR isoforms in both
+    # sets, so the dominant/minor asymmetry of 4a cannot leak in.
+    classb_bg <- cb |>
+      filter(!.data$is_dominant, !is.na(.data$PTC)) |>
+      group_by(.data$dataset) |>
+      group_modify(function(d, key) {
+        tb <- table(class_b = d$class_b, ptc = d$PTC)
+        if (nrow(tb) < 2 || ncol(tb) < 2) return(tibble())
+        ft <- stats::fisher.test(tb)
+        tibble(
+          n_minor_class_b = sum(tb["TRUE", ]), n_minor_background = sum(tb["FALSE", ]),
+          pct_ptc_class_b = 100 * tb["TRUE", "TRUE"] / sum(tb["TRUE", ]),
+          pct_ptc_background = 100 * tb["FALSE", "TRUE"] / sum(tb["FALSE", ]),
+          odds_ratio = unname(ft$estimate), p = ft$p.value
+        )
+      }) |>
+      ungroup()
+    if (nrow(classb_bg)) {
+      write_table_pair(classb_bg, results_tables, "consequence_class_b_vs_background", cfg = cfg)
+      message("\n  4b. between sets -- minor-isoform PTC rate, Class B vs background")
+      print(as.data.frame(classb_bg |> mutate(across(where(is.numeric), ~ round(.x, 3)))))
+    }
+
+    # ---- 4c. within Class B: does PTC predict which minor isoforms are shed? ----------------
+    # THE TRAP THIS TEST FELL INTO FIRST, recorded because the naive version looked like a
+    # clean four-of-four result in the WRONG direction and would have been reported as one.
+    #
+    # The obvious response variable is iso_lfc = log2((v2+1)/(v1+1)). Class B minor isoforms
+    # sit at 0.07-0.40 expression units, so the +1 pseudocount DOMINATES the ratio: an isoform
+    # at 0.07 cannot produce a fold-change of any size, while one at 0.40 can. Section 4d
+    # below shows PTC+ minors are 2-6x LESS abundant than PTC- minors in every dataset. The
+    # naive test therefore reported "PTC+ isoforms fall less" (median delta +0.08 to +0.20,
+    # p = 0.002-0.07) when what it had measured was that they start lower. Do not restore it.
+    #
+    # THE FIX, two parts:
+    #   response  dIF = IF2 - IF1, a difference of two ratios ISA computes without any
+    #             pseudocount, expressed relative to IF1 so it reads as proportional change in
+    #             usage. An isoform at any abundance can lose all of its usage share.
+    #   adjust    baseline abundance enters the model explicitly, and gene enters as a fixed
+    #             effect so only the WITHIN-gene contrast is estimated. Both the unadjusted
+    #             and adjusted coefficients are reported side by side: if they disagree, the
+    #             disagreement is the result.
+    minors <- cb |>
+      filter(.data$class_b, !.data$is_dominant, !is.na(.data$PTC),
+             is.finite(.data$IF1), .data$IF1 > 0, is.finite(.data$dIF)) |>
+      mutate(rel_dIF = .data$dIF / .data$IF1)
+
+    # ---- 4d. the confound itself, reported whether or not 4c is run ------------------------
+    classb_conf <- minors |>
+      group_by(.data$dataset, .data$PTC) |>
+      summarize(n = dplyr::n(),
+                median_expr_baseline = median(as.numeric(.data$iso_value_1), na.rm = TRUE),
+                median_IF1 = median(.data$IF1, na.rm = TRUE), .groups = "drop") |>
+      tidyr::pivot_wider(names_from = "PTC", values_from = c("n", "median_expr_baseline",
+                                                             "median_IF1")) |>
+      mutate(abundance_ratio_nonPTC_over_PTC =
+               .data$median_expr_baseline_FALSE / .data$median_expr_baseline_TRUE)
+    write_table_pair(classb_conf, results_tables, "consequence_class_b_abundance_confound",
+                     cfg = cfg)
+    message("\n  4d. CONFOUND -- baseline abundance of PTC+ vs PTC- minor isoforms")
+    print(as.data.frame(classb_conf |> mutate(across(where(is.numeric), ~ round(.x, 3)))))
+    message("     PTC+ minors are the LESS abundant class everywhere. Any pseudocount-based")
+    message("     fold-change comparison between the two groups measures this, not NMD.")
+
+    classb_fall <- bind_rows(lapply(sort(unique(minors$dataset)), function(k) {
+      d <- minors |> filter(.data$dataset == k)
+      # Only genes carrying both a PTC+ and a PTC- minor contribute to a within-gene contrast.
+      keep <- d |> group_by(.data$gene_id) |>
+        filter(any(.data$PTC), any(!.data$PTC)) |> ungroup()
+      if (dplyr::n_distinct(keep$gene_id) < 5) return(NULL)
+      unadj <- stats::lm(rel_dIF ~ PTC + factor(gene_id), data = keep)
+      adj <- stats::lm(rel_dIF ~ PTC + log10(IF1) + factor(gene_id), data = keep)
+      co <- function(m) {
+        r <- summary(m)$coefficients
+        rn <- grep("^PTCTRUE$", rownames(r), value = TRUE)
+        if (!length(rn)) return(c(NA_real_, NA_real_))
+        c(r[rn, "Estimate"], r[rn, "Pr(>|t|)"])
+      }
+      u <- co(unadj); a <- co(adj)
+      tibble(
+        dataset = k,
+        n_genes_informative = dplyr::n_distinct(keep$gene_id),
+        n_isoforms = nrow(keep),
+        median_rel_dIF_ptc = median(keep$rel_dIF[keep$PTC]),
+        median_rel_dIF_nonptc = median(keep$rel_dIF[!keep$PTC]),
+        ptc_coef_unadjusted = u[1], p_unadjusted = u[2],
+        ptc_coef_abundance_adjusted = a[1], p_adjusted = a[2]
+      )
+    }))
+    if (!is.null(classb_fall) && nrow(classb_fall)) {
+      write_table_pair(classb_fall, results_tables, "consequence_class_b_ptc_decline", cfg = cfg)
+      message("\n  4c. within Class B -- does PTC predict proportional LOSS of usage?")
+      message("      (negative coefficient = PTC+ minors shed MORE usage = purification)")
+      print(as.data.frame(classb_fall |> mutate(across(where(is.numeric), ~ round(.x, 4)))))
+      message("      Gene enters both models as a fixed effect, so a gene's overall decline")
+      message("      cancels and only the within-gene PTC contrast is estimated.")
+    }
+  }
+}
+
 # ---- Verdict -------------------------------------------------------------------------------
 # Written out rather than left to the reader, because the paired PTC result is the kind of
 # single-dataset signal this project has repeatedly found not to survive.
@@ -272,7 +499,7 @@ verdict <- tibble(
     "Suggestive, NOT established -- direction consistent 4/4, significant 1/4",
     "No -- null in every dataset, paired and unpaired",
     "No -- indistinguishable in every dataset",
-    "NOT TESTABLE -- Class B genes are 5-21% covered by the ORF annotation"
+    "No -- not enrichment, and not the transcripts being shed (answered 2026-08-27)"
   ),
   note = c(
     paste0("Within a gene the isoform gaining usage is more often an NMD target in all four ",
@@ -284,7 +511,18 @@ verdict <- tibble(
            "finding without an independent dataset."),
     "Paired riser-vs-faller is almost exactly balanced in all four datasets.",
     "Both markers, all four datasets, no difference beyond noise.",
-    "Carry PTC/IR from the unfiltered exports into the context layer to test it."
+    paste0("Testable since the context layer gained PTC (86-93% coverage vs 5-21%). Three ",
+           "readings, none supporting purification. (a) Minor isoforms ARE more often PTC+ ",
+           "than the dominant one -- but so are they in background genes (OR 75-319), so it ",
+           "is a property of being minor, not of Class B. (b) Minor-isoform PTC RATE in ",
+           "Class B vs background: 14.4/14.9% vs ~20% in T_HT/T_UT (depleted, p=0.012/0.042) ",
+           "and null in H_HT/U_UT -- and T_HT/T_UT are the SAME six libraries re-annotated, ",
+           "so that is one observation, not two. No enrichment anywhere. (c) Whether PTC ",
+           "predicts WHICH minors are shed: null in all four (p=0.27-0.98) once measured on ",
+           "dIF/IF1 and adjusted for baseline abundance. An earlier version of (c) used ",
+           "iso_lfc and reported a consistent four-of-four effect in the OPPOSITE direction; ",
+           "that was the +1 pseudocount acting on a class that is 1.5-4.1x less abundant ",
+           "(consequence_class_b_abundance_confound.csv), not biology.")
   )
 )
 write_table_pair(verdict, results_tables, "consequence_verdict", cfg = cfg)

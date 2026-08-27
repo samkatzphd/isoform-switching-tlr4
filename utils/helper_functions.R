@@ -561,13 +561,40 @@ extract_context_tables <- function(isa_obj) {
     "IF1", "IF2", "dIF", "IF_overall",
     "iso_value_1", "iso_value_2", "iso_overall_mean",
     "gene_value_1", "gene_value_2",
-    "isoform_switch_q_value", "gene_switch_q_value", "iso_q_value", "gene_q_value"
+    "isoform_switch_q_value", "gene_switch_q_value", "iso_q_value", "gene_q_value",
+    # ORF / NMD annotation. `analyzeORF` runs unconditionally upstream, so PTC is present
+    # on the unfiltered table too -- it was simply never extracted. Without it the context
+    # cannot answer any consequence question about NON-switching isoforms, which is the
+    # whole of the compositional-rescue (Class B) test: those genes need not switch, so the
+    # reduced objects cover only 5-21% of them.
+    "PTC", "IR"
   )
   keep <- intersect(want, names(f))
   if (!all(c("isoform_id", "gene_id") %in% keep)) {
     stop("extract_context_tables: unfiltered object lacks isoform_id / gene_id.")
   }
   features <- f[, keep, drop = FALSE]
+
+  # The orfAnalysis slot carries the quantitative ORF description behind the PTC flag:
+  # ORF length, and the distance from the stop codon to the last exon-exon junction, which
+  # is the actual NMD rule (>50-55 nt upstream of the last junction triggers decay). Keeping
+  # it lets downstream code re-derive NMD status with an explicit rule rather than trusting
+  # a single boolean, and distinguishes "no ORF found" from "ORF found, not a PTC".
+  orf <- if (is.list(isa_obj) && !is.null(isa_obj[["orfAnalysis"]])) {
+    tibble::as_tibble(isa_obj[["orfAnalysis"]], .name_repair = "unique")
+  } else {
+    NULL
+  }
+  if (!is.null(orf) && "isoform_id" %in% names(orf)) {
+    orf_want <- intersect(
+      c("isoform_id", "orfTransciptStart", "orfTransciptEnd", "orfTransciptLength",
+        "stopDistanceToLastJunction", "stopIndex", "orf_origin"),
+      names(orf)
+    )
+    orf <- orf[, orf_want, drop = FALSE]
+    orf <- orf[!duplicated(orf$isoform_id), , drop = FALSE]
+    features <- dplyr::left_join(features, orf, by = "isoform_id")
+  }
 
   grab_rep <- function(slot) {
     if (!is.list(isa_obj) || is.null(isa_obj[[slot]])) {

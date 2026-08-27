@@ -1,0 +1,9 @@
+"dataset","set","n_genes","minor_only","dom_only","p","ratio_minor_over_dom"
+"H_HT","Class B",37,30,0,1.86264514923096e-09,
+"H_HT","background",6280,4772,35,0,136.342857142857
+"T_HT","Class B",19,16,0,3.0517578125e-05,
+"T_HT","background",7980,5580,74,0,75.4054054054054
+"T_UT","Class B",19,13,0,0.000244140625,
+"T_UT","background",8684,6149,27,0,227.740740740741
+"U_UT","Class B",21,13,0,0.000244140625,
+"U_UT","background",8939,6371,20,0,318.55
