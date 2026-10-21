@@ -1,0 +1,3 @@
+"dataset","n_genes","n_switching_genes","n_novel_involved","pct_of_tested_genes_novel_involved","pct_of_switching_genes_novel_involved","pct_switching_genes","n_isoforms_quantified","n_switching_isoforms","comparable_across_datasets"
+"H_HT_supplementary",8160,169,101,1.24,59.76,2.07,128491,192,FALSE
+"T_HT_anchor",10907,95,47,0.43,49.47,0.87,148951,125,FALSE

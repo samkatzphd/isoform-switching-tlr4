@@ -1,0 +1,11 @@
+"element","value","known"
+"cell system","THP-1 monocytic line (T), one clone",TRUE
+"cell system","Human primary MDM (H), 3 donors",TRUE
+"LPS","paired minus / plus per replicate",TRUE
+"replication","T1-T3 matured, treated, extracted separately",TRUE
+"replication","H1-H3 three donors on three days",TRUE
+"PMA differentiation","UNKNOWN",FALSE
+"LPS dose","UNKNOWN",FALSE
+"LPS timepoint","UNKNOWN",FALSE
+"library chemistry","UNKNOWN (polyA vs ribo-depleted)",FALSE
+"cap verification","UNKNOWN",FALSE

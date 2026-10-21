@@ -1,0 +1,15 @@
+"dataset","min_abs_dif","n_sig_isoforms","n_sig_genes","is_chosen"
+"H_HT_supplementary",0,409,277,FALSE
+"T_HT_anchor",0,265,134,FALSE
+"H_HT_supplementary",0.05,383,277,FALSE
+"T_HT_anchor",0.05,241,134,FALSE
+"H_HT_supplementary",0.1,350,277,FALSE
+"T_HT_anchor",0.1,218,134,FALSE
+"H_HT_supplementary",0.15,222,179,TRUE
+"T_HT_anchor",0.15,110,75,TRUE
+"H_HT_supplementary",0.2,113,91,FALSE
+"T_HT_anchor",0.2,48,36,FALSE
+"H_HT_supplementary",0.25,60,50,FALSE
+"T_HT_anchor",0.25,21,19,FALSE
+"H_HT_supplementary",0.3,26,22,FALSE
+"T_HT_anchor",0.3,8,7,FALSE

@@ -1,0 +1,3 @@
+"dataset","min_abs_dif","target_snr","recommended_gene_expr_floor","if_sd_at_floor","n_isoforms_total","n_isoforms_below_floor","pct_isoforms_below_floor","n_switching_calls","n_switching_calls_below_floor","pct_switching_calls_below_floor","consensus_floor_applied"
+"T_HT",0.15,3,10.0731603998494,0.0476566539600365,148951,19329,12.9767507435331,213,76,35.6807511737089,12
+"H_HT",0.15,3,6.02203022009824,0.0428191351306088,128491,6888,5.36068674070557,288,41,14.2361111111111,12

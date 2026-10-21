@@ -1,0 +1,35 @@
+"dataset_label","set","class_code","n","pct"
+"T_HT_anchor","all quantified","=",105879,71.083107867688
+"T_HT_anchor","all quantified","c",14993,10.06572631268
+"T_HT_anchor","all quantified","e",12,0.00805634067579271
+"T_HT_anchor","all quantified","i",38,0.0255117454733436
+"T_HT_anchor","all quantified","j",24148,16.2120428865869
+"T_HT_anchor","all quantified","k",584,0.392075246221912
+"T_HT_anchor","all quantified","m",1123,0.753939214909601
+"T_HT_anchor","all quantified","n",1724,1.15742761042222
+"T_HT_anchor","all quantified","o",297,0.19939443172587
+"T_HT_anchor","all quantified","u",86,0.0577371081765144
+"T_HT_anchor","all quantified","x",63,0.0422957885479117
+"T_HT_anchor","all quantified","y",4,0.0026854468919309
+"T_HT_anchor","switching","=",93,74.4
+"T_HT_anchor","switching","c",18,14.4
+"T_HT_anchor","switching","j",11,8.8
+"T_HT_anchor","switching","k",1,0.8
+"T_HT_anchor","switching","m",1,0.8
+"T_HT_anchor","switching","o",1,0.8
+"H_HT_supplementary","all quantified","=",87911,68.418021495669
+"H_HT_supplementary","all quantified","c",14138,11.0031052758559
+"H_HT_supplementary","all quantified","e",7,0.00544785237876583
+"H_HT_supplementary","all quantified","i",44,0.0342436435236709
+"H_HT_supplementary","all quantified","j",23005,17.9039777105011
+"H_HT_supplementary","all quantified","k",456,0.354888669245317
+"H_HT_supplementary","all quantified","m",1026,0.798499505801963
+"H_HT_supplementary","all quantified","n",1590,1.23744075460538
+"H_HT_supplementary","all quantified","o",206,0.160322512860823
+"H_HT_supplementary","all quantified","u",43,0.0334653788981329
+"H_HT_supplementary","all quantified","x",61,0.0474741421578165
+"H_HT_supplementary","all quantified","y",4,0.0031130585021519
+"H_HT_supplementary","switching","=",94,48.9583333333333
+"H_HT_supplementary","switching","c",68,35.4166666666667
+"H_HT_supplementary","switching","j",29,15.1041666666667
+"H_HT_supplementary","switching","k",1,0.520833333333333

@@ -1,0 +1,13 @@
+"library","cell_system","replicate","lps","total_expected_count","n_isoforms_detected","n_genes_detected"
+"H1_minus_S21_001","Primary MDM (H)","H1","minus",61588487.8400002,120483,20419
+"H1_plus_S22_001","Primary MDM (H)","H1","plus",51631157.9000002,115334,19874
+"H2_minus_S23_001","Primary MDM (H)","H2","minus",60071319.3799992,119327,20074
+"H2_plus_S24_001","Primary MDM (H)","H2","plus",50604422.3999995,111587,19432
+"H3_minus_S25_001","Primary MDM (H)","H3","minus",52268929.5500003,119961,20270
+"H3_plus_S26_001","Primary MDM (H)","H3","plus",54471299.9900006,118741,20113
+"T1_minus_S15_001","THP-1 (T)","T1","minus",41462963.3599998,123972,22092
+"T1_plus_S16_001","THP-1 (T)","T1","plus",56839522.9500005,130009,22447
+"T2_minus_S17_001","THP-1 (T)","T2","minus",49672544.4300002,131251,22687
+"T2_plus_S18_001","THP-1 (T)","T2","plus",62056625.9200001,132399,22747
+"T3_minus_S19_001","THP-1 (T)","T3","minus",62012126.1200004,135801,23332
+"T3_plus_S20_001","THP-1 (T)","T3","plus",52120200.91,130771,22471

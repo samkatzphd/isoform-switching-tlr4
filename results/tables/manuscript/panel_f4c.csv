@@ -1,0 +1,7 @@
+"as_event","n_switches","required_input"
+"alternative first exon",,"H_T.gff3 (exon coordinates) on /Volumes/Expansion"
+"exon skipping",,"H_T.gff3 (exon coordinates) on /Volumes/Expansion"
+"alternative donor",,"H_T.gff3 (exon coordinates) on /Volumes/Expansion"
+"alternative acceptor",,"H_T.gff3 (exon coordinates) on /Volumes/Expansion"
+"intron retention",,"H_T.gff3 (exon coordinates) on /Volumes/Expansion"
+"alternative last exon",,"H_T.gff3 (exon coordinates) on /Volumes/Expansion"

@@ -1,0 +1,9 @@
+"dataset_label","n_switching","overcount_pp","definition","pct"
+"H_HT_supplementary",192,42.7083333333333,"published (ID prefix)",58.3333333333333
+"H_HT_supplementary",192,42.7083333333333,"structural",51.0416666666667
+"H_HT_supplementary",192,42.7083333333333,"strict (c excluded)",15.625
+"H_HT_supplementary",192,42.7083333333333,"Illumina-findable",48.9583333333333
+"T_HT_anchor",125,34.4,"published (ID prefix)",45.6
+"T_HT_anchor",125,34.4,"structural",25.6
+"T_HT_anchor",125,34.4,"strict (c excluded)",11.2
+"T_HT_anchor",125,34.4,"Illumina-findable",74.4
