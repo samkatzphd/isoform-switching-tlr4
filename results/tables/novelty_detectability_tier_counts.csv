@@ -1,0 +1,17 @@
+"dataset_label","detect_tier","n"
+"H_HT_supplementary","pb_contained",68
+"H_HT_supplementary","pb_novel",30
+"H_HT_supplementary","pb_redundant",14
+"H_HT_supplementary","reference",80
+"T_HT_anchor","pb_contained",18
+"T_HT_anchor","pb_novel",14
+"T_HT_anchor","pb_redundant",25
+"T_HT_anchor","reference",68
+"T_UT","pb_contained",25
+"T_UT","pb_novel",19
+"T_UT","pb_redundant",27
+"T_UT","reference",72
+"U_UT","pb_contained",17
+"U_UT","pb_novel",10
+"U_UT","pb_redundant",12
+"U_UT","reference",40

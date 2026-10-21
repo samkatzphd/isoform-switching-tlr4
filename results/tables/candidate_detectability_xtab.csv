@@ -1,0 +1,6 @@
+"detect_class","detect_reason","fused","n"
+"illumina_findable","Illumina-findable: both sides are distinct annotated Ensembl transcripts",FALSE,16
+"illumina_findable","Illumina-findable: both sides are distinct annotated Ensembl transcripts",TRUE,4
+"pacbio_required","PacBio only: novel structure, and both sides map to one Ensembl transcript",FALSE,9
+"pacbio_required","PacBio only: one or both sides are a novel structure",FALSE,9
+"pacbio_required","PacBio only: one or both sides are a novel structure",TRUE,6

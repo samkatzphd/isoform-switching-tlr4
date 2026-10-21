@@ -14,13 +14,20 @@ shortlist changed this session — see "What changed" below.
 
 ### The order to work in
 
-| gene | why it is here | unique bp |
-|---|---|---|
-| **RBKS** | biggest both-sides effect (dIF 0.44); loses the catalytic proton acceptor and 13 of 14 binding sites; rising isoform is PTC+; **zero** isoform-level prior art | 273 |
-| **ATRN** | membrane→secreted switch, loses only the TM helix (1280–1300); the secreted/membrane pair was described in PMID 10811918, so there is a predicted answer to check | 4,396 |
-| **IRAK3** | loses the Death domain, Ser110, the PIN1 site and 78% of the pseudokinase domain | 3,465 |
-| **KDM6B** | both sides, dIF 0.30 — but the rising isoform has **no ORF called**; inspect it manually before designing | 147 |
-| **NCOA7** | best single-sided candidate: internal-promoter isoform gaining the TLDc domain, and it is the known interferon-inducible NCOA7-B (PMID 30478388) | 81 |
+| gene | platform | why it is here | unique bp |
+|---|---|---|---|
+| **RBKS** | Illumina-findable | biggest both-sides effect (dIF 0.44); loses the catalytic proton acceptor and 13 of 14 binding sites; rising isoform is PTC+; **zero** isoform-level prior art | 273 |
+| **ATRN** | Illumina-findable | membrane→secreted switch, loses only the TM helix (1280–1300); the secreted/membrane pair was described in PMID 10811918, so there is a predicted answer to check | 4,396 |
+| **IRAK3** | **PacBio required** | loses the Death domain, Ser110, the PIN1 site and 78% of the pseudokinase domain. Both sides map to `ENST00000261233` — Ensembl holds one transcript where PacBio resolves two | 3,465 |
+| **KDM6B** | Illumina-findable | both sides, dIF 0.30 — but the rising isoform has **no ORF called**; inspect it manually before designing | 147 |
+| **NCOA7** | **PacBio required** | best single-sided candidate: internal-promoter isoform gaining the TLDc domain, and it is the known interferon-inducible NCOA7-B (PMID 30478388) | 81 |
+| **IL23A** | **PacBio required** | added 2026-10-21. Priority 7, assayable, frameshift consequence, rising side is a class-`j` novel junction structure. Was not on the previous list and is the most immunologically direct target on it | 75 |
+| **WDR33** | **PacBio required** | added 2026-10-21. Priority 6, assayable, C-terminal change, 5,526 unique bp — the largest discriminable region on the list. A cleavage/polyadenylation factor, which bears on the promoter/cap story | 5,526 |
+
+Platform column from `results/tables/candidate_detectability_by_switch.csv` (script 19).
+"PacBio required" means no annotation-based short-read quantifier could have seen the switch
+— either a side is a structure absent from Ensembl, or both sides collapse onto one Ensembl
+transcript. Explore it with `explore/19_novelty_partition_explore.R`.
 
 **PLD6 is off the list** — see below. It was previously ranked as the second-best both-sides
 gene, so anything written before 2026-08-27 that names it is stale.
@@ -30,8 +37,36 @@ gene, so anything written before 2026-08-27 that names it is stale.
 Unchanged: design into the `unique_region` interval, then match **both** primers against every
 transcript in `fa/transcripts_U-T.fa` and count amplified products. Do not trust predicted
 specificity — the review's 5′-anchored alternatives amplified 4–10 transcripts each despite
-looking fine. A new `scripts/19_primer_design.R` following the standard skeleton (14–18 are
-taken). Guard the FASTA read the way `13` guards the GFF3: warn and skip, do not fail.
+looking fine. A new **`scripts/20_primer_design.R`** following the standard skeleton (14–19
+are taken; 19 is the novelty partition added 2026-10-21). Guard the FASTA read the way `13`
+guards the GFF3: warn and skip, do not fail.
+
+**Design for both platform classes, and mark which is which on the order sheet.** For a
+PacBio-required switch the isoform-specific assay is the *only* evidence available — no
+short-read reanalysis of a public dataset can corroborate it — so those assays carry the
+weight of the claim and need the stricter specificity check. For an Illumina-findable switch,
+a public macrophage RNA-seq dataset can serve as an orthogonal check before any bench work.
+
+## What changed 2026-10-21
+
+### "Novel" was counting provenance, not discovery
+
+`is_novel_pacbio` comes from the transcript ID prefix (`oId` starting `PB`), so it says which
+assembler emitted the model — not whether the structure is new. 89 `PB` transcripts in the
+T_HT object are class `=`, i.e. their intron chain exactly matches a named Ensembl transcript.
+`scripts/19_novelty_partition.R` recounts it structurally. The published
+`pct_switching_that_are_novel` overstates structural novelty by **34–43 percentage points**;
+genuinely novel junction structures are **11–16%** of switching isoforms, not 46–58%. The
+published figure is not retracted — it is mislabelled. Call it "isoforms contributed by the
+PacBio assembly". Full detail in `REVIEW_CHANGES.md` §0j.
+
+### The shortlist splits roughly in half by platform
+
+Of 34 distinct candidate switches (locus fusions excluded): **16 Illumina-findable, 18
+PacBio-required**. Nine of the 18 are PacBio-required because *both sides map to the same
+Ensembl transcript* — a failure mode the isoform-level view cannot see at all. Six are
+PacBio-required *and* assayable: **IL23A, IRAK3, NCOA7, RPUSD2, WDR33, ZDHHC21.** IL23A and
+WDR33 were not on the previous priority list and should be.
 
 ## What changed 2026-08-27
 

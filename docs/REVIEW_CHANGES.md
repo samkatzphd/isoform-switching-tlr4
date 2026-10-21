@@ -896,6 +896,64 @@ analysis and should not be mistaken for a fifth dataset.
 
 ---
 
+## 0j. "Novel" counted provenance, not discovery (2026-10-21)
+
+**`is_novel_pacbio` is a statement about which assembler emitted the transcript model, not
+about whether its structure is in the reference.** `tag_novel_isoforms()` sets it from the
+`oId` prefix: `PB*` is novel, `ENST*` is known. That is provenance. gffcompare's
+`class_code` is the structural statement, and the two disagree for thousands of isoforms.
+
+Verified directly in `isoformFeatures_T_HT_anchor.rds` (oId prefix x class_code):
+
+```
+         =    c    j    k    m    n    o    u
+  ENST  993    0    0    0    0    0    0    0
+  PB.*   89  187  239    4   14   13    2    2
+```
+
+Every `ENST` row is class `=`, as expected — a carried reference model matches itself. But
+**89 `PB` transcripts in the reduced object are also class `=`**: PacBio models whose intron
+chain exactly matches a named Ensembl transcript. Short-read Illumina quantified against
+Ensembl would have had those transcripts in its index.
+
+So `pct_switching_that_are_novel` in `novel_isoform_dataset_summary.csv` (script 03) counts
+pipeline provenance. Recounted structurally by `scripts/19_novelty_partition.R`:
+
+| dataset | n switching | published % novel | structural % novel | strict % novel | overcount (pp) |
+|---|---|---|---|---|---|
+| H_HT_supplementary | 192 | 58.3 | 51.0 | 15.6 | 42.7 |
+| T_HT_anchor | 125 | 45.6 | 25.6 | 11.2 | 34.4 |
+| T_UT | 143 | 49.7 | 30.8 | 13.3 | 36.4 |
+| U_UT | 79 | 49.4 | 34.2 | 12.7 | 36.7 |
+
+`structural` counts a PacBio model as novel when its class code is not `=`. `strict` further
+excludes class `c` (contained in a reference transcript — a *fragment*, novel only if its 5′
+end is real, which is exactly what the open cap-selection question governs). The published
+figure is **not retracted** for what it measures; it is mislabelled. Report it as "isoforms
+contributed by the PacBio assembly", never as "novel isoforms".
+
+**The switch, not the isoform, is the unit for the platform question.** A switch is
+resolvable by short reads only if *both* its isoforms are separable in the reference. Two
+ways that fails: (a) either side is a novel structure, or (b) both sides map to the **same**
+`cmp_ref` — Ensembl holds one transcript where PacBio resolves two, so no annotation-based
+short-read quantifier can see the switch at all. (b) is invisible to the isoform-level view
+and accounts for 9 of the 34 real candidate switches.
+
+Of the 34 distinct candidate switches (63 candidate-isoform rows collapsed on the unordered
+pair, 10 locus-fusion rows excluded): **16 Illumina-findable, 18 PacBio-required.** Within
+the previous priority five, `RBKS`, `ATRN` and `KDM6B` are Illumina-findable; `IRAK3` and
+`NCOA7` require PacBio. Tables: `candidate_detectability{,_by_switch,_xtab}`,
+`novelty_detectability_summary`, `novelty_detectability_tier_counts`.
+
+**Caveat not resolved here.** gffcompare `=` requires a matching *intron chain*; the 5′ and
+3′ ends may differ freely, so a class-`=` PacBio model can still carry a PacBio-discovered
+TSS. Where both sides are `=` against *distinct* Ensembl transcripts the switch is findable
+regardless, because both chains are annotated; where they are `=` against the same
+transcript, case (b) already catches it. What remains open is the magnitude of a TSS shift
+within a matched intron chain — that needs the GFF3 and belongs to 15, not 19.
+
+---
+
 ## 1. Statistics that were not interpretable as reported
 
 ### 1.1 Fisher test removed, not caveated
