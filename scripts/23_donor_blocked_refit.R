@@ -270,6 +270,11 @@ refit <- fits |>
       abs(.data$mean_dIF) >= M_DIF
   )
 PRIMARY_MODEL <- "blocked (nested replicate)"
+# NOT COMMITTED -- .gitignore excludes this one. It is ~13 MB (two models x ~112,000
+# transcripts) and nothing reads it: the figures and explore/23_refit_dual_anchor_explore.R
+# work from the summary CSVs below, and re-running this script regenerates it. Committing it
+# once took the push pack to 33 MB and the push failed. Everything downstream is derived here,
+# so the file is a convenience for interactive digging, not an input.
 write_table_pair(refit, results_tables, "refit_isoform_level", cfg = cfg, csv = FALSE)
 
 # ---- per-dataset summary ----------------------------------------------------------------

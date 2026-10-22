@@ -41,3 +41,15 @@ __pycache__/
 
 /.quarto/
 **/*.quarto_ipynb
+
+# Large regenerable intermediates. 23 writes a per-isoform table for every fitted model,
+# which is ~13 MB and nothing reads it: the figures and explore/23_refit_dual_anchor_explore.R
+# work from the summary CSVs, and it regenerates by re-running the script. It was committed
+# once and made the push pack 33 MB; keep it local.
+results/tables/refit_isoform_level.rds
+
+# Default R graphics output. Writing it is a side effect of running any explore/ script from
+# the repo root without a device open, and it is NOT a result worth versioning. NOTE: this
+# entry is inert until the file is untracked, which is deliberately left to you:
+#   git rm --cached Rplots.pdf
+/Rplots.pdf
