@@ -1,0 +1,3 @@
+"discovery","other_system","n_tested","n_same_direction","n_all_three_agree","background_3of3","n_background","pct_same_direction","pct_all_three_agree","background_pct","p_vs_background","p_direction_vs_half"
+"H_HT_supplementary","T_HT_anchor",89,61,31,0.296718489381249,112113,68.5393258426966,34.8314606741573,29.6718489381249,0.170722940666704,0.000305129525140399
+"T_HT_anchor","H_HT_supplementary",89,62,38,0.256856921142062,112113,69.6629213483146,42.6966292134831,25.6856921142062,0.000356057964555239,0.000132792671493734

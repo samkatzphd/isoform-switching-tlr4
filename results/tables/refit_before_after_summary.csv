@@ -1,0 +1,3 @@
+"dataset_label","n_matched","dIF_correlation","median_abs_dIF_refit","median_abs_dIF_stored","n_switching_refit","n_switching_stored"
+"H_HT_supplementary",93214,0.752085632881886,0.0071889883327899,0.0083,105,283
+"T_HT_anchor",104969,0.972267611507493,0.00800851409013721,0.0079,107,205

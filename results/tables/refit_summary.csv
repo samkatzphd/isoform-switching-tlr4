@@ -1,0 +1,5 @@
+"model","dataset_label","blocked_on","n_isoforms_fitted","n_switching_isoforms","n_switching_genes","n_genes_fitted","median_sd_dIF","pct_all_pairs_agree","pct_switching_genes"
+"blocked (nested replicate)","H_HT_supplementary","donor",112113,109,91,12379,0.0162489467893246,25.6856921142062,0.735115922126181
+"blocked (nested replicate)","T_HT_anchor","batch",112113,121,94,12379,0.0153914122062741,29.6718489381249,0.759350512965506
+"unblocked (~0+group)","H_HT_supplementary","donor",112113,70,61,12379,0.0162489467893246,25.6856921142062,0.492770013732935
+"unblocked (~0+group)","T_HT_anchor","batch",112113,95,75,12379,0.0153914122062741,29.6718489381249,0.605864770983117

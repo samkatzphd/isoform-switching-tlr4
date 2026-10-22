@@ -1,0 +1,15 @@
+"discovery","set","tier","n"
+"H_HT_supplementary","H-private","0 not quantified",2
+"H_HT_supplementary","H-private","1 opposite direction",28
+"H_HT_supplementary","H-private","2 same direction, replicates split",29
+"H_HT_supplementary","shared","2 same direction, replicates split",1
+"H_HT_supplementary","H-private","3 all replicates agree, below |dIF|",22
+"H_HT_supplementary","H-private","4 all agree, |dIF| ok, not significant",2
+"H_HT_supplementary","shared","5 switching in both",7
+"T_HT_anchor","T-private","0 not quantified",5
+"T_HT_anchor","T-private","1 opposite direction",27
+"T_HT_anchor","T-private","2 same direction, replicates split",23
+"T_HT_anchor","shared","2 same direction, replicates split",1
+"T_HT_anchor","T-private","3 all replicates agree, below |dIF|",28
+"T_HT_anchor","T-private","4 all agree, |dIF| ok, not significant",3
+"T_HT_anchor","shared","5 switching in both",7
