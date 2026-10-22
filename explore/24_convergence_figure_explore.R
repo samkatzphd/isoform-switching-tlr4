@@ -38,6 +38,9 @@ rd <- function(stem) {
 dual <- rd("refit_dual_anchor")
 summ <- rd("refit_summary")
 conc <- rd("refit_selconf_concordance")
+# Fusion screen (script 25). Required: without it the named panel would advertise genes the
+# screen has since disqualified, which is worse than showing a shorter list.
+scr <- rd("followup_shortlist_fusion_screened")
 
 PRIMARY <- "blocked (nested replicate)"
 PRETTY  <- c(H_HT_supplementary = "Primary MDM (H)", T_HT_anchor = "THP-1 (T)")
@@ -138,23 +141,32 @@ p_c <- ggplot(c_df, aes(x = .data$discovery, y = .data$observed, fill = .data$di
        x = NULL, y = "% of hits") +
   th + theme(axis.text.x = element_text(angle = 12, hjust = 1))
 
-# --- D: the named follow-up shortlist -------------------------------------------------------
-short <- dual |>
-  filter(.data$direction_supported) |>
-  arrange(dplyr::desc(abs(.data$own_dIF))) |>
-  distinct(.data$gene_id, .keep_all = TRUE)
-n_short_all <- nrow(short)
+# --- D: the locus-fusion screen -----------------------------------------------------------
+# Two isoforms of one gene always share exonic sequence. Where the candidate and the isoform
+# moving hardest against it share NONE, the dIF is the relative expression of two neighbouring
+# genes the assembler merged into one XLOC -- not an isoform switch. 19 of 63 fail.
+scr <- scr |> mutate(screen = ifelse(.data$passes_screen, "genuine switch",
+                                     "fused locus (0 shared exonic bp)"))
+n_pass <- sum(scr$passes_screen); n_fail <- sum(!scr$passes_screen)
 
-named <- short |>
-  filter(is_real_symbol(.data$gene_name)) |>
+p_d <- ggplot(scr, aes(x = .data$set, fill = .data$screen)) +
+  geom_bar(width = 0.66) +
+  scale_fill_manual(values = c("genuine switch" = "#1F6F54",
+                               "fused locus (0 shared exonic bp)" = "#C1443C"),
+                    name = NULL) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(subtitle = paste0("Locus screen: ", n_fail, " of ", nrow(scr), " are fused loci"),
+       x = NULL, y = "genes") +
+  th + theme(legend.position = "top", legend.text = element_text(size = 7.6),
+             axis.text.x = element_text(angle = 15, hjust = 1)) +
+  guides(fill = guide_legend(ncol = 1))
+
+# --- E: the named shortlist, survivors only -------------------------------------------------
+named <- scr |>
+  filter(.data$passes_screen, is_real_symbol(.data$gene_name)) |>
+  arrange(dplyr::desc(abs(.data$own_dIF))) |>
   slice_head(n = 22) |>
-  mutate(
-    fused = .data$gene_name %in% FUSION_SUSPECT,
-    # Plain ASCII marker: the U+26A0 warning sign is absent from the default PNG font and
-    # renders as an empty box.
-    label = ifelse(.data$fused, paste0(.data$gene_name, " [fused?]"), .data$gene_name),
-    label = stats::reorder(.data$label, abs(.data$own_dIF))
-  )
+  mutate(label = stats::reorder(.data$gene_name, abs(.data$own_dIF)))
 
 seg <- named |>
   transmute(.data$label, .data$set, x = abs(.data$own_dIF), xend = abs(.data$other_dIF))
@@ -165,7 +177,7 @@ pts <- bind_rows(
                      which = "other system")
 )
 
-p_d <- ggplot() +
+p_e <- ggplot() +
   geom_segment(data = seg, aes(x = .data$x, xend = .data$xend, y = .data$label,
                                yend = .data$label, colour = .data$set),
                linewidth = 0.9, alpha = 0.55) +
@@ -174,32 +186,30 @@ p_d <- ggplot() +
   scale_colour_manual(values = COL_SET, name = "set") +
   scale_shape_manual(values = c("discovery system" = 16, "other system" = 1), name = NULL) +
   scale_x_continuous(expand = expansion(mult = c(0.02, 0.06))) +
-  labs(subtitle = paste0("Follow-up shortlist: ", n_short_all,
-                         " direction-supported genes, top 22 named"),
-       x = "|dIF| (filled = discovery system, open = other system)", y = NULL,
-       caption = "[fused?] confirmed a FUSED LOCUS in UT space (script 18); not re-screened on the HT assembly") +
-  th +
-  theme(legend.position = "right",
-        plot.caption = element_text(hjust = 0, size = 8, colour = "#8B3A33"))
+  labs(subtitle = paste0("Follow-up shortlist: ", n_pass,
+                         " genes surviving both screens, top 22 named"),
+       x = "|dIF| (filled = discovery system, open = other system)", y = NULL) +
+  th + theme(legend.position = "right")
 
 # --- assemble --------------------------------------------------------------------------------
 save_dir <- getOption("convergence.save_dir", NULL)
 if (!requireNamespace("patchwork", quietly = TRUE)) {
-  for (p in list(p_a, p_b, p_c, p_d)) print(p)
+  for (p in list(p_a, p_b, p_c, p_d, p_e)) print(p)
 } else {
   g <- patchwork::wrap_plots(
-    list(p_a, p_b, p_c, p_d),
-    # Every patch's OWN area must be a rectangle, not merely the design string: B spanning
-    # cols 3-6 on row 1 but 4-6 on row 2 fails with "Patch areas must be rectangular".
-    design = "AABBBB\nCCBBBB\nDDDDDD",
-    heights = c(1, 1, 2.15)
+    list(p_a, p_b, p_c, p_d, p_e),
+    # Every patch's OWN area must be a rectangle, not merely the design string. Five panels:
+    # A naive overlap, B evidence ladder, C concordance vs null, D locus screen, E named list.
+    design = "AABBBB\nCCBBBB\nDDEEEE\nDDEEEE",
+    heights = c(1, 1, 1.05, 1.05)
   ) +
     patchwork::plot_annotation(
       title = "From per-system hits to a named follow-up shortlist",
       subtitle = paste0(
         "Both systems refit from raw counts with the replicate blocked (script 23), so H and ",
         "T are measured the same way.\nNeither is treated as the anchor: a hit discovered in ",
-        "either is graded by what the other shows on the same isoform."),
+        "either is graded by what the other shows on the same isoform, then screened for ",
+        "fused loci."),
       tag_levels = "A",
       theme = theme(plot.title = element_text(face = "bold", size = 14),
                     plot.subtitle = element_text(size = 9.5, colour = "grey30"))
@@ -210,38 +220,34 @@ if (!requireNamespace("patchwork", quietly = TRUE)) {
   } else {
     dir.create(save_dir, recursive = TRUE, showWarnings = FALSE)
     ggsave(file.path(save_dir, "convergence_to_shortlist.png"), plot = g,
-           width = 13.5, height = 13.0, dpi = 200, bg = "white")
+           width = 14.0, height = 15.5, dpi = 200, bg = "white")
     message("Wrote ", file.path(save_dir, "convergence_to_shortlist.png"))
   }
 }
 
-# --- the shortlist as a table ------------------------------------------------------------------
-cat("\n== Direction-supported follow-up shortlist (", n_short_all, " genes) ==\n", sep = "")
-print(as.data.frame(short |> count(.data$set, name = "genes")), row.names = FALSE)
-cat("\nTop 22 with resolved symbols:\n")
+# --- the shortlist as a table ------------------------------------------------------------
+cat("\n== Follow-up shortlist after BOTH screens ==\n")
+cat("  direction-supported: ", nrow(scr), "\n", sep = "")
+cat("  fused loci removed:  ", n_fail, "\n", sep = "")
+cat("  surviving:           ", n_pass, "\n\n", sep = "")
+print(as.data.frame(scr |> count(.data$set, .data$screen, name = "genes")), row.names = FALSE)
+
+cat("\nTop 22 survivors with resolved symbols:\n")
 print(as.data.frame(
   named |> transmute(gene = .data$gene_name,
-                     discovered_in = .data$discovery_pretty, set = .data$set,
-                     tier = substr(.data$tier, 1, 34),
+                     discovered_in = .data$discovered_in, set = .data$set,
+                     tier = substr(.data$tier, 1, 32),
                      own_dIF = round(.data$own_dIF, 3),
                      other_dIF = round(.data$other_dIF, 3),
-                     fused_locus_suspect = .data$fused)), row.names = FALSE)
-if (!is.null(save_dir)) {
-  out <- short |>
-    mutate(fused_locus_suspect = .data$gene_name %in% FUSION_SUSPECT,
-           resolved_symbol = is_real_symbol(.data$gene_name)) |>
-    select("gene_name", "gene_id", "isoform_id", discovered_in = "discovery_pretty",
-           "set", "tier", "own_dIF", "own_q", "other_dIF", "other_q",
-           "own_concordant", "other_concordant", "fused_locus_suspect",
-           "resolved_symbol") |>
-    arrange(dplyr::desc(abs(.data$own_dIF)))
-  utils::write.csv(out, file.path(TBL, "followup_shortlist.csv"),
-                   row.names = FALSE, fileEncoding = "UTF-8", na = "")
-  message("Wrote ", file.path(TBL, "followup_shortlist.csv"))
-}
+                     shared_exonic_bp = .data$shared_exonic_bp)), row.names = FALSE)
 
-excluded <- short |> filter(!is_real_symbol(.data$gene_name))
-if (nrow(excluded)) {
-  cat("\nExcluded from the named panel (unresolved symbols): ",
-      paste(excluded$gene_name, collapse = ", "), "\n", sep = "")
+cat("\nRemoved as fused loci: ",
+    paste(sort(scr$gene_name[!scr$passes_screen]), collapse = ", "), "\n", sep = "")
+
+if (!is.null(save_dir)) {
+  utils::write.csv(
+    scr |> arrange(.data$passes_screen, dplyr::desc(abs(.data$own_dIF))),
+    file.path(TBL, "followup_shortlist_final.csv"), row.names = FALSE,
+    fileEncoding = "UTF-8", na = "")
+  message("Wrote ", file.path(TBL, "followup_shortlist_final.csv"))
 }
