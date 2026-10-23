@@ -30,24 +30,87 @@ Final deliverables, mirroring the HT arm:
 
 ## 2. Decisions already made — do not relitigate these
 
-### Work in HT annotation space, not UT
+### Work in UT annotation space. HT is the sensitivity check, not the primary
 
-This is the single most important thing in this document. **Both RSEM quantifications
-contain all 18 libraries.** `counts/H_T_pipe/RSEM.isoforms.*.all_samples.txt` has
-`U1_minus_S9_001` … `U3_plus_S14_001` alongside the H and T libraries — verified by reading
-the header. The U arm is therefore quantified against the HT reference, and the whole UBL5
-question can be answered there.
+**An earlier draft of this handover said the opposite. It was wrong, and the reasoning is
+worth recording so nobody repeats it.** The argument for HT space was pipeline reuse: the
+whole verified assay-design chain is built against HT, and `counts/H_T_pipe/` does carry all
+18 libraries including `U1_minus_S9_001` … `U3_plus_S14_001`, so the U arm *is* quantified
+there. All of that is true and none of it matters, because it optimises for convenience
+instead of for the question.
 
-Why that matters: `gff3/H_T.gff3` and `fa/transcripts_H-T.fa` are already local and
-verified, and **the entire downstream chain is built and checked against HT** — the
-spliced-cDNA set (`results/sequences/ht_candidates_spliced.json`), the platform caller
-(`33`), the 296,613-transcript specificity scan (`29`). Running in UT space would mean
-pulling two more large files off `/Volumes/Expansion`, re-deriving all of it against a
-second annotation, and reintroducing the annotation-space mixing this project already
-decided against for the manuscript.
+The references are built from different long-read pools. **HT = H + T long reads. UT = U + T
+long reads.** So the UT assembly contains transcript models discovered in the UBL5-knockdown
+cells, and the HT assembly cannot contain them — no KD read ever contributed to it. The
+sizes show it directly:
 
-Use the **HT-space** matrices. Keep `counts/U_T_pipe/` only as a sensitivity check if a
-result looks annotation-dependent.
+| reference | transcripts | genes |
+|---|---|---|
+| HT | 296,613 | 57,502 |
+| UT | **315,349** | 57,841 |
+
+That is **18,736 transcript models present in UT and absent from HT**. Quantifying the U
+libraries against HT does not leave those transcripts unmeasured — it is worse than that.
+They are not in the index, so reads arising from them are assigned to whichever HT model
+they best match, diluted into other isoforms of the locus. A KD-specific isoform does not
+show up as missing; it shows up as noise on its neighbours.
+
+This matters most for exactly the question being asked. "Are there novel transcripts
+differentially abundant between WT and KD" is **unanswerable in HT space by construction**,
+and UBL5 is the reason to expect such transcripts in the first place — it is the human Hub1
+homolog, and Hub1 acts on the spliceosome, so a knockdown plausibly produces splice forms
+that wildtype cells do not make.
+
+**Use the UT-space matrices as primary.** Because the same six WT THP-1 libraries were
+quantified against both references, HT space remains available as a genuine sensitivity
+check for any candidate whose model exists in both — and that check is worth running, but it
+is a check, not the analysis.
+
+### The bias this introduces, and how to handle it
+
+Switching to UT buys the right question and brings one problem with it. It is **not** that
+KD reads preferentially map to KD-discovered models — once the index is fixed, RSEM
+quantifies every transcript in all twelve libraries symmetrically, and a WT read matching a
+KD-discovered structure is assigned to it normally. The problem is upstream of
+quantification: **a structure only enters the index if some sample's long reads supported
+it.** A model admitted on the strength of a handful of KD reads enters with weak evidence,
+and its apparent KD-specificity is then partly an artefact of which library was in the
+discovery pool.
+
+This is the same trap this project already fell into once — `REVIEW_CHANGES.md` §0j, where
+`is_novel_pacbio` turned out to encode *which assembler emitted the model*, not whether the
+structure was new. Treat discovery provenance as a covariate, not a result:
+
+1. Check what provenance the UT GFF3 carries per transcript. The HT GFF3 has `oId`,
+   `class_code`, `cmp_ref`, `num_samples` and `tss_id` on every transcript line; if
+   `num_samples` or an equivalent records how many libraries supported the model, that is
+   the covariate you need.
+2. Require replicate support, not just significance: a KD-specific novel transcript should
+   be detected in at least 2 of 3 KD replicates before it is a candidate. The direction-
+   agreement machinery from the HT arm (`23`, `24`) already does this kind of grading.
+3. Report novel-transcript candidates with their discovery provenance attached, and treat a
+   model supported by one library as a hypothesis the assay is there to test — which is
+   fine, because producing validation assays is the whole point.
+4. Run `33`-equivalent platform classification in UT space. Do not reuse the HT platform
+   calls; `class_code` and `cmp_ref` are assembly-specific.
+
+### What this costs, practically
+
+Two files need to come off `/Volumes/Expansion`: the UT GFF3 and the UT transcript FASTA
+(by analogy with `gtf_files/GTF_to_GFF311_3_2022/H_T/H_T.gff3` and
+`IsoformSwitchAnalyzer/fa/transcripts_H-T.fa` — confirm the actual names). Expect roughly
+600 MB and ~2.5 GB respectively, a little larger than the HT pair given the extra models.
+
+**Check free space first.** The boot volume was at ~97% during the HT work. The HT copies
+can now be deleted to make room — `gff3/H_T.gff3` and `fa/transcripts_H-T.fa` are gitignored,
+every HT result derived from them is committed, and the two things that would be expensive to
+regenerate (`results/sequences/ht_candidates_spliced.json` and
+`results/tables/reference_fasta_audit.csv.gz`) are in the repo. Both HT files are
+recoverable from the drive if an HT sensitivity check is needed later.
+
+Also note: the UT space has its own fused-locus problem, already partly characterised by
+`scripts/18` — PLD6+FLCN, DDX58 (=TOPORS+RIGI), IPCEF1+CNKSR3, THAP2+TMEM19, MREG(+PECR),
+IFITM2+IFITM1, CCL3+CCL3L3. The fusion screen in step 4 is not optional here either.
 
 ### It is a knockdown, not a knockout
 
@@ -74,7 +137,16 @@ alongside as a sensitivity check. Keep that.
 |---|---|---|
 | `12_dtu_refit_2x2.R` | **Q1 as a single 2×2.** Builds contrasts `WT_LPS`, `KO_LPS`, `interaction` by hand from `~ 0 + group`. The interaction is exactly the Q1 question. | written, needs its input path repointed |
 | `04_comparison_T_vs_U.R` | T_UT vs U_UT switch overlap: shared / T-only / U-only, concordance, delta-dIF, per-gene panels | written, UT-space |
-| `25`–`35` | fusion screen → structural classification → assay routing → reagent design → specificity scan → selection → figures → bench docs → protocols | **built and verified for HT; reusable with a different candidate list** |
+| `25`–`35` | fusion screen → structural classification → assay routing → reagent design → specificity scan → selection → figures → bench docs → protocols | **built and verified for HT; the logic transfers, the paths do not — see below** |
+
+> **These scripts hardcode the HT inputs.** `gff3/H_T.gff3`, `fa/transcripts_H-T.fa`,
+> `results/sequences/ht_candidates_spliced.json`, `results/tables/tx2gene.tsv` and the HT
+> assay tables are referenced by literal path throughout `25`–`35`. Running the UBL5 arm in
+> UT space means parameterising the reference (a `--ref UT` argument or a config key) rather
+> than reusing them as-is. Budget for that: the method is verified, the plumbing is not.
+> Specifically, these HT artefacts **cannot** be reused and must be regenerated in UT space:
+> `tx2gene.tsv` (transcript→locus map), `reference_fasta_audit.csv.gz` (spliced/unspliced
+> audit), the spliced-cDNA sequence set, and all `class_code`/`cmp_ref` platform calls.
 
 **Script 12 needs one fix before it runs.** It reads
 `<counts_dir>/U-T/Isoforms/RSEM.isoforms.expected_count.all_samples.txt`, with `counts_dir`
@@ -126,7 +198,12 @@ an internal inconsistency in the thesis worth resolving at the same time.)
 
 ## 5. Suggested step plan
 
-1. **Repoint and run script 12** on the HT-space matrix. Report how many genes are
+0. **Get the UT reference onto disk** — GFF3 and transcript FASTA, after checking free space
+   (see §2). Verify the FASTA against the GFF3 exon sums before anything is designed against
+   it; 12.2% of the HT FASTA records were unspliced genomic intervals and there is no reason
+   to assume UT is cleaner. Build the UT `tx2gene` map from the FASTA headers in the same
+   pass.
+1. **Repoint and run script 12** on the UT-space matrix. Report how many genes are
    significant for `interaction`, and for `WT_LPS` and `KO_LPS` separately. This is the
    diagnostic that sizes the whole job — if the interaction returns very few genes, say so
    plainly rather than loosening thresholds to manufacture a list.
@@ -137,10 +214,15 @@ an internal inconsistency in the thesis worth resolving at the same time.)
    way the HT arm's evidence ladder did — never on "called in one and not the other" alone,
    which is a power artefact.
 3. **Build the Q2 contrasts** as a new script: transcript-level differential abundance,
-   `U_minus vs T_minus` and `U_plus vs T_plus`, limma-voom or edgeR-QLF on the same HT-space
+   `U_minus vs T_minus` and `U_plus vs T_plus`, limma-voom or edgeR-QLF on the UT-space
    matrix, reported as two separate tables. Keep it transcript-level, as asked, but also
    report the gene-level result beside it — a transcript that moves only because its whole
-   gene moved is a different finding from one that moves against its gene.
+   gene moved is a different finding from one that moves against its gene. **This is the
+   step that most needs UT space**, and the one where discovery provenance (§2) must be
+   carried as a column: partition the results into transcripts annotated in both references
+   and transcripts that exist only in UT, and report those two groups separately rather than
+   pooled. The second group is the novel-isoform claim the long-read design was for, and it
+   is also the group most exposed to discovery bias — both things are true at once.
 4. **Fusion-screen the survivors** with `25_ht_locus_fusion_screen.R`. Non-negotiable: the
    HT arm lost 19 of 63 candidates to fused loci, including the single largest effect.
 5. **Structural classification and assay routing** with `26` and `27`.
@@ -164,12 +246,13 @@ most likely to bite again here.
    (12.2%) store the unspliced genomic interval. Always check extracted sequence length
    against the summed exon length from the GFF3, and rebuild offenders from hg38 (UCSC
    `getData/sequence`, 0-based half-open, UCSC chrom naming) using GFF3 exon coordinates.
-   `results/tables/reference_fasta_audit.csv.gz` already records which records are affected —
-   check against it rather than re-auditing.
+   **The existing `reference_fasta_audit.csv.gz` is HT-specific and does not transfer** — run
+   the same audit against the UT FASTA before designing anything (step 0).
 2. **Specificity is off-target *loci*, not transcripts bound.** A RACE GSP is deliberately
    placed in sequence shared with the partner and a long-read outer pair is meant to amplify
    both isoforms; counting same-gene isoforms as failures rejects designs that are working.
-   `results/tables/tx2gene.tsv` maps transcript → locus.
+   `results/tables/tx2gene.tsv` maps transcript → locus for HT; build the UT equivalent from
+   the UT FASTA headers.
 3. **Every qPCR candidate needs two pairs**: isoform-specific (numerator) and total-gene
    with both primers inside one contiguous shared block (denominator). dIF is a fraction,
    and LPS moves total output hard at these loci. This is doubly true here — a genotype
