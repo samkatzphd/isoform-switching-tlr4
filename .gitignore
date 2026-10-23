@@ -48,6 +48,22 @@ __pycache__/
 # once and made the push pack 33 MB; keep it local.
 results/tables/refit_isoform_level.rds
 
+# RSEM count matrices, 295 MB across counts/H_T_pipe and counts/U_T_pipe. These are inputs,
+# not results: they come off the external drive and the pipeline reads them. GitHub rejects
+# single files over 100 MB and .git is already 353 MB, so these do NOT belong here. They need
+# a real backup (the external drive plus one more copy), not version control.
+counts/
+
+# Image previews written when inspecting a figure. Never a result.
+_view_*.png
+
+# Agent tool configuration, not project content.
+.claude/
+
+# The per-transcript spliced/unspliced audit of the reference FASTA is 9.5 MB as CSV and
+# 2.0 MB gzipped; the gzip is committed instead. Regenerate the CSV with scripts/29.
+results/tables/reference_fasta_audit.csv
+
 # Default R graphics output. Writing it is a side effect of running any explore/ script from
 # the repo root without a device open, and it is NOT a result worth versioning. NOTE: this
 # entry is inert until the file is untracked, which is deliberately left to you:
