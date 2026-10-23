@@ -1,0 +1,71 @@
+gene_name,oligo_role,sequence,length,tm_C,gc_pct,expected_product_candidate_bp,expected_product_partner_bp,offtarget_loci,assay,isoform_id,partner,selection
+KDM6A,RACE5_GSP1_outer,GTAGGAGCAGTACTCTCTCCCGTCC,25,67.0,60.0,2622,656,0,5' RACE,TCONS_00294484,TCONS_00287308,verified: no off-target locus
+KDM6A,RACE5_GSP2_inner,CTGCAGCAATGAGAGCTTCCCTCAA,25,67.2,52.0,2184,218,0,5' RACE,TCONS_00294484,TCONS_00287308,verified: no off-target locus
+KDM6A,longread_F,CCAAAGGACAAGTTGAATCCACC,23,62.0,47.8,1475,no product,1,targeted long-read cDNA,TCONS_00294484,TCONS_00287308,verified: the pair amplifies no other locus; amplifies the candidate only
+KDM6A,longread_R,TGCAGAACTGGGTTATTTCCTGA,23,62.0,43.5,1475,no product,0,targeted long-read cDNA,TCONS_00294484,TCONS_00287308,verified: the pair amplifies no other locus; amplifies the candidate only
+KDM6A,qPCR_total_F,TCATTGCTGCAGGAAAAGAGA,21,60.1,42.9,185,185,0,total-gene reference amplicon,TCONS_00294484,TCONS_00287308,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+KDM6A,qPCR_total_R,GTTTTCCAAGTTTCCGCTTGT,21,60.0,42.9,185,185,0,total-gene reference amplicon,TCONS_00294484,TCONS_00287308,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+NCOA7,RACE5_GSP1_outer,ATCAAATGCCCACACCTCCAGATCC,25,66.8,52.0,790,2672,0,5' RACE,TCONS_00239734,TCONS_00248414,verified: no off-target locus
+NCOA7,RACE5_GSP2_inner,GCGCTTTGCCTCTTCAACAGTGATG,25,67.0,52.0,235,2117,0,5' RACE,TCONS_00239734,TCONS_00248414,verified: no off-target locus
+NCOA7,longread_F,CACACTTCTCACTGCTCACAATG,23,62.0,47.8,2944,no product,0,targeted long-read cDNA,TCONS_00239734,TCONS_00248414,verified: the pair amplifies no other locus; amplifies the candidate only
+NCOA7,longread_R,AGGGTCACACATTTCTGAATGGA,23,62.0,43.5,2944,no product,0,targeted long-read cDNA,TCONS_00239734,TCONS_00248414,verified: the pair amplifies no other locus; amplifies the candidate only
+NCOA7,qPCR_total_F,GAAGAGCACATGCAGCTACTA,21,60.0,47.6,90,90,0,total-gene reference amplicon,TCONS_00239734,TCONS_00248414,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+NCOA7,qPCR_total_R,ATGTGCATATTCTCCAGGAGC,21,60.1,47.6,90,90,0,total-gene reference amplicon,TCONS_00239734,TCONS_00248414,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+BCL2L13,RACE5_GSP1_outer,TGGCAGTGATATGTGGAAGCAAGGG,25,67.0,52.0,499,1184,0,5' RACE,TCONS_00184442,TCONS_00189820,verified: no off-target locus
+BCL2L13,RACE5_GSP2_inner,CACCTCTTCTTTCTCCACGTGCACA,25,67.0,52.0,390,1075,0,5' RACE,TCONS_00184442,TCONS_00189820,verified: no off-target locus
+BCL2L13,longread_F,TCTTGAGTCAGAGGAGGAGGAAT,23,62.1,47.8,2732,no product,0,targeted long-read cDNA,TCONS_00184442,TCONS_00189820,verified: the pair amplifies no other locus; amplifies the candidate only
+BCL2L13,longread_R,CAATGCAACTATCAGAGCCCATG,23,62.0,47.8,2732,no product,0,targeted long-read cDNA,TCONS_00184442,TCONS_00189820,verified: the pair amplifies no other locus; amplifies the candidate only
+BCL2L13,qPCR_total_F,CTATACTGCTGTTTGGAGGGG,21,60.0,52.4,198,198,0,total-gene reference amplicon,TCONS_00184442,TCONS_00189820,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+BCL2L13,qPCR_total_R,GTCCCCAATTATCCCAGAGTG,21,60.0,52.4,198,198,0,total-gene reference amplicon,TCONS_00184442,TCONS_00189820,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+RSAD2,RACE5_GSP1_outer,ACCACAGGTAATCAGATGCCACGTG,25,66.9,52.0,1253,343,0,5' RACE,TCONS_00151268,TCONS_00170352,verified: no off-target locus
+RSAD2,RACE5_GSP2_inner,CCCACTGGTGTGTTGAAGTCTCGTT,25,67.0,52.0,1147,237,0,5' RACE,TCONS_00151268,TCONS_00170352,verified: no off-target locus
+RSAD2,longread_F,TAGCTACCAAGAGGAGAAAGCAG,23,61.6,47.8,3672,no product,0,targeted long-read cDNA,TCONS_00151268,TCONS_00170352,verified: the pair amplifies no other locus; amplifies the candidate only
+RSAD2,longread_R,TCTCCAGGCTCCAGTTCTAGTTA,23,62.1,47.8,3672,no product,0,targeted long-read cDNA,TCONS_00151268,TCONS_00170352,verified: the pair amplifies no other locus; amplifies the candidate only
+RSAD2,qPCR_F,GTTTCCACACAGCCAAAACAT,21,60.0,42.9,116,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00151268,TCONS_00170352,verified: the pair amplifies no other locus; excludes the partner
+RSAD2,qPCR_R,AAATGGCTCTCCACCTGAAAA,21,60.0,42.9,116,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00151268,TCONS_00170352,verified: the pair amplifies no other locus; excludes the partner
+RSAD2,qPCR_total_F,CTGCAATACTATCCCGTTGGT,21,60.0,47.6,90,90,0,total-gene reference amplicon,TCONS_00151268,TCONS_00170352,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+RSAD2,qPCR_total_R,GTGTTCAGTGACCACAGGTAA,21,60.0,47.6,90,90,0,total-gene reference amplicon,TCONS_00151268,TCONS_00170352,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+MERTK,RACE5_GSP1_outer,AGACCCAAACTCTCCTTCACCCAGA,25,66.9,52.0,1893,488,0,5' RACE,TCONS_00171616,TCONS_00169480,verified: no off-target locus
+MERTK,RACE5_GSP2_inner,GGCATAATCTACCCAACCGTGTGCA,25,67.2,52.0,1560,155,0,5' RACE,TCONS_00171616,TCONS_00169480,verified: no off-target locus
+MERTK,longread_F,CCGTCCGGAGAGAAATTACAGAT,23,61.9,47.8,3727,no product,0,targeted long-read cDNA,TCONS_00171616,TCONS_00169480,verified: the pair amplifies no other locus; amplifies the candidate only
+MERTK,longread_R,GGGGCCGTTTTATAAGATTTGGG,23,61.9,47.8,3727,no product,27,targeted long-read cDNA,TCONS_00171616,TCONS_00169480,verified: the pair amplifies no other locus; amplifies the candidate only
+MERTK,qPCR_F,CTATCACTGAGGCAAGGGAAG,21,60.0,52.4,181,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00171616,TCONS_00169480,verified: the pair amplifies no other locus; excludes the partner
+MERTK,qPCR_R,GGAATGGCTACGTTTCCTGTA,21,59.9,47.6,181,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00171616,TCONS_00169480,verified: the pair amplifies no other locus; excludes the partner
+MERTK,qPCR_total_F,CATAGCTTGGGAGTCAGTGAG,21,60.0,52.4,155,155,0,total-gene reference amplicon,TCONS_00171616,TCONS_00169480,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+MERTK,qPCR_total_R,ACTTTCAGAGAGGTCCCATCT,21,60.1,47.6,155,155,0,total-gene reference amplicon,TCONS_00171616,TCONS_00169480,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+OR52K3P,RACE5_GSP1_outer,CAATGCTGAGGAGGAAAGGACCAGG,25,67.0,56.0,776,649,0,5' RACE,TCONS_00054777,TCONS_00040271,verified: no off-target locus
+OR52K3P,RACE5_GSP2_inner,GGCCTGGAATCCCCATCAACAAGAA,25,67.0,52.0,603,476,0,5' RACE,TCONS_00054777,TCONS_00040271,verified: no off-target locus
+OR52K3P,longread_F,CTGAGTGCTGGTTCTTCTTTGTG,23,62.0,47.8,2024,no product,0,targeted long-read cDNA,TCONS_00054777,TCONS_00040271,verified: the pair amplifies no other locus; amplifies the candidate only
+OR52K3P,longread_R,ATAGCCATGAGGATGAGGAGGTA,23,62.0,47.8,2024,no product,0,targeted long-read cDNA,TCONS_00054777,TCONS_00040271,verified: the pair amplifies no other locus; amplifies the candidate only
+OR52K3P,qPCR_F,GGAATAAGGAATTGAGCCCCA,21,59.9,47.6,105,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00054777,TCONS_00040271,verified: the pair amplifies no other locus; excludes the partner
+OR52K3P,qPCR_R,ACATAACGAACCTGGTCACTG,21,60.1,47.6,105,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00054777,TCONS_00040271,verified: the pair amplifies no other locus; excludes the partner
+OR52K3P,qPCR_total_F,TTTGGGACATGTGTCTCTCAC,21,60.1,47.6,180,180,0,total-gene reference amplicon,TCONS_00054777,TCONS_00040271,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+OR52K3P,qPCR_total_R,CTTGGTCTTAACGCCGTAGAT,21,60.0,47.6,180,180,0,total-gene reference amplicon,TCONS_00054777,TCONS_00040271,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+ZC3HAV1,RACE5_GSP1_outer,TTCTTCTGCATGTGCTTGCTGTTGC,25,67.0,48.0,1069,323,0,5' RACE,TCONS_00260483,TCONS_00263585,verified: no off-target locus
+ZC3HAV1,RACE5_GSP2_inner,AGGATCACTTTGGAGGAGGAGCACT,25,67.0,52.0,818,72,0,5' RACE,TCONS_00260483,TCONS_00263585,verified: no off-target locus
+ZC3HAV1,longread_F,CGTTCTCTTTCTTTCCACCCAGT,23,62.8,47.8,6934,no product,0,targeted long-read cDNA,TCONS_00260483,TCONS_00263585,verified: the pair amplifies no other locus; amplifies the candidate only
+ZC3HAV1,longread_R,TATCAGTGTACAAAGCATGCTGC,23,61.6,43.5,6934,no product,0,targeted long-read cDNA,TCONS_00260483,TCONS_00263585,verified: the pair amplifies no other locus; amplifies the candidate only
+ZC3HAV1,qPCR_F,CCCATTAGACACCACTAGCTG,21,60.0,52.4,161,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00260483,TCONS_00263585,verified: the pair amplifies no other locus; excludes the partner
+ZC3HAV1,qPCR_R,GATTTCTGCTTGAGCCAATGG,21,60.0,47.6,161,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00260483,TCONS_00263585,verified: the pair amplifies no other locus; excludes the partner
+ZC3HAV1,qPCR_total_F,CACATGGAGACGATCGAGAAA,21,60.0,47.6,136,136,0,total-gene reference amplicon,TCONS_00260483,TCONS_00263585,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+ZC3HAV1,qPCR_total_R,TGACAGAAGAAGGAGTGGAGA,21,60.0,47.6,136,136,0,total-gene reference amplicon,TCONS_00260483,TCONS_00263585,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+URM1,longread_F,GGAGCTCCTGTTTGACGGTATTA,23,62.1,47.8,1333,1117,0,targeted long-read cDNA,TCONS_00284393,TCONS_00279043,verified: the pair amplifies no other locus; amplifies both isoforms
+URM1,longread_R,GGAAGGGAGAGAAAACGGACATT,23,62.6,47.8,1333,1117,0,targeted long-read cDNA,TCONS_00284393,TCONS_00279043,verified: the pair amplifies no other locus; amplifies both isoforms
+URM1,qPCR_F,CTGGCTGGAGAGATAAAGGTG,21,60.0,52.4,129,no product,0,junction-spanning qPCR / ddPCR,TCONS_00284393,TCONS_00279043,verified: the pair amplifies no other locus; excludes the partner
+URM1,qPCR_R,GACTGTCGCATCTAAAGGGTT,21,60.2,47.6,129,no product,0,junction-spanning qPCR / ddPCR,TCONS_00284393,TCONS_00279043,verified: the pair amplifies no other locus; excludes the partner
+URM1,qPCR_total_F,CCCTCCAGTTTGTCAAGAGTT,21,60.0,47.6,154,154,0,total-gene reference amplicon,TCONS_00284393,TCONS_00279043,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+URM1,qPCR_total_R,CTCAGGTCCATTCATCTTCCC,21,60.0,52.4,154,154,0,total-gene reference amplicon,TCONS_00284393,TCONS_00279043,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+SPHK1,RACE5_GSP1_outer,CAGCGTGAAGGAGATTTCAGCCTCA,25,66.9,52.0,506,545,0,5' RACE,TCONS_00119551,TCONS_00119548,verified: no off-target locus
+SPHK1,RACE5_GSP2_inner,CTCCTGCCTTCAGCTCCTTATCGGT,25,67.8,56.0,285,324,0,5' RACE,TCONS_00119551,TCONS_00119548,verified: no off-target locus
+SPHK1,longread_F,TCTTCTCTCCCTCAGGTCCAG,21,62.2,57.1,1620,no product,0,targeted long-read cDNA,TCONS_00119551,TCONS_00119548,verified: the pair amplifies no other locus; amplifies the candidate only
+SPHK1,longread_R,TTATTTGGATTTGGTTCGTGGGG,23,61.5,43.5,1620,no product,0,targeted long-read cDNA,TCONS_00119551,TCONS_00119548,verified: the pair amplifies no other locus; amplifies the candidate only
+SPHK1,qPCR_F,GACCTCAGCTCTCTGGACTTC,21,61.7,57.1,126,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00119551,TCONS_00119548,verified: the pair amplifies no other locus; excludes the partner
+SPHK1,qPCR_R,CTGAGGGAGAGAAGACAGCG,20,61.8,60.0,126,no product,0,unique-region qPCR / ddPCR (+ 5' RACE to fix the TSS),TCONS_00119551,TCONS_00119548,verified: the pair amplifies no other locus; excludes the partner
+SPHK1,qPCR_total_F,AAGGATGGGAAAGGTGTGTTT,21,59.9,42.9,89,89,0,total-gene reference amplicon,TCONS_00119551,TCONS_00119548,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+SPHK1,qPCR_total_R,ATCCAGAAGTAGTTTGGGTGC,21,60.1,47.6,89,89,0,total-gene reference amplicon,TCONS_00119551,TCONS_00119548,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+CHMP5,longread_F,CTGGTTTTGCTCTAGTGTTTGGG,23,62.0,47.8,1758,no product,0,targeted long-read cDNA,TCONS_00276446,TCONS_00284239,verified: the pair amplifies no other locus; amplifies the candidate only
+CHMP5,longread_R,GCAGGAGTTTGAACTTGCTGTAG,23,62.0,47.8,1758,no product,0,targeted long-read cDNA,TCONS_00276446,TCONS_00284239,verified: the pair amplifies no other locus; amplifies the candidate only
+CHMP5,qPCR_F,TTCTTTTCTTGGAAGGTGCCT,21,59.9,42.9,186,no product,0,junction-spanning qPCR / ddPCR,TCONS_00276446,TCONS_00284239,verified: the pair amplifies no other locus; excludes the partner
+CHMP5,qPCR_R,TGGTTTGATCTGCAGACACAT,21,60.1,42.9,186,no product,0,junction-spanning qPCR / ddPCR,TCONS_00276446,TCONS_00284239,verified: the pair amplifies no other locus; excludes the partner
+CHMP5,qPCR_total_F,ATGCACTAGGTGATGAGCTTC,21,60.0,47.6,139,139,0,total-gene reference amplicon,TCONS_00276446,TCONS_00284239,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"
+CHMP5,qPCR_total_R,GGCAATCCAAATTCATCCACC,21,60.0,47.6,139,139,3,total-gene reference amplicon,TCONS_00276446,TCONS_00284239,"verified: the pair amplifies no other locus; amplifies both isoforms, usable as the fraction denominator"

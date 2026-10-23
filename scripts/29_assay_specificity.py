@@ -35,10 +35,21 @@ PROBE = 15
 COMP = str.maketrans("ACGTNacgtn", "TGCANtgcan")
 rc = lambda s: s.translate(COMP)[::-1]
 
-SENSE_ROLES = {"qPCR_F", "longread_F", "RACE3_GSP1_outer", "RACE3_GSP2_inner"}
+# Every role whose oligo reads along the SENSE strand. Getting this set wrong does not
+# error -- the primer is silently searched as its own reverse complement and reports zero
+# binding sites, which looks like a clean result.
+SENSE_ROLES = {"qPCR_F", "qPCR_total_F", "longread_F",
+               "RACE3_GSP1_outer", "RACE3_GSP2_inner"}
+_known = {"qPCR_F", "qPCR_R", "qPCR_total_F", "qPCR_total_R", "longread_F", "longread_R",
+          "RACE5_GSP1_outer", "RACE5_GSP2_inner", "RACE3_GSP1_outer", "RACE3_GSP2_inner"}
 
 oligos = list(csv.DictReader(open("results/tables/assay_reagents.csv")))
 print(f"oligos: {len(oligos)}")
+_seen = {o["oligo_role"] for o in oligos}
+assert _seen <= _known, (
+    f"unclassified oligo role(s): {sorted(_seen - _known)}. Add each to _known and, if it "
+    f"reads along the sense strand, to SENSE_ROLES -- otherwise it is searched as its own "
+    f"reverse complement and silently reports zero binding sites.")
 
 # template_seq = the sequence as it appears on the transcript (sense) strand
 for i, o in enumerate(oligos):
@@ -143,6 +154,7 @@ with open("results/tables/assay_specificity.csv", "w", newline="") as fh:
 
 # ------------------------------------------------------------------ per pair
 PAIRS = [("qPCR_F", "qPCR_R", 70, 200),
+         ("qPCR_total_F", "qPCR_total_R", 70, 200),
          ("longread_F", "longread_R", 200, 12000)]
 pair_rows = []
 byiso = defaultdict(dict)

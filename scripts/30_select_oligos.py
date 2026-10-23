@@ -74,7 +74,10 @@ for p in pair:
 
 pair_report = []
 for (iso, pr), cands in bykey.items():
-    is_qpcr = pr.startswith("qPCR")
+    # The total-gene pair is a DENOMINATOR: it is supposed to amplify both isoforms, so it
+    # is scored like the long-read pair, not like the discriminating qPCR pair.
+    is_total = pr.startswith("qPCR_total")
+    is_qpcr = pr.startswith("qPCR") and not is_total
     scored = []
     for c in cands:
         ref_bad = B(c.get("ref_record_unspliced"))
@@ -93,11 +96,20 @@ for (iso, pr), cands in bykey.items():
     best_score, best_ok, best = scored[0]
     role_f, role_r = pr.split("/")
     if best_ok:
-        # say what was actually measured for THIS pair, not what the class usually does
-        note = "verified: no off-target locus"
-        note += "; excludes the partner" if is_qpcr else (
-            "; amplifies both isoforms" if B(best["amplifies_partner"])
-            else "; amplifies the candidate only")
+        # Say what was measured for THIS pair. Note the distinction from the per-oligo
+        # offtarget_loci column: that counts BINDING SITES for one primer, while a pair only
+        # amplifies where BOTH primers bind in the right orientation and spacing. A primer
+        # with one stray site can still belong to a pair that amplifies nothing else.
+        note = "verified: the pair amplifies no other locus"
+        if is_qpcr:
+            note += "; excludes the partner"
+        elif is_total:
+            note += ("; amplifies both isoforms, usable as the fraction denominator"
+                     if B(best["amplifies_partner"])
+                     else "; WARNING does not amplify the partner, so it is not a valid denominator")
+        else:
+            note += ("; amplifies both isoforms" if B(best["amplifies_partner"])
+                     else "; amplifies the candidate only")
     else:
         note = f"BEST AVAILABLE - {I(best['offtarget_loci'])} off-target loci"
         if B(best["amplifies_partner"]) and is_qpcr:

@@ -239,6 +239,31 @@ for row in cand:
                 emit("qPCR_R", res[f"PRIMER_RIGHT_{k}_SEQUENCE"], res[f"PRIMER_RIGHT_{k}_TM"],
                      res[f"PRIMER_RIGHT_{k}_GC_PERCENT"], rs - rl + 1, rs + 1, assay, prod, pprod, used, k)
 
+    # ---- "total gene" pair, both primers in SHARED sequence ---------------
+    # Without this the qPCR cannot answer the question. dIF is a FRACTION, and LPS changes
+    # total output at these loci substantially -- RSAD2 and USP18 are interferon-induced.
+    # An isoform-specific Ct alone cannot separate "the isoform's share rose" from "the
+    # whole gene was induced". The isoform-specific amplicon is the numerator; this is the
+    # denominator, and it has to sit in sequence common to both isoforms.
+    if longest_s and (longest_s[1] - longest_s[0]) >= 90:
+        a, b = longest_s
+        res, err = pick_pair(cseq, [[a, b - a, a, b - a]], QPCR, f"{gene}_total")
+        if res is None:
+            print(f"  {gene}: no total-gene pair ({str(err)[:60]})")
+        else:
+            for k in range(res.get("PRIMER_PAIR_NUM_RETURNED", 0)):
+                ls, ll = res[f"PRIMER_LEFT_{k}"]; rs, rl = res[f"PRIMER_RIGHT_{k}"]
+                prod = res[f"PRIMER_PAIR_{k}_PRODUCT_SIZE"]
+                lp, rp = binds_partner(ls, ls + ll), binds_partner(rs - rl + 1, rs + 1)
+                pprod = (rp + rl - lp) if (lp is not None and rp is not None and rp > lp) else "no product"
+                for role, s_, tm_, gc_, i0, i1 in (
+                        ("qPCR_total_F", res[f"PRIMER_LEFT_{k}_SEQUENCE"], res[f"PRIMER_LEFT_{k}_TM"],
+                         res[f"PRIMER_LEFT_{k}_GC_PERCENT"], ls, ls + ll),
+                        ("qPCR_total_R", res[f"PRIMER_RIGHT_{k}_SEQUENCE"], res[f"PRIMER_RIGHT_{k}_TM"],
+                         res[f"PRIMER_RIGHT_{k}_GC_PERCENT"], rs - rl + 1, rs + 1)):
+                    emit(role, s_, tm_, gc_, i0, i1, "total-gene reference amplicon", prod, pprod,
+                         "denominator for the isoform fraction; must amplify BOTH isoforms equally", k)
+
     # ---- nested gene-specific primers for RACE ---------------------------
     if "5' RACE" in assay:
         # Preference: put the GSP in sequence SHARED with the partner, so one reaction

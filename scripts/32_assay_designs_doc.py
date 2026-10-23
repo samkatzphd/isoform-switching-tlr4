@@ -23,9 +23,15 @@ prep = defaultdict(list)
 for r in rd("results/tables/pair_selection_report.csv"):
     prep[r["isoform_id"]].append(r)
 
+# NOT candidate_detectability_by_switch.csv -- that table was built on the earlier 63-gene
+# list, also has 44 rows by coincidence, and shares no isoform_id with this shortlist, so
+# joining on it silently yields empty platform columns. 33 recomputes it for these 44.
 detect = {}
-for r in rd("results/tables/candidate_detectability_by_switch.csv"):
+for r in rd("results/tables/shortlist_platform.csv"):
     detect[r["isoform_id"]] = r
+assert detect, "shortlist_platform.csv is empty"
+_miss = [a["gene_name"] for a in assign if a["isoform_id"] not in detect]
+assert not _miss, f"no platform record for: {_miss[:5]}"
 
 oligos = defaultdict(list)
 for o in order:
@@ -129,7 +135,7 @@ w("")
 ill = Counter()
 for a in assign:
     d = detect.get(a["isoform_id"])
-    ill[d["detect_class"] if d else "not classified"] += 1
+    ill[d["platform_required"] if d else "not classified"] += 1
 w("| platform requirement | candidates |")
 w("|---|---|")
 for k, v in ill.most_common():
@@ -158,11 +164,17 @@ for a in assign_sorted:
       + (f"; in the other system dIF = {F(a['other_dIF']):+.3f}." if a["other_dIF"] else ".") + "\n")
 
     if det:
-        w(f"**Platform.** {det.get('detect_class','?')} — {det.get('detect_reason','')}. "
-          f"Class codes: candidate `{det.get('class_code_candidate','?')}`, partner "
-          f"`{det.get('class_code_partner','?')}`"
-          + ("; both map to the same reference transcript, so this switch is invisible to "
-             "isoform-level short-read analysis." if B(det.get("same_reference_transcript")) else ".") + "\n")
+        prov = []
+        if B(det.get("assembly_contributed_candidate")):
+            prov.append("the candidate model was emitted by the PacBio assembly")
+        if B(det.get("assembly_contributed_partner")):
+            prov.append("the partner model was emitted by the PacBio assembly")
+        w(f"**Platform. {det['platform_required']}** — {det['reason']}. "
+          f"Class codes: candidate `{det['class_code_candidate']}`, partner "
+          f"`{det['class_code_partner']}`."
+          + (" " + "; ".join(prov).capitalize() +
+             " — note this is provenance, not novelty: which assembler emitted a model is a "
+             "different question from whether its structure is new." if prov else "") + "\n")
 
     nested = " The candidate is wholly contained within its partner, so no amplicon can be " \
              "specific to it by position alone — this is why the assay below is not a qPCR." \
