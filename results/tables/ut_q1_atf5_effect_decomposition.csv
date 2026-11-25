@@ -1,0 +1,10 @@
+quantity,value
+baseline KD-WT,0.074
+dIF_WT,0.023
+dIF_KD,-0.078
+interaction,-0.101
+post-LPS KD-WT,-0.028
+pooled within-arm SD,0.0073
+MDE n=3 interaction,0.0268
+MDE n=6 interaction,0.0175
+project-wide floor,0.16

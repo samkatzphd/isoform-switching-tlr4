@@ -1,0 +1,15 @@
+discovery_source,class_code,platform_class,n_transcripts,pct_of_source
+ENST (reference),=,illumina_findable,234860,100
+PB,j,novel_pacbio_only,37313,46.36
+PB,c,novel_contained_fragment,28026,34.82
+PB,=,illumina_findable,8366,10.39
+PB,n,novel_pacbio_only,2149,2.67
+PB,m,novel_pacbio_only,1312,1.63
+PB,k,novel_pacbio_only,898,1.12
+PB,o,novel_pacbio_only,712,0.88
+PB,u,novel_pacbio_only,678,0.84
+PB,x,novel_pacbio_only,579,0.72
+PB,i,novel_pacbio_only,390,0.48
+PB,y,novel_pacbio_only,42,0.05
+PB,e,novel_pacbio_only,20,0.02
+PB,s,novel_pacbio_only,4,0

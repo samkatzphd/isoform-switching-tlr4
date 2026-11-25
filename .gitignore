@@ -69,3 +69,10 @@ results/tables/reference_fasta_audit.csv
 # entry is inert until the file is untracked, which is deliberately left to you:
 #   git rm --cached Rplots.pdf
 /Rplots.pdf
+
+# Large UT-space tables from the 2026-10-23/25 sessions (1.5-16 MB each). Kept on disk, out of
+# git, like the per-isoform refit table and the counts.
+results/tables/ut_q1_power_audit.csv.gz
+results/tables/ut_tx2gene.tsv
+results/tables/ut_reference_audit.csv.gz
+results/tables/ut_q2_genelevel_KD_vs_WT.csv.gz

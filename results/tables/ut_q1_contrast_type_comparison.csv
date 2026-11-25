@@ -1,0 +1,6 @@
+arm,question,contrast_type,n_switching_genes,n_genes_fitted,pct
+H_HT_supplementary,marginal: LPS effect within one arm,difference of 2 group means,61,12379,0.493
+T_HT_anchor,marginal: LPS effect within one arm,difference of 2 group means,75,12379,0.606
+T_UT (UBL5 wildtype),marginal: LPS effect within one arm,difference of 2 group means,174,13098,1.328
+U_UT (UBL5 knockdown),marginal: LPS effect within one arm,difference of 2 group means,37,13129,0.282
+UBL5 genotype x treatment,interaction: difference of differences,combination of 4 group means,2,13086,0.015

@@ -1,0 +1,4 @@
+contrast,median_se,median_abs_observed,median_abs_if_null,ratio_observed_to_null,pct_nominal_p05,pct_expected_if_null,n_isoforms
+KO_LPS,0.41,0.277,0.277,1,4.661,5,127431
+WT_LPS,0.47,0.341,0.317,1.075,6.369,5,127343
+interaction,0.655,0.424,0.442,0.959,4.049,5,127315

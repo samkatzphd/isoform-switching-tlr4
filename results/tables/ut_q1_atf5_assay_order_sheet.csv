@@ -1,0 +1,7 @@
+assay,purpose,targets,oligo_role,sequence,length,tx_start,tx_end,genomic_start,genomic_end,exon,product_bp,verified_in_cDNA
+ATF5_novel_specific_D2,"discriminating, endpoint RT-PCR",TCONS_00159376,forward,CACAAGGAGAGGGCTGGATC,20,142,161,49928968,49928987,"1 (upstream, 49928827-49929006)",514,True
+ATF5_novel_specific_D2,"discriminating, endpoint RT-PCR",TCONS_00159376,reverse,CACCTTCCACCTGCCCTTAC,20,636,655,49931029,49931048,3 (49930732-49931121),514,True
+ATF5_upstreamTSS_N0,isoform-class qPCR numerator,TCONS_00159376 + TCONS_00149856,forward,AATCACAGGAGGAAGCAGGC,20,51,70,49928877,49928896,"1 (upstream, 49928827-49929006)",187,True
+ATF5_upstreamTSS_N0,isoform-class qPCR numerator,TCONS_00159376 + TCONS_00149856,reverse,CAAAGGGGTCGAGGCTACAG,20,218,237,49929280,49929299,"2 (shared, 49929243-49929400)",187,True
+ATF5_total_T0,total-gene qPCR denominator,all 6 expressed ATF5 isoforms,forward,TCTCCTGTTGCCATCAGTGC,20,418,437,49930811,49930830,3 (shared block 49930732-49931028),119,True
+ATF5_total_T0,total-gene qPCR denominator,all 6 expressed ATF5 isoforms,reverse,AGTCTACGAGCCATCCCAGC,20,517,536,49930910,49930929,3 (shared block 49930732-49931028),119,True
