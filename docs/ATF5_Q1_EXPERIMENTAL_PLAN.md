@@ -14,7 +14,8 @@
 >
 > Provenance: `ut_q1_atf5_candidate.png`, `atf5_biology.png`,
 > `ut_q1_atf5_pair_discrimination.csv` and `ut_q1_atf5_primer_specificity.csv` were built
-> interactively on 2026-10-25 and committed on 2026-11-25. No script under `scripts/` produces
+> interactively on 2026-10-25, held only as session artifacts, and written into the repository on
+> 2026-11-25. No script under `scripts/` produces
 > the ATF5 tables, so rerunning the pipeline will not regenerate them.
 
 ## Summary
