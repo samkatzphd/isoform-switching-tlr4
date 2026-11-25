@@ -1,9 +1,21 @@
 # Q1 candidate and validation plan: a novel *ATF5* isoform
 
-*Attached: `ut_q1_atf5_candidate.png`. Oligos to order: `ut_q1_atf5_assay_order_sheet.csv`.
-Supporting tables: `ut_q1_locus_fusion_screen.csv`, `ut_q1_atf5_isoform_fractions.csv`,
+*Figure: `results/figures/ut_q1_atf5_candidate.png`. Oligos to order:
+`results/tables/ut_q1_atf5_assay_order_sheet.csv`. Supporting tables, all under
+`results/tables/`: `ut_q1_locus_fusion_screen.csv`, `ut_q1_atf5_isoform_fractions.csv`,
 `ut_q1_atf5_effect_decomposition.csv`, `ut_q1_atf5_pair_discrimination.csv`,
 `ut_q1_atf5_primer_specificity.csv`.*
+
+> **Primer specificity of record is `results/tables/atf5_oligo_order_table.csv`**, not
+> `ut_q1_atf5_primer_specificity.csv`. The latter is an earlier 8-oligo iteration covering only
+> the N0/N3/T0/T3 qPCR pairs. The order table supersedes it: 16 oligos, each with a
+> transcriptome-wide off-target count, including the D2 pair that gives the 514 bp endpoint
+> RT-PCR product. Order from the order table.
+>
+> Provenance: `ut_q1_atf5_candidate.png`, `atf5_biology.png`,
+> `ut_q1_atf5_pair_discrimination.csv` and `ut_q1_atf5_primer_specificity.csv` were built
+> interactively on 2026-10-25 and committed on 2026-11-25. No script under `scripts/` produces
+> the ATF5 tables, so rerunning the pipeline will not regenerate them.
 
 ## Summary
 

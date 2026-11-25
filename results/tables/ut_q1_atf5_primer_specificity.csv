@@ -1,0 +1,9 @@
+oligo,pair,role,seq,n_transcripts,n_loci,n_offtarget_loci,offtarget
+N0_fwd,N0,forward,AATCACAGGAGGAAGCAGGC,2,1,0,none
+N0_rev,N0,reverse,CAAAGGGGTCGAGGCTACAG,5,1,0,none
+N3_fwd,N3,forward,CACAAGGAGAGGGCTGGATC,2,1,0,none
+N3_rev,N3,reverse,CAAAGGGGTCGAGGCTACAG,5,1,0,none
+T0_fwd,T0,forward,TCTCCTGTTGCCATCAGTGC,6,1,0,none
+T0_rev,T0,reverse,AGTCTACGAGCCATCCCAGC,6,1,0,none
+T3_fwd,T3,forward,GCCTCTCCTGTTGCCATCAG,6,1,0,none
+T3_rev,T3,reverse,AGTCTACGAGCCATCCCAGC,6,1,0,none
